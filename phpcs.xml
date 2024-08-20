@@ -1,12 +1,7 @@
 <?xml version="1.0"?>
-<ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="PHP_CodeSniffer">
-    <description>The coding standard for PHP_CodeSniffer.</description>
-
+<ruleset name="CodeSniffer">
     <file>src</file>
     <file>tests</file>
-
-    <exclude-pattern>*/Migrations/*</exclude-pattern>
-    <exclude-pattern>*/Sniffs/*</exclude-pattern>
 
     <arg name="basepath" value="."/>
     <arg name="colors"/>
@@ -23,5 +18,5 @@
     </rule>
 
     <!-- Include custom sniffs located in dev\CodeSniffer\Sniffs folder -->
-    <rule ref="Kununu"/>
+    <rule ref="./dev/CodeSniffer/ruleset.xml"/>
 </ruleset>

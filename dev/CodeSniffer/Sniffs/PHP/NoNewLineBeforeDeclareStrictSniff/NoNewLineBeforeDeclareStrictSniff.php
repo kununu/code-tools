@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Dev\CodeSniffer\Sniffs\NoNewLineBeforeDeclareStrictSniff;
+namespace dev\CodeSniffer\Sniffs\PHP\NoNewLineBeforeDeclareStrictSniff;
 
 use PHP_CodeSniffer\Files\File;
 use PHP_CodeSniffer\Sniffs\Sniff;
