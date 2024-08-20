@@ -10,9 +10,11 @@
     <arg value="n"/>
 
     <!-- Include custom sniffs located in Kununu\Sniffs folder -->
-    <rule ref="Kununu"/>
+    <rule ref="./Kununu/ruleset.xml"/>
 
+    <!-- Customize Rules according to project needs -->
     <rule ref="Kununu.Files.LineLength">
+        <exclude-pattern>*/Migrations/*</exclude-pattern>
         <properties>
             <property name="lineLimit" value="120"/>
             <property name="absoluteLineLimit" value="120"/>
