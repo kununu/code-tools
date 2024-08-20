@@ -9,14 +9,16 @@
     <arg value="p"/>
     <arg value="n"/>
 
-    <!-- Include more sniffs for this project -->
-    <rule ref="Generic.Files.LineLength">
+    <!-- Include custom sniffs located in Kununu\Sniffs folder -->
+    <rule ref="Kununu"/>
+
+    <rule ref="Kununu.Files.LineLength">
         <properties>
-            <property name="lineLimit" value="100"/>
+            <property name="lineLimit" value="120"/>
             <property name="absoluteLineLimit" value="120"/>
+            <property name="ignoreComments" value="true"/>
+            <property name="ignoreUseStatements" value="true"/>
         </properties>
     </rule>
 
-    <!-- Include custom sniffs located in dev\CodeSniffer\Sniffs folder -->
-    <rule ref="./dev/CodeSniffer/ruleset.xml"/>
 </ruleset>

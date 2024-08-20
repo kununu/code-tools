@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace dev\CodeSniffer\Sniffs\Formatting\MethodSignatureArgumentsSniff;
+namespace Kununu\Sniffs\Formatting;
 
 use PHP_CodeSniffer\Exceptions\DeepExitException;
 use PHP_CodeSniffer\Files\File;
