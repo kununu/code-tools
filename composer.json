@@ -1,0 +1,21 @@
+{
+    "name": "kununu/code-tools",
+    "description": "Code Tools",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Team Rosa Mota",
+            "email": "rosamota-dev@kununu.com"
+        }
+    ],
+    "require": {
+        "php": ">=8.1",
+        "squizlabs/php_codesniffer": "^3.10"
+    },
+    "autoload": {
+        "psr-4": {
+            "Dev\\": "dev/"
+        }
+    }
+}
