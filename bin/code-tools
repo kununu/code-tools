@@ -2,12 +2,15 @@
 
 # Function to display help instructions
 show_help() {
-    echo "Usage: $0 publish:config [config-file-name]"
-    echo "Valid config file names: code-sniffer"
-    echo "If no config file name are passed, then all the available config files will be copied."
+    echo "Usage: vendor/bin/code-tools publish:config [tool-name]"
+    echo "Valid tool names: code-sniffer"
+    echo "If no tool name is passed, then all the available config files for each tool will be copied."
     echo "Options:"
     echo "  --help    Show help message."
 }
+
+# Array of config files
+CONFIG_FILES=("phpcs.xml")
 
 # Check if help is requested
 if [ "$1" == "--help" ]; then
@@ -27,28 +30,32 @@ if [ "$1" != "publish:config" ]; then
     exit 1
 fi
 
-# Validate the second argument if provided
-if [ "$#" -eq 2 ] && [ "$2" != "code-sniffer" ]; then
-    echo "Invalid config file name. Valid config file name: code-sniffer"
-    exit 1
-fi
+# Function to copy a config file
+copy_config_file() {
+    local SOURCE_FILE="vendor/kununu/code-tools/$1"
+    local DEST_FILE="$1"
 
-# Define source and destination files
-SOURCE_FILE="vendor/code-tools/phpcs.xml"
-DEST_FILE="phpcs.xml"
+    if [ -f "$DEST_FILE" ]; then
+        echo "Config file '$DEST_FILE' already exists at project level."
+    elif [ -f "$SOURCE_FILE" ]; then
+        cp "$SOURCE_FILE" "$DEST_FILE"
+        echo "Config file '$DEST_FILE' copied to project level, customize it as you like."
+    else
+        echo "Config file '$SOURCE_FILE' does not exist."
+    fi
+}
 
-# Check if the destination file already exists
-if [ -f "$DEST_FILE" ]; then
-    echo "Config file 'phpcs.xml' already exists at project level."
-    exit 0
-fi
-
-# Check if the source file exists
-if [ -f "$SOURCE_FILE" ]; then
-    # Copy the file to the destination directory
-    cp "$SOURCE_FILE" "$DEST_FILE"
-    echo "Config file 'phpcs.xml' copied to project level, customize it as you like."
+# If a second argument is provided, validate and copy the specific config file
+if [ "$#" -eq 2 ]; then
+    if [ "$2" == "code-sniffer" ]; then
+        copy_config_file "phpcs.xml"
+    else
+        echo "Invalid config file name. Valid config file name: code-sniffer"
+        exit 1
+    fi
 else
-    echo "Config file 'phpcs.xml' does not exist in 'vendor/code-tools/'."
-    exit 1
+    # If no second argument, copy all config files
+    for config_file in "${CONFIG_FILES[@]}"; do
+        copy_config_file "$config_file"
+    done
 fi
