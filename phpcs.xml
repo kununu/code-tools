@@ -2,8 +2,8 @@
 <ruleset name="code-tools">
     <config name="installed_paths" value="../../kununu/code-tools"/>
 
-    <file>src</file>
-    <file>tests</file>
+    <file>../../../src</file>
+    <file>../../../tests</file>
 
     <arg name="basepath" value="."/>
     <arg name="colors"/>
