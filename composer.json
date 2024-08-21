@@ -18,6 +18,9 @@
             "Kununu\\": "Kununu/"
         }
     },
+    "bin": [
+        "bin/code-tools"
+    ],
     "config": {
         "sort-packages": true,
         "process-timeout": 900

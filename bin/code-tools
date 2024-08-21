@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# Function to display help instructions
+show_help() {
+    echo "Usage: $0 publish:config [config-file-name]"
+    echo "Valid config file names: code-sniffer"
+    echo "If no config file name are passed, then all the available config files will be copied."
+    echo "Options:"
+    echo "  --help    Show help message."
+}
+
+# Check if help is requested
+if [ "$1" == "--help" ]; then
+    show_help
+    exit 0
+fi
+
+# Check if at least one argument is provided
+if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
+    show_help
+    exit 1
+fi
+
+# Validate the first argument
+if [ "$1" != "publish:config" ]; then
+    echo "Invalid command. Valid command: publish:config"
+    exit 1
+fi
+
+# Validate the second argument if provided
+if [ "$#" -eq 2 ] && [ "$2" != "code-sniffer" ]; then
+    echo "Invalid config file name. Valid config file name: code-sniffer"
+    exit 1
+fi
+
+# Define source and destination files
+SOURCE_FILE="vendor/code-tools/phpcs.xml"
+DEST_FILE="phpcs.xml"
+
+# Check if the destination file already exists
+if [ -f "$DEST_FILE" ]; then
+    echo "Config file 'phpcs.xml' already exists at project level."
+    exit 0
+fi
+
+# Check if the source file exists
+if [ -f "$SOURCE_FILE" ]; then
+    # Copy the file to the destination directory
+    cp "$SOURCE_FILE" "$DEST_FILE"
+    echo "Config file 'phpcs.xml' copied to project level, customize it as you like."
+else
+    echo "Config file 'phpcs.xml' does not exist in 'vendor/code-tools/'."
+    exit 1
+fi
