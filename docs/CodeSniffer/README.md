@@ -117,7 +117,7 @@ Example of a customized `phpcs.xml` to include all Kununu rules + rules from oth
 </ruleset>
 ```
 
-> [!WARNING]
+> **Warning!!!**  
 > Be careful when including rules, as some rules may conflict with other rules or standards.
 
 </details>
@@ -223,6 +223,15 @@ Is automatically fixable by phpcbf: `No`
 
 See more details about the extended `Generic.Files.LineLength` sniff [here](https://github.com/PHPCSStandards/PHP_CodeSniffer/wiki/Customisable-Sniff-Properties#genericfileslinelength)
 
+<details>
+  <summary>See it in action</summary>
+
+- **phpcs**
+- ![kununu/code-tools](/docs/CodeSniffer/screenshots/phpcs-line-length.png)
+- **git diff**
+- ![kununu/code-tools](/docs/CodeSniffer/screenshots/git-diff-line-length.png)
+</details>
+
 -----
 
 ### Kununu.Formatting.MethodSignatureArguments
@@ -250,6 +259,18 @@ Is automatically fixable by phpcbf: `Yes`
     </properties>
 </rule>
 ```
+
+<details>
+  <summary>See it in action</summary>
+
+- **phpcs**
+- ![kununu/code-tools](/docs/CodeSniffer/screenshots/phpcs-MethodSignatureArguments.png)
+- **phpcbf**
+- ![kununu/code-tools](/docs/CodeSniffer/screenshots/phpcbf-MethodSignatureArguments.png)
+- **git diff**
+- ![kununu/code-tools](/docs/CodeSniffer/screenshots/git-diff-MethodSignatureArguments.png)
+</details>
+
 -----
 
 ### Kununu.PHP.NoNewLineBeforeDeclareStrict
@@ -264,3 +285,16 @@ Is automatically fixable by phpcbf: `Yes`
 ```xml
 <rule ref="Kununu.PHP.NoNewLineBeforeDeclareStrict" />
 ```
+<details>
+  <summary>See it in action</summary>
+
+- **phpcs**
+- ![kununu/code-tools](/docs/CodeSniffer/screenshots/cs-check-no-empty-line.png)
+- **phpcbf**
+- ![kununu/code-tools](/docs/CodeSniffer/screenshots/cs-fix-no-empty-line.png)
+- **git diff**
+- ![kununu/code-tools](/docs/CodeSniffer/screenshots/git-diff-no-empty-line.png)
+</details>
+
+
+-----
