@@ -7,6 +7,8 @@ use PHP_CodeSniffer\Standards\Generic\Sniffs\Files\LineLengthSniff as PHP_CodeSn
 
 class LineLengthSniff extends PHP_CodeSnifferLineLengthSniff
 {
+    public $lineLimit = 100;
+    public $absoluteLineLimit = 120;
     public $ignoreUseStatements = false;
 
     public function process(File $phpcsFile, $stackPtr)

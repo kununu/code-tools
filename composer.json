@@ -17,5 +17,9 @@
         "psr-4": {
             "Kununu\\": "Kununu/"
         }
+    },
+    "config": {
+        "sort-packages": true,
+        "process-timeout": 900
     }
 }
