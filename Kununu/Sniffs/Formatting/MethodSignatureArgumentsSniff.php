@@ -33,7 +33,11 @@ class MethodSignatureArgumentsSniff implements Sniff
         $openParenthesisPosition = $tokens[$stackPtr]['parenthesis_opener'];
         $closeParenthesisPosition = $tokens[$stackPtr]['parenthesis_closer'];
 
-        $isSingleLineSignature = $this->areTokensOnTheSameLine($tokens, $openParenthesisPosition, $closeParenthesisPosition);
+        $isSingleLineSignature = $this->areTokensOnTheSameLine(
+            $tokens,
+            $openParenthesisPosition,
+            $closeParenthesisPosition
+        );
         $signatureLength = $this->getMethodSignatureLength($phpcsFile, $stackPtr);
         $parametersCount = count($phpcsFile->getMethodParameters($stackPtr));
         if ($isSingleLineSignature) {
@@ -45,7 +49,12 @@ class MethodSignatureArgumentsSniff implements Sniff
                 return;
             }
 
-            $fix = $phpcsFile->addFixableError('The parameters on this method definition need to be multi-line.', $stackPtr, 'Multiline');
+            $fix = $phpcsFile->addFixableError(
+                'The parameters on this method definition need to be multi-line.',
+                $stackPtr,
+                'Multiline'
+            );
+
             if (!$fix) {
                 return;
             }
@@ -65,7 +74,12 @@ class MethodSignatureArgumentsSniff implements Sniff
         ) {
             return;
         }
-        $fix = $phpcsFile->addFixableError('The parameters on this method definition need to be on a single line.', $stackPtr, 'Inline');
+        $fix = $phpcsFile->addFixableError(
+            'The parameters on this method definition need to be on a single line.',
+            $stackPtr,
+            'Inline'
+        );
+
         if (!$fix) {
             return;
         }
@@ -97,7 +111,8 @@ class MethodSignatureArgumentsSniff implements Sniff
             $this->removeEverythingBetweenPositions($phpcsFile, $closeParenthesisPosition, $scopeOpenerPosition);
             $phpcsFile->fixer->addContentBefore($scopeOpenerPosition, "\n" . $indentation);
             if ($returnTypePosition !== false) {
-                $phpcsFile->fixer->addContent($closeParenthesisPosition, ': ' . $tokens[$returnTypePosition]['content']);
+                $phpcsFile->fixer
+                    ->addContent($closeParenthesisPosition, ': ' . $tokens[$returnTypePosition]['content']);
             }
         }
         $this->removeEverythingBetweenPositions($phpcsFile, $openParenthesisPosition, $closeParenthesisPosition);
@@ -173,7 +188,9 @@ class MethodSignatureArgumentsSniff implements Sniff
 
         $firstIndex = $this->getFirstTokenOfLine($tokens, $prevIndex);
         $whitespace = '';
-        if ($tokens[$firstIndex]['type'] === 'T_WHITESPACE' || $tokens[$firstIndex]['type'] === 'T_DOC_COMMENT_WHITESPACE') {
+        if ($tokens[$firstIndex]['type'] === 'T_WHITESPACE'
+            || $tokens[$firstIndex]['type'] === 'T_DOC_COMMENT_WHITESPACE'
+        ) {
             $whitespace = $tokens[$firstIndex]['content'];
         }
 
