@@ -16,20 +16,20 @@
 
 ### Analyze and detect violations
 ```console
-vendor/bin/phpcs --standard=vendor/kununu/code-tools/phpcs.xml
+vendor/bin/phpcs --standard=vendor/kununu/code-tools/phpcs.xml src tests
 ```
 
 ### Automatically fix violations
 ```console
-vendor/bin/phpcbf --standard=vendor/kununu/code-tools/phpcs.xml
+vendor/bin/phpcbf --standard=vendor/kununu/code-tools/phpcs.xml src tests
 ```
 
 #### Optionally you can add it to your project's composer.json
 ```json
 {
     "scripts": {
-        "cs-check": "vendor/bin/phpcs --standard=vendor/kununu/code-tools/phpcs.xml",
-        "cs-fix": "vendor/bin/phpcbf --standard=vendor/kununu/code-tools/phpcs.xml"
+        "cs-check": "vendor/bin/phpcs --standard=vendor/kununu/code-tools/phpcs.xml src tests",
+        "cs-fix": "vendor/bin/phpcbf --standard=vendor/kununu/code-tools/phpcs.xml src tests"
     }
 }
 ```
@@ -40,7 +40,7 @@ vendor/bin/phpcbf --standard=vendor/kununu/code-tools/phpcs.xml
 - The easiest way to customize the rules is to copy the `phpcs.xml` file to your project and modify it, for this we provide the following command:
 
 ```console
-vendor/bin/code-tools pubish:config code-sniffer
+vendor/bin/code-tools publish:config code-sniffer
 ```
 
 - The `phpcs.xml` file will be copied to your project, and you can modify it to suit your needs.
@@ -124,20 +124,20 @@ Example of a customized `phpcs.xml` to include all Kununu rules + rules from oth
 
 ### Analyze and detect violations
 ```console
-vendor/bin/phpcs --standard=phpcs.xml
+vendor/bin/phpcs --standard=phpcs.xml src tests
 ```
 
 ### Automatically fix violations
 ```console
-vendor/bin/phpcbf --standard=phpcs.xml
+vendor/bin/phpcbf --standard=phpcs.xml src tests
 ```
 
 #### Optionally you can add it to your project's composer.json
 ```json
 {
     "scripts": {
-        "cs-check": "vendor/bin/phpcs --standard=phpcs.xml",
-        "cs-fix": "vendor/bin/phpcbf --standard=phpcs.xml"
+        "cs-check": "vendor/bin/phpcs --standard=phpcs.xml src tests",
+        "cs-fix": "vendor/bin/phpcbf --standard=phpcs.xml src tests"
     }
 }
 ```
@@ -209,7 +209,7 @@ vendor/bin/phpcbf --standard=phpcs.xml
 
 This sniff extends `Generic.Files.LineLength` sniff to provide ability to ignore use statements when calculating line lengths.
 
-If the `ignoreUseStatements` property is set to `true`, any use statements will be ignored when calculating line lengths. This also ensures that no error or warning will be thrown for a line that only contains a use statement, no matter how long the line is.
+If the `ignoreUseStatements` property is set to `true`, any use statements will be ignored when calculating line lengths.
 
 Is automatically fixable by phpcbf: `No`
 

@@ -10,7 +10,7 @@ show_help() {
 }
 
 # Array of config files
-CONFIG_FILES=("phpcs.xml")
+CONFIG_FILES=("dist/phpcs.xml.dist")
 
 # Check if help is requested
 if [ "$1" == "--help" ]; then
@@ -33,7 +33,8 @@ fi
 # Function to copy a config file
 copy_config_file() {
     local SOURCE_FILE="vendor/kununu/code-tools/$1"
-    local DEST_FILE="$1"
+    local DEST_FILE="${1#dist/}"
+    DEST_FILE="${DEST_FILE%.dist}"
 
     if [ -f "$DEST_FILE" ]; then
         echo "Config file '$DEST_FILE' already exists at project level."
@@ -48,7 +49,7 @@ copy_config_file() {
 # If a second argument is provided, validate and copy the specific config file
 if [ "$#" -eq 2 ]; then
     if [ "$2" == "code-sniffer" ]; then
-        copy_config_file "phpcs.xml"
+        copy_config_file "dist/phpcs.xml.dist"
     else
         echo "Invalid config file name. Valid config file name: code-sniffer"
         exit 1
