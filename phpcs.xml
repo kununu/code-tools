@@ -7,6 +7,8 @@
     <arg value="p"/>
     <arg value="n"/>
 
+    <exclude-pattern>tests/_data/*</exclude-pattern>
+
     <!-- Include custom sniffs located in Kununu\Sniffs folder -->
     <rule ref="Kununu"/>
 
