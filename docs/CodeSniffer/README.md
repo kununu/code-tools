@@ -8,6 +8,7 @@
   - [Kununu.Files.LineLength](#kununufileslinelength)
   - [Kununu.Formatting.MethodSignatureArguments](#kununuformattingmethodsignaturearguments)
   - [Kununu.PHP.NoNewLineBeforeDeclareStrict](#kununuphpnonewlinebeforedeclarestrict)
+- [How to disable rules](#how-to-disable-rules)
 
 ## Out of the box usage
 - It will check the code standards for the `src` and `tests` directories.
@@ -16,20 +17,20 @@
 
 ### Analyze and detect violations
 ```console
-vendor/bin/phpcs --standard=vendor/kununu/code-tools/phpcs.xml src tests
+vendor/bin/phpcs --standard=vendor/kununu/code-tools/phpcs.xml src/ tests/
 ```
 
 ### Automatically fix violations
 ```console
-vendor/bin/phpcbf --standard=vendor/kununu/code-tools/phpcs.xml src tests
+vendor/bin/phpcbf --standard=vendor/kununu/code-tools/phpcs.xml src/ tests/
 ```
 
 #### Optionally you can add it to your project's composer.json
 ```json
 {
     "scripts": {
-        "cs-check": "vendor/bin/phpcs --standard=vendor/kununu/code-tools/phpcs.xml src tests",
-        "cs-fix": "vendor/bin/phpcbf --standard=vendor/kununu/code-tools/phpcs.xml src tests"
+        "cs-check": "phpcs --standard=vendor/kununu/code-tools/phpcs.xml src/ tests/",
+        "cs-fix": "phpcbf --standard=vendor/kununu/code-tools/phpcs.xml src/ tests/"
     }
 }
 ```
@@ -124,20 +125,20 @@ Example of a customized `phpcs.xml` to include all Kununu rules + rules from oth
 
 ### Analyze and detect violations
 ```console
-vendor/bin/phpcs --standard=phpcs.xml src tests
+vendor/bin/phpcs --standard=phpcs.xml src/ tests/
 ```
 
 ### Automatically fix violations
 ```console
-vendor/bin/phpcbf --standard=phpcs.xml src tests
+vendor/bin/phpcbf --standard=phpcs.xml src/ tests/
 ```
 
 #### Optionally you can add it to your project's composer.json
 ```json
 {
     "scripts": {
-        "cs-check": "vendor/bin/phpcs --standard=phpcs.xml src tests",
-        "cs-fix": "vendor/bin/phpcbf --standard=phpcs.xml src tests"
+        "cs-check": "phpcs --standard=phpcs.xml src/ tests/",
+        "cs-fix": "phpcbf --standard=phpcs.xml src/ tests/"
     }
 }
 ```
@@ -296,5 +297,15 @@ Is automatically fixable by phpcbf: `Yes`
 - ![kununu/code-tools](/docs/CodeSniffer/screenshots/git-diff-no-empty-line.png)
 </details>
 
-
 -----
+
+## How to disable rules
+
+- You can disable a rule by adding the following comment to the line you want to disable the rule for:
+```php
+// phpcs:disable Kununu.Files.LineLength
+$someVariable = 'This is a very long string that will exceed the line length limit';
+// phpcs:enable 
+```
+
+- You can disable rules for a folder, a file, a block of code or a line, and you can choose to disable just one rule or all rules. See offical documentation [here](https://github.com/PHPCSStandards/PHP_CodeSniffer/wiki/Advanced-Usage#ignoring-files-and-folders)
