@@ -27,6 +27,9 @@ class MethodSignatureArgumentsSniff implements Sniff
         ];
     }
 
+    /**
+     * @throws DeepExitException
+     */
     public function process(File $phpcsFile, $stackPtr): void
     {
         $tokens = $phpcsFile->getTokens();
@@ -167,6 +170,9 @@ class MethodSignatureArgumentsSniff implements Sniff
         return $tokens[$firstPosition]['line'] === $tokens[$secondPosition]['line'];
     }
 
+    /**
+     * @throws DeepExitException
+     */
     protected function getMethodSignatureLength(File $phpcsFile, int $stackPtr): int
     {
         $tokens = $phpcsFile->getTokens();
