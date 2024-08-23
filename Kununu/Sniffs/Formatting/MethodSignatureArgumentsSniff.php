@@ -14,11 +14,11 @@ use PHP_CodeSniffer\Sniffs\Sniff;
  */
 class MethodSignatureArgumentsSniff implements Sniff
 {
-    public $methodSignatureLengthHardBreak = 120;
+    public int $methodSignatureLengthHardBreak = 120;
 
-    public $methodSignatureLengthSoftBreak = 80;
+    public int $methodSignatureLengthSoftBreak = 80;
 
-    public $methodSignatureNumberParameterSoftBreak = 3;
+    public int $methodSignatureNumberParameterSoftBreak = 3;
 
     public function register(): array
     {
@@ -159,6 +159,9 @@ class MethodSignatureArgumentsSniff implements Sniff
         }
     }
 
+    /**
+     * @param array<int, array<string, mixed>> $tokens
+     */
     protected function areTokensOnTheSameLine(array $tokens, int $firstPosition, int $secondPosition): bool
     {
         return $tokens[$firstPosition]['line'] === $tokens[$secondPosition]['line'];
@@ -197,6 +200,9 @@ class MethodSignatureArgumentsSniff implements Sniff
         return $whitespace;
     }
 
+    /**
+     * @param array<int, array<string, mixed>> $tokens
+     */
     protected function getLineEndingPosition(array $tokens, int $position): int
     {
         while (!empty($tokens[$position]) && !str_contains($tokens[$position]['content'], PHP_EOL)) {
@@ -206,6 +212,9 @@ class MethodSignatureArgumentsSniff implements Sniff
         return $position;
     }
 
+    /**
+     * @param array<int, array<string, mixed>> $tokens
+     */
     protected function getMethodSingleLineSignatureLength(array $tokens, int $stackPtr): int
     {
         $position = $this->getLineEndingPosition($tokens, $stackPtr);
@@ -213,6 +222,9 @@ class MethodSignatureArgumentsSniff implements Sniff
         return $tokens[$position]['column'] - 1;
     }
 
+    /**
+     * @param array<int, array<string, mixed>> $tokens
+     */
     protected function getFirstTokenOfLine(array $tokens, int $index): int
     {
         $line = $tokens[$index]['line'];
@@ -225,6 +237,12 @@ class MethodSignatureArgumentsSniff implements Sniff
         return $currentIndex;
     }
 
+
+    /**
+     * @param array<int, array<string, mixed>> $tokens
+     * @param array<string, mixed> $methodProperties
+     * @param array<array<string, mixed>> $methodParameters
+     */
     protected function getMethodSignatureMultilineLength(
         array $tokens,
         int $stackPtr,
@@ -257,6 +275,9 @@ class MethodSignatureArgumentsSniff implements Sniff
         return $totalLength;
     }
 
+    /**
+     * @param array<string, mixed> $methodParameter
+     */
     protected function getParameterTotalLength(array $methodParameter): int
     {
         $length = 0;

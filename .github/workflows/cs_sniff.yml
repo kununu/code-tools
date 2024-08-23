@@ -33,3 +33,6 @@ jobs:
 
       - name: Run code style sniffer
         run: vendor/bin/phpcs --standard=phpcs.xml Kununu/ tests/
+
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse

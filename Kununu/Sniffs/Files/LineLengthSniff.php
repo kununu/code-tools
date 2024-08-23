@@ -9,7 +9,7 @@ class LineLengthSniff extends PHP_CodeSnifferLineLengthSniff
 {
     public $lineLimit = 100;
     public $absoluteLineLimit = 120;
-    public $ignoreUseStatements = false;
+    public bool $ignoreUseStatements = false;
 
     public function process(File $phpcsFile, $stackPtr)
     {
@@ -29,6 +29,5 @@ class LineLengthSniff extends PHP_CodeSnifferLineLengthSniff
 
         // Ignore the rest of the file.
         return $phpcsFile->numTokens;
-
     }
 }
