@@ -39,6 +39,7 @@
         "test-unit": "phpunit",
         "cs-check": "phpcs --standard=phpcs.xml Kununu/ tests/",
         "cs-fix": "phpcbf --standard=phpcs.xml Kununu/ tests/",
-        "stan": "phpstan analyze"
+        "stan": "phpstan analyze",
+        "rector": "rector process --dry-run Kununu/ tests/"
     }
 }

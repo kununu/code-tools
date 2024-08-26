@@ -3,14 +3,14 @@
 # Function to display help instructions
 show_help() {
     echo "Usage: vendor/bin/code-tools publish:config [tool-name]"
-    echo "Valid tool names: code-sniffer"
+    echo "Valid tool names: code-sniffer or rector"
     echo "If no tool name is passed, then all the available config files for each tool will be copied."
     echo "Options:"
     echo "  --help    Show help message."
 }
 
 # Array of config files
-CONFIG_FILES=("dist/phpcs.xml.dist")
+CONFIG_FILES=("dist/phpcs.xml.dist" "dist/rector.php.dist")
 
 # Check if help is requested
 if [ "$1" == "--help" ]; then
@@ -50,8 +50,10 @@ copy_config_file() {
 if [ "$#" -eq 2 ]; then
     if [ "$2" == "code-sniffer" ]; then
         copy_config_file "dist/phpcs.xml.dist"
+    elif [ "$2" == "rector" ]; then
+        copy_config_file "dist/rector.php.dist"
     else
-        echo "Invalid config file name. Valid config file name: code-sniffer"
+        echo "Invalid config file name. Valid config file name: code-sniffer or rector"
         exit 1
     fi
 else
