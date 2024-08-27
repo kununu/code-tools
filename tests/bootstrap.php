@@ -3,8 +3,10 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
+use PHP_CodeSniffer\Config;
+
 $phpcsAutoload = dirname(__DIR__) . '/vendor/squizlabs/php_codesniffer/autoload.php';
-if (!class_exists(PHP_CodeSniffer\Config::class) && is_file($phpcsAutoload)) {
+if (!class_exists(Config::class) && is_file($phpcsAutoload)) {
     require_once $phpcsAutoload;
     unset($phpcsAutoload);
 }
