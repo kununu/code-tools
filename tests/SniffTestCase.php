@@ -45,7 +45,7 @@ class SniffTestCase extends TestCase
         $codeSniffer = new Runner();
         $codeSniffer->config = new Config(['-s']);
         $codeSniffer->init();
-        $codeSniffer->ruleset->sniffs = [get_class($sniffer) => $sniffer];
+        $codeSniffer->ruleset->sniffs = [$sniffer::class => $sniffer];
         $codeSniffer->ruleset->populateTokenListeners();
         $file = new LocalFile($this->getDummyFileBefore($sniffer), $codeSniffer->ruleset, $codeSniffer->config);
 
@@ -99,7 +99,7 @@ class SniffTestCase extends TestCase
     private function getTestFilesPath(): string
     {
         return implode(DIRECTORY_SEPARATOR, [
-                __DIR__,
+            __DIR__,
             '_data',
         ]) . DIRECTORY_SEPARATOR;
     }

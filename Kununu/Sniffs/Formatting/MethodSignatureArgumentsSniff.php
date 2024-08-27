@@ -243,11 +243,10 @@ class MethodSignatureArgumentsSniff implements Sniff
         return $currentIndex;
     }
 
-
     /**
      * @param array<int, array<string, mixed>> $tokens
-     * @param array<string, mixed> $methodProperties
-     * @param array<array<string, mixed>> $methodParameters
+     * @param array<string, mixed>             $methodProperties
+     * @param array<array<string, mixed>>      $methodParameters
      */
     protected function getMethodSignatureMultilineLength(
         array $tokens,

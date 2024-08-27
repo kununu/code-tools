@@ -19,10 +19,10 @@ class NoNewLineBeforeDeclareStrictSniff implements Sniff
     public function process(File $phpcsFile, $stackPtr)
     {
         $tokens = $phpcsFile->getTokens();
-        $declare = $phpcsFile->findNext(T_DECLARE, ($stackPtr + 1));
+        $declare = $phpcsFile->findNext(T_DECLARE, $stackPtr + 1);
 
         if ($declare !== false) {
-            $isEmptyLine = $phpcsFile->findNext(T_WHITESPACE, ($stackPtr + 1), $declare);
+            $isEmptyLine = $phpcsFile->findNext(T_WHITESPACE, $stackPtr + 1, $declare);
 
             if ($isEmptyLine !== false && str_contains($tokens[$isEmptyLine]['content'], "\n")) {
                 $error = 'Empty line before declare(strict_types=1) is not allowed';
