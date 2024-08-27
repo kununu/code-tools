@@ -3,12 +3,11 @@ declare(strict_types=1);
 
 namespace Kununu;
 
-class FixMe
+class Fixme
 {
     public function signatureArgumentsShouldBeSingleLine(
         string $foo
-    ): void
-    {
+    ): void {
     }
 
     public function signatureArgumentsShouldBeMultiLine(string $firstArgument, string $secondArgument, string $thirdArgument): void
