@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<ruleset name="code-tools">
+    <config name="installed_paths" value="../../kununu/code-tools"/>
+    
+    <arg name="colors"/>
+    <arg name="parallel" value="75"/>
+    <arg value="p"/>
+    <arg value="n"/>
+
+    <!-- Include custom sniffs located in Kununu\Sniffs folder -->
+    <rule ref="Kununu"/>
+
+    <!-- Customize Rules according to project needs -->
+    <rule ref="Kununu.Files.LineLength">
+        <exclude-pattern>*/Migrations/*</exclude-pattern>
+        <properties>
+            <property name="ignoreComments" value="true"/>
+            <property name="ignoreUseStatements" value="true"/>
+        </properties>
+    </rule>
+
+</ruleset>

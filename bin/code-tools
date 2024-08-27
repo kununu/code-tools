@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# Function to display help instructions
+show_help() {
+    echo "Usage: vendor/bin/code-tools publish:config [tool-name]"
+    echo "Valid tool names: code-sniffer or rector"
+    echo "If no tool name is passed, then all the available config files for each tool will be copied."
+    echo "Options:"
+    echo "  --help    Show help message."
+}
+
+# Array of config files
+CONFIG_FILES=("dist/phpcs.xml.dist" "dist/rector.php.dist")
+
+# Check if help is requested
+if [ "$1" == "--help" ]; then
+    show_help
+    exit 0
+fi
+
+# Check if at least one argument is provided
+if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
+    show_help
+    exit 1
+fi
+
+# Validate the first argument
+if [ "$1" != "publish:config" ]; then
+    echo "Invalid command. Valid command: publish:config"
+    exit 1
+fi
+
+# Function to copy a config file
+copy_config_file() {
+    local SOURCE_FILE="vendor/kununu/code-tools/$1"
+    local DEST_FILE="${1#dist/}"
+    DEST_FILE="${DEST_FILE%.dist}"
+
+    if [ -f "$DEST_FILE" ]; then
+        echo "Config file '$DEST_FILE' already exists at project level."
+    elif [ -f "$SOURCE_FILE" ]; then
+        cp "$SOURCE_FILE" "$DEST_FILE"
+        echo "Config file '$DEST_FILE' copied to project level, customize it as you like."
+    else
+        echo "Config file '$SOURCE_FILE' does not exist."
+    fi
+}
+
+# If a second argument is provided, validate and copy the specific config file
+if [ "$#" -eq 2 ]; then
+    if [ "$2" == "code-sniffer" ]; then
+        copy_config_file "dist/phpcs.xml.dist"
+    elif [ "$2" == "rector" ]; then
+        copy_config_file "dist/rector.php.dist"
+    else
+        echo "Invalid config file name. Valid config file name: code-sniffer or rector"
+        exit 1
+    fi
+else
+    # If no second argument, copy all config files
+    for config_file in "${CONFIG_FILES[@]}"; do
+        copy_config_file "$config_file"
+    done
+fi

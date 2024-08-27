@@ -1,0 +1,38 @@
+name: CI
+on:
+  pull_request:
+
+jobs:
+  cs:
+    name: cs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: /tmp/composer-cache
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer
+
+      - name: Install composer dependencies
+        uses: php-actions/composer@v6
+        with:
+          php_version: '8.3'
+          version: 2
+          args: --optimize-autoloader --no-progress --no-interaction
+          ssh_key: ${{ secrets.CLONE_SSH_KEY }}
+          ssh_key_pub: ${{ secrets.CLONE_SSH_KEY_PUB }}
+
+      - name: Run code style sniffer
+        run: vendor/bin/phpcs --standard=phpcs.xml Kununu/ tests/
+
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse

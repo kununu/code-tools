@@ -1,0 +1,49 @@
+{
+    "name": "kununu/code-tools",
+    "description": "Code Tools",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Team Rosa Mota",
+            "email": "rosamota-dev@kununu.com"
+        }
+    ],
+    "require": {
+        "php": ">=8.1",
+        "rector/rector": "^1.2",
+        "squizlabs/php_codesniffer": "^3.10"
+    },
+    "require-dev": {
+        "kununu/scripts": "^5.0",
+        "phpstan/phpstan": "^1.11",
+        "phpunit/phpunit": "^11.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Kununu\\": "Kununu/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "bin": [
+        "bin/code-tools"
+    ],
+    "config": {
+        "sort-packages": true,
+        "process-timeout": 900,
+        "allow-plugins": {
+            "kununu/scripts": true
+        }
+    },
+    "scripts": {
+        "test-unit": "phpunit",
+        "cs-check": "phpcs --standard=phpcs.xml Kununu/ tests/",
+        "cs-fix": "phpcbf --standard=phpcs.xml Kununu/ tests/",
+        "stan": "phpstan analyze",
+        "rector": "rector process --dry-run Kununu/ tests/"
+    }
+}
