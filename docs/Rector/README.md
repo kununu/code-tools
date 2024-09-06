@@ -3,6 +3,8 @@
 ## Table of Contents
 - [Out of the box usage](#out-of-the-box-usage)
 - [Customized usage](#customized-usage)
+  - [Example of a customized `rector.php` to upgrade to PHP 8.3 and phpunit 10](#example-of-a-customized-rectorphp-to-upgrade-to-php-83-and-phpunit-10)
+  - [Example of a customized `rector.php` to fix phpunit deprecation warnings](#example-of-a-customized-rectorphp-to-fix-phpunit-deprecation-warnings)
 
 ## Out of the box usage
 - It will check the code in `tests` directory and suggest or apply the necessary refactor to make it compatible with phpunit v10.
@@ -39,7 +41,7 @@ vendor/bin/code-tools publish:config rector
 <details>
   <summary>See some customization examples</summary>
 
-Example of a customized `rector.php` to upgrade to PHP 8.3 and phpunit 10:
+### Example of a customized `rector.php` to upgrade to PHP 8.3 and phpunit 10:
 ```php
 <?php
 
@@ -79,6 +81,50 @@ Example of a customized `rector.php` to upgrade to PHP 8.3 and phpunit 10:
           PublicConstantVisibilityRector::class,
           AddOverrideAttributeToOverriddenMethodsRector::class,
         ]);
+```
+
+### Example of a customized `rector.php` to fix phpunit deprecation warnings:
+```php
+    <?php
+    declare(strict_types=1);
+    
+    use Rector\CodeQuality\Rector\Class_\CompleteDynamicPropertiesRector;
+    use Rector\Config\RectorConfig;
+    use Rector\Php70\Rector\Ternary\TernaryToNullCoalescingRector;
+    use Rector\Php80\Rector\Class_\ClassPropertyAssignToConstructorPromotionRector;
+    use Rector\Php83\Rector\ClassMethod\AddOverrideAttributeToOverriddenMethodsRector;
+    use Rector\PHPUnit\AnnotationsToAttributes\Rector\ClassMethod\DataProviderAnnotationToAttributeRector;
+    use Rector\PHPUnit\PHPUnit110\Rector\Class_\NamedArgumentForDataProviderRector;
+    use Rector\PHPUnit\Rector\StmtsAwareInterface\WithConsecutiveRector;
+    use Rector\PHPUnit\Set\PHPUnitSetList;
+    use Rector\Set\ValueObject\LevelSetList;
+    use Rector\Set\ValueObject\SetList;
+    use Rector\Symfony\Set\SymfonySetList;
+    use Rector\TypeDeclaration\Rector\ClassMethod\ReturnNeverTypeRector;
+    
+    return RectorConfig::configure()
+        ->withSets([
+            PHPUnitSetList::PHPUNIT_110,
+            LevelSetList::UP_TO_PHP_83,
+            SetList::PHP_83,
+            SymfonySetList::SYMFONY_64,
+            SymfonySetList::SYMFONY_CODE_QUALITY,
+            SymfonySetList::SYMFONY_CONSTRUCTOR_INJECTION,
+        ])
+        ->withRules([
+            DataProviderAnnotationToAttributeRector::class,
+            NamedArgumentForDataProviderRector::class,
+            CompleteDynamicPropertiesRector::class,
+        ])
+        ->withSkip([
+            WithConsecutiveRector::class,
+            AddOverrideAttributeToOverriddenMethodsRector::class,
+            ReturnNeverTypeRector::class,
+            TernaryToNullCoalescingRector::class,
+            ClassPropertyAssignToConstructorPromotionRector::class,
+            __DIR__ . '/tests/bootstrap.php',
+        ])
+        ->withImportNames();
 ```
 
 </details>
