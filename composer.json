@@ -34,7 +34,8 @@
         }
     },
     "bin": [
-        "bin/code-tools"
+        "bin/code-tools",
+        "bin/code-generator"
     ],
     "config": {
         "sort-packages": true,

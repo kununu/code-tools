@@ -9,7 +9,6 @@ require __DIR__ . '/../vendor/autoload.php';
 
 $application = new Application();
 
-// Register the command with Twig environment
 $application->add(new GenerateBoilerplateCommand());
 
 $application->run();
