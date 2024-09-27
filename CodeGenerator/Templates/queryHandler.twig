@@ -1,0 +1,18 @@
+<?php
+declare(strict_types=1);
+
+namespace App\UseCase\Query\{{ use_case_name }};
+
+use Kununu\CQRS\Query\QueryHandler as CQRSQueryHandler;
+
+final readonly class QueryHandler implements CQRSQueryHandler
+{
+    public function __construct()
+    {
+    }
+
+    public function handle(Query $query): void
+    {
+        // Your query logic here
+    }
+}

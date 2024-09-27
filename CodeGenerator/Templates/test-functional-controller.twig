@@ -1,0 +1,23 @@
+<?php
+declare(strict_types=1);
+
+namespace Tests\Functional\UseCase\{{ use_case_type }};
+
+use Kununu\TestingBundle\Test\RequestBuilder;
+use Kununu\TestingBundle\Test\WebTestCase;
+
+class {{ class_name }}ControllerTest extends WebTestCase
+{
+    private const string URI = 'http://example.com';
+
+    public function testReturnsSuccessfulResponse()
+    {
+        $response = $this->doRequest(
+            RequestBuilder::aGetRequest()
+                ->withUri(self::URI)
+                ->withHeader('Content-type', 'application/json')
+        );
+
+        self::assertTrue($response->isSuccessful());
+    }
+}

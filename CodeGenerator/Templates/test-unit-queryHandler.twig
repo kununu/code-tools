@@ -1,0 +1,26 @@
+<?php
+declare(strict_types=1);
+
+namespace App\Tests\Unit\UseCase\Query\{{ use_case_name }};
+
+use App\UseCase\Query\{{ class_name }}\Query;
+use App\UseCase\Query\{{ class_name }}\QueryHandler;
+use PHPUnit\Framework\TestCase;
+
+class QueryHandlerTest extends TestCase
+{
+    private Query $query;
+    private QueryHandler $queryHandler;
+
+    public function testQueryHandler()
+    {
+        $this->markTestSkipped('This test has not been implemented yet.');
+        $this->queryHandler->handle($this->query);
+    }
+
+    protected function setUp(): void
+    {
+        $this->query = new Query();
+        $this->queryHandler = new QueryHandler();
+    }
+}
