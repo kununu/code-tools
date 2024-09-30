@@ -9,6 +9,7 @@ use Kununu\Utilities\Serialization\Attribute\SerializedName;
 use Kununu\Utilities\Validator\ConstraintsBuilderConfig;
 use Symfony\Component\Validator\Constraints\NotNull;
 
+#[ConstraintsBuilderConfig(allowExtraFields: false)]
 final class {{ file.className }} extends AbstractValidatedDTO implements ToArray
 {
     #[SerializedName('your_property')]

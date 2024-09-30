@@ -207,7 +207,7 @@ class GenerateBoilerplateCommand extends Command
                     className: sprintf('%sControllerTest', $answers->useCaseName),
                     type: 'controller-test',
                     template: 'test-functional-controller.twig',
-                    fqcn: sprintf('App\\Tests\\Functional\\Controller\\%s\\%sControllerTest', $answers->controllerNamespace, $useCaseName)
+                    fqcn: sprintf('App\\Tests\\Functional\\%s\\%sControllerTest', $answers->controllerNamespace, $useCaseName)
                 ),
             ],
             default => throw new InvalidArgumentException('Invalid generation type.'),

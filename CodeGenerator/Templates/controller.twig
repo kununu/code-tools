@@ -13,13 +13,13 @@ use Kununu\CQRS\Bundle\Controller\AbstractCommandQueryBusController;
 use Kununu\ResponseSerializationBundle\Response\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 
-final class {{ file.className }}Controller extends AbstractCommandQueryBusController
+final class {{ file.className }} extends AbstractCommandQueryBusController
 {
     public function __invoke(
         #[MapRequestPayload(resolver: {{ resolver.className }}::class)]
         {{ requestDto.className }} $requestData,
     ): JsonResponse {
-        $this->commandBus->handle(new {{ commandOrQuery.fileName }}($data));
+        $this->commandBus->handle(new {{ commandOrQuery.fileName }}($requestData));
 
         return JsonResponse::ok();
     }
