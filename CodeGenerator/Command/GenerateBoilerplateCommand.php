@@ -3,13 +3,17 @@ declare(strict_types=1);
 
 namespace CodeGenerator\Command;
 
+use CodeGenerator\DTO\AnswersDTO;
+use CodeGenerator\DTO\FileDTO;
 use InvalidArgumentException;
 use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ChoiceQuestion;
+use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Question\Question;
+use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Filesystem\Filesystem;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
@@ -45,14 +49,14 @@ class GenerateBoilerplateCommand extends Command
 
         $answers = $this->askQuestions($helper, $input, $output);
 
-        $this->generateFiles($answers, $output);
+        $this->generateFiles($answers, $input, $output);
 
         $output->writeln('Boilerplate generation completed.');
 
         return Command::SUCCESS;
     }
 
-    private function askQuestions($helper, InputInterface $input, OutputInterface $output): array
+    private function askQuestions($helper, InputInterface $input, OutputInterface $output): AnswersDTO
     {
         $questions = [
             'What are we generating? (Controller or Command)' => [
@@ -92,85 +96,107 @@ class GenerateBoilerplateCommand extends Command
             $answers[] = $helper->ask($input, $output, $questionObject);
         }
 
-        return $answers;
+        return new AnswersDTO(...$answers);
     }
 
-    private function generateFiles(array $answers, OutputInterface $output): void
+    private function generateFiles(AnswersDTO $answers, InputInterface $input, OutputInterface $output): void
     {
-        [$generationType, $useCaseName, $controllerNamespace, $useCaseType] = $answers;
+        $files = $this->getFilesList($answers);
 
-        // Prepare formatted controller namespace path without double backslashes
-        $namespacePrefix = 'Controller';
-        $formattedControllerNamespace = $controllerNamespace ? $namespacePrefix . '\\' . trim($controllerNamespace, '\\') : $namespacePrefix;
+        $io = new SymfonyStyle($input, $output);
+        $io->title('These are the files to be generated:');
 
-        $useCaseName = ucfirst($useCaseName);
+        $sortedFiles = $files;
+        usort($sortedFiles, static fn(FileDTO $a, FileDTO $b) => strcmp($a->filePath, $b->filePath));
 
-        $controllerName = str_replace('\\', '/', $formattedControllerNamespace);
-        $files = match ($generationType) {
-            self::CONTROLLER => [
-                'Controller.php'     => sprintf('src/%s/%sController.php', $controllerName, $useCaseName),
-                'services.yaml'      => sprintf('src/UseCase/%s/%s/Resources/config/services.yaml', $useCaseType, $useCaseName),
-                'readme.md'          => sprintf('src/UseCase/%s/%s/README.md', $useCaseType, $useCaseName),
-                'ControllerTest.php' => sprintf('tests/Functional/Controller/%s/%sControllerTest.php', $useCaseName, $useCaseName),
-            ],
-            default => throw new InvalidArgumentException('Invalid generation type.'),
-        };
+        foreach ($sortedFiles as $file) {
+            $io->text($file->filePath);
+        }
 
-        $useCaseTypeSpecificFiles = match ($useCaseType) {
-            self::QUERY => [
-                'Query.php'            => sprintf('src/UseCase/%s/%s/Query.php', $useCaseType, $useCaseName),
-                'QueryHandler.php'     => sprintf('src/UseCase/%s/%s/QueryHandler.php', $useCaseType, $useCaseName),
-                'QueryTest.php'        => sprintf('tests/Unit/UseCase/%s/%s/QueryTest.php', $useCaseType, $useCaseName),
-                'QueryHandlerTest.php' => sprintf('tests/Unit/UseCase/%s/%s/QueryHandlerTest.php', $useCaseType, $useCaseName),
-            ],
-            self::COMMAND => [
-                'Command.php'            => sprintf('src/UseCase/%s/%s/Command.php', $useCaseType, $useCaseName),
-                'CommandHandler.php'     => sprintf('src/UseCase/%s/%s/CommandHandler.php', $useCaseType, $useCaseName),
-                'CommandTest.php'        => sprintf('tests/Unit/UseCase/%s/%s/CommandTest.php', $useCaseType, $useCaseName),
-                'CommandHandlerTest.php' => sprintf('tests/Unit/UseCase/%s/%s/CommandHandlerTest.php', $useCaseType, $useCaseName),
-            ],
-            default => throw new InvalidArgumentException('Invalid generation type.'),
-        };
+        $confirm = new ConfirmationQuestion(
+            'Continue with file generation?',
+            true,
+            '/^(y|j)/i'
+        );
 
-        $files = array_merge($files, $useCaseTypeSpecificFiles);
+        if (!$io->askQuestion($confirm)) {
+            $output->writeln('File generation aborted.');
 
-        foreach ($files as $fileName => $filePath) {
-            $output->writeln(sprintf('Generating %s...', $fileName));
-            $this->generateFile($fileName, $filePath, $useCaseName, $useCaseType, $formattedControllerNamespace);
+            return;
+        }
+
+        foreach ($files as $file) {
+            $output->writeln(sprintf('Generating %s...', $file->fileName));
+            $this->generateFile($file, $answers);
         }
     }
 
-    private function generateFile(string $fileName, string $filePath, string $useCaseName, string $useCaseType, string $controllerNamespace): void
+    private function getFilesList(AnswersDTO $answers): array
     {
-        $templateFileName = match (true) {
-            str_contains($fileName, 'UnitTest')           => 'test-unit.twig',
-            str_contains($fileName, 'FunctionalTest')     => 'test-functional.twig',
-            str_contains($fileName, 'QueryTest')          => 'test-unit-query.twig',
-            str_contains($fileName, 'QueryHandlerTest')   => 'test-unit-queryHandler.twig',
-            str_contains($fileName, 'CommandTest')        => 'test-unit-command.twig',
-            str_contains($fileName, 'CommandHandlerTest') => 'test-unit-commandHandler.twig',
-            str_contains($fileName, 'ControllerTest')     => 'test-functional-controller.twig',
-            str_contains($fileName, 'Controller')         => 'controller.twig',
-            str_contains($fileName, 'CommandHandler')     => 'commandHandler.twig',
-            str_contains($fileName, 'Command')            => 'command.twig',
-            str_contains($fileName, 'QueryHandler')       => 'queryHandler.twig',
-            str_contains($fileName, 'Query')              => 'query.twig',
-            str_contains($fileName, 'services')           => 'services.yaml.twig',
-            str_contains($fileName, 'readme')             => 'readme.twig',
-            default                                       => throw new RuntimeException("Template for {$fileName} not found.")
+        $namespacePrefix = 'Controller';
+        $formattedControllerNamespace = $answers->controllerNamespace ? $namespacePrefix . '\\' . trim($answers->controllerNamespace, '\\') : $namespacePrefix;
+
+        $useCaseName = ucfirst($answers->useCaseName);
+
+        $controllerName = str_replace('\\', '/', $formattedControllerNamespace);
+        $files = match ($answers->generationType) {
+            self::CONTROLLER => [
+                new FileDTO('Controller.php', sprintf('src/%s/%sController.php', $controllerName, $useCaseName)),
+                new FileDTO('services.yaml', sprintf('src/UseCase/%s/%s/Resources/config/services.yaml', $answers->useCaseType, $useCaseName)),
+                new FileDTO('readme.md', sprintf('src/UseCase/%s/%s/README.md', $answers->useCaseType, $useCaseName)),
+                new FileDTO('ControllerTest.php', sprintf('tests/Functional/Controller/%s/%sControllerTest.php', $answers->controllerNamespace, $useCaseName)),
+            ],
+            default => throw new InvalidArgumentException('Invalid generation type.'),
         };
 
-        // Correctly format the controller namespace
-        $formattedNamespace = rtrim($controllerNamespace, '\\');
+        $useCaseTypeSpecificFiles = match ($answers->useCaseType) {
+            self::QUERY => [
+                new FileDTO('Query.php', sprintf('src/UseCase/%s/%s/Query.php', $answers->useCaseType, $useCaseName)),
+                new FileDTO('QueryHandler.php', sprintf('src/UseCase/%s/%s/QueryHandler.php', $answers->useCaseType, $useCaseName)),
+                new FileDTO('QueryTest.php', sprintf('tests/Unit/UseCase/%s/%s/QueryTest.php', $answers->useCaseType, $useCaseName)),
+                new FileDTO('QueryHandlerTest.php', sprintf('tests/Unit/UseCase/%s/%s/QueryHandlerTest.php', $answers->useCaseType, $useCaseName)),
+            ],
+            self::COMMAND => [
+                new FileDTO('Command.php', sprintf('src/UseCase/%s/%s/Command.php', $answers->useCaseType, $useCaseName)),
+                new FileDTO('CommandHandler.php', sprintf('src/UseCase/%s/%s/CommandHandler.php', $answers->useCaseType, $useCaseName)),
+                new FileDTO('CommandTest.php', sprintf('tests/Unit/UseCase/%s/%s/CommandTest.php', $answers->useCaseType, $useCaseName)),
+                new FileDTO('CommandHandlerTest.php', sprintf('tests/Unit/UseCase/%s/%s/CommandHandlerTest.php', $answers->useCaseType, $useCaseName)),
+            ],
+            default => throw new InvalidArgumentException('Invalid generation type.'),
+        };
 
-        // Render the template with controller namespace as well
+        return array_merge($files, $useCaseTypeSpecificFiles);
+    }
+
+    private function generateFile(FileDTO $file, AnswersDTO $answers): void
+    {
+        $templateFileName = match (true) {
+            str_contains($file->fileName, 'UnitTest')           => 'test-unit.twig',
+            str_contains($file->fileName, 'FunctionalTest')     => 'test-functional.twig',
+            str_contains($file->fileName, 'QueryTest')          => 'test-unit-query.twig',
+            str_contains($file->fileName, 'QueryHandlerTest')   => 'test-unit-queryHandler.twig',
+            str_contains($file->fileName, 'CommandTest')        => 'test-unit-command.twig',
+            str_contains($file->fileName, 'CommandHandlerTest') => 'test-unit-commandHandler.twig',
+            str_contains($file->fileName, 'ControllerTest')     => 'test-functional-controller.twig',
+            str_contains($file->fileName, 'Controller')         => 'controller.twig',
+            str_contains($file->fileName, 'CommandHandler')     => 'commandHandler.twig',
+            str_contains($file->fileName, 'Command')            => 'command.twig',
+            str_contains($file->fileName, 'QueryHandler')       => 'queryHandler.twig',
+            str_contains($file->fileName, 'Query')              => 'query.twig',
+            str_contains($file->fileName, 'services')           => 'services.yaml.twig',
+            str_contains($file->fileName, 'readme')             => 'readme.twig',
+            default                                             => throw new RuntimeException("Template for {$file->fileName} not found.")
+        };
+
+        $formattedNamespace = rtrim($answers->controllerNamespace, '\\');
+
         $content = $this->twig->render($templateFileName, [
-            'use_case_name'        => $useCaseName,
-            'use_case_type'        => $useCaseType,
+            'use_case_name'        => $answers->useCaseName,
+            'use_case_type'        => $answers->useCaseType,
             'controller_namespace' => $formattedNamespace,
-            'class_name'           => $useCaseName,
+            'class_name'           => $answers->useCaseName,
         ]);
 
-        $this->filesystem->dumpFile($filePath, $content);
+        $this->filesystem->dumpFile($file->filePath, $content);
     }
 }

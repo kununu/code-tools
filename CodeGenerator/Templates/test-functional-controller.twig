@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Tests\Functional\UseCase\{{ use_case_type }};
+namespace App\Tests\Functional\{{ controller_namespace|replace({'\\\\': '\\'}) }};
 
 use Kununu\TestingBundle\Test\RequestBuilder;
 use Kununu\TestingBundle\Test\WebTestCase;
@@ -10,7 +10,7 @@ class {{ class_name }}ControllerTest extends WebTestCase
 {
     private const string URI = 'http://example.com';
 
-    public function testReturnsSuccessfulResponse()
+    public function testReturnsSuccessfulResponse(): void
     {
         $response = $this->doRequest(
             RequestBuilder::aGetRequest()

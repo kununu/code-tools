@@ -4,10 +4,13 @@ declare(strict_types=1);
 namespace App\{{ controller_namespace|replace({'\\\\': '\\'}) }};
 
 use Kununu\CQRS\Bundle\Controller\AbstractCommandQueryBusController;
+use Kununu\ResponseSerializationBundle\Response\JsonResponse;
 
 final class {{ class_name }}Controller extends AbstractCommandQueryBusController
 {
     public function __invoke(Request $request): JsonResponse {
-        return $this->commandBus->handle(new Command($data));
+        $this->commandBus->handle(new Command($data));
+
+        return JsonResponse::ok();
     }
 }

@@ -1,3 +1,7 @@
 services:
-    App\{{ namespace }}\{{ class_name }}Command:
-    tags: ['console.command']
+  _defaults:
+    autowire: true
+    autoconfigure: true
+
+  App\UseCase\{{ use_case_type }}\{{ use_case_name }}:
+    resource: '../../../../../UseCase/{{ use_case_type }}/{{ use_case_name }}/*'

@@ -5,7 +5,16 @@ declare(strict_types=1);
 use CodeGenerator\Command\GenerateBoilerplateCommand;
 use Symfony\Component\Console\Application;
 
-require __DIR__ . '/../vendor/autoload.php';
+$files = [__DIR__ . '/../vendor/autoload.php', __DIR__ . '/../../../autoload.php'];
+$loader = null;
+
+foreach ($files as $file) {
+    if (file_exists($file)) {
+        $loader = require $file;
+
+        break;
+    }
+}
 
 $application = new Application();
 
