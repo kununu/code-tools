@@ -1,0 +1,34 @@
+<?php
+declare(strict_types=1);
+
+namespace {{ file.namespace }};
+
+use Kununu\ResponseSerializationBundle\Exception\AbstractValidationException;
+
+final class ValidationException extends AbstractValidationException
+{
+    private array $errors;
+
+    public function __construct(array $errors = [])
+    {
+        foreach ($errors as $field => $errorDetail) {
+            $this->errors[$field] = $errorDetail['message'];
+        }
+
+        parent::__construct('Validation error', 400);
+    }
+
+    public function getFields(): array
+    {
+        return $this->errors;
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'code'    => $this->getCode(),
+            'message' => $this->getMessage(),
+            'errors'  => $this->getFields(),
+        ];
+    }
+}

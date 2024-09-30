@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Tests\Functional\{{ controller_namespace|replace({'\\\\': '\\'}) }};
+namespace {{ file.namespace }};
 
 use Kununu\TestingBundle\Test\RequestBuilder;
 use Kununu\TestingBundle\Test\WebTestCase;
 
-class {{ class_name }}ControllerTest extends WebTestCase
+class {{ file.className }}ControllerTest extends WebTestCase
 {
     private const string URI = 'http://example.com';
 

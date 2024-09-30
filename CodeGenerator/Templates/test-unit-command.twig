@@ -1,9 +1,10 @@
+{% set command = files.getFileByType("command") %}
 <?php
 declare(strict_types=1);
 
-namespace App\Tests\Unit\UseCase\Command\{{ use_case_name }};
+namespace {{ file.namespace }};
 
-use App\UseCase\Command\{{ class_name }}\Command;
+use {{ command.fqcn }};
 use PHPUnit\Framework\TestCase;
 
 class CommandTest extends TestCase

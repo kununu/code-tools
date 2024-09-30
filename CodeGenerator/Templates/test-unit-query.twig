@@ -1,9 +1,10 @@
+{% set query = files.getFileByType("query") %}
 <?php
 declare(strict_types=1);
 
-namespace App\Tests\Unit\UseCase\Query\{{ use_case_name }};
+namespace {{ file.namespace }};
 
-use App\UseCase\Query\{{ class_name }}\Query;
+use {{ query.fqcn }};
 use PHPUnit\Framework\TestCase;
 
 class QueryTest extends TestCase

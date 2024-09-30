@@ -1,0 +1,24 @@
+<?php
+declare(strict_types=1);
+
+namespace {{ file.namespace }};
+
+use Kununu\Collection\Convertible\ToArray;
+use Kununu\Utilities\DTO\Validated\AbstractValidatedDTO;
+use Kununu\Utilities\Serialization\Attribute\SerializedName;
+use Kununu\Utilities\Validator\ConstraintsBuilderConfig;
+use Symfony\Component\Validator\Constraints\NotNull;
+
+final class {{ file.className }} extends AbstractValidatedDTO implements ToArray
+{
+    #[SerializedName('your_property')]
+    #[NotNull]
+    public readonly string $yourProperty;
+
+    public function toArray(): array
+    {
+        return [
+            'yourProperty' => $this->yourProperty,
+        ];
+    }
+}

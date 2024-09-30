@@ -3,5 +3,5 @@ services:
     autowire: true
     autoconfigure: true
 
-  App\UseCase\{{ use_case_type }}\{{ use_case_name }}:
-    resource: '../../../../../UseCase/{{ use_case_type }}/{{ use_case_name }}/*'
+  {{ file.namespace }}:
+    resource: '../../../../../UseCase/{{ file.className }}/*'

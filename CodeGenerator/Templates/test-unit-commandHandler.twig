@@ -1,10 +1,12 @@
+{% set command = files.getFileByType("command") %}
+{% set commandHandler = files.getFileByType("command-handler") %}
 <?php
 declare(strict_types=1);
 
-namespace App\Tests\Unit\UseCase\Command\{{ use_case_name }};
+namespace {{ file.namespace }};
 
-use App\UseCase\Command\{{ class_name }}\Command;
-use App\UseCase\Command\{{ class_name }}\CommandHandler;
+use {{ command.fqcn }};
+use {{ commandHandler.fqcn }};
 use PHPUnit\Framework\TestCase;
 
 class CommandHandlerTest extends TestCase

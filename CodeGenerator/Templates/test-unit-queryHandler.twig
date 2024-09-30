@@ -1,10 +1,12 @@
+{% set query = files.getFileByType("query") %}
+{% set queryHandler = files.getFileByType("query-handler") %}
 <?php
 declare(strict_types=1);
 
-namespace App\Tests\Unit\UseCase\Query\{{ use_case_name }};
+namespace {{ file.namespace }};
 
-use App\UseCase\Query\{{ class_name }}\Query;
-use App\UseCase\Query\{{ class_name }}\QueryHandler;
+use {{ query.fqcn }};
+use {{ queryHandler.fqcn }};
 use PHPUnit\Framework\TestCase;
 
 class QueryHandlerTest extends TestCase

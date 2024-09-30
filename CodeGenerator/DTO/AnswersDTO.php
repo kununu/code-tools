@@ -9,6 +9,7 @@ final readonly class AnswersDTO
         public string $generationType,
         public string $useCaseName,
         public string $controllerNamespace,
+        public string $requestResolverNamespace,
         public string $useCaseType
     ) {
     }

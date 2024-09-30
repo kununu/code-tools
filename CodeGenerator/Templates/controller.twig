@@ -1,15 +1,25 @@
+{% set resolver = files.getFileByType("resolver") %}
+{% set requestDto = files.getFileByType("request-dto") %}
+{% set commandOrQuery = files.getFileByType(answers.useCaseType) %}
 <?php
 declare(strict_types=1);
 
-namespace App\{{ controller_namespace|replace({'\\\\': '\\'}) }};
+namespace {{ file.namespace }};
 
+use {{ requestDto.fqcn }};
+use {{ resolver.fqcn }};
+use {{ commandOrQuery.fqcn }};
 use Kununu\CQRS\Bundle\Controller\AbstractCommandQueryBusController;
 use Kununu\ResponseSerializationBundle\Response\JsonResponse;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 
-final class {{ class_name }}Controller extends AbstractCommandQueryBusController
+final class {{ file.className }}Controller extends AbstractCommandQueryBusController
 {
-    public function __invoke(Request $request): JsonResponse {
-        $this->commandBus->handle(new Command($data));
+    public function __invoke(
+        #[MapRequestPayload(resolver: {{ resolver.className }}::class)]
+        {{ requestDto.className }} $requestData,
+    ): JsonResponse {
+        $this->commandBus->handle(new {{ commandOrQuery.fileName }}($data));
 
         return JsonResponse::ok();
     }
