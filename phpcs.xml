@@ -15,6 +15,7 @@
     <!-- Customize Rules according to project needs -->
     <rule ref="Kununu.Files.LineLength">
         <exclude-pattern>*/Migrations/*</exclude-pattern>
+        <exclude-pattern>*/GenerateBoilerplateCommand</exclude-pattern>
         <properties>
             <property name="ignoreComments" value="true"/>
             <property name="ignoreUseStatements" value="true"/>

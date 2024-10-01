@@ -105,14 +105,12 @@ class GenerateBoilerplateCommand extends Command
 
     private function generateFiles(AnswersDTO $answers, InputInterface $input, OutputInterface $output): void
     {
-        $files = $this->getFilesList($answers);
-        $filesDTO = new FilesDTO($files);
+        $filesDTO = $this->getFilesList($answers);
 
         $io = new SymfonyStyle($input, $output);
         $io->title('These are the files to be generated:');
 
         $sortedFiles = $filesDTO->getAllFiles();
-        usort($sortedFiles, static fn(FileDTO $a, FileDTO $b) => strcmp($a->filePath, $b->filePath));
 
         foreach ($sortedFiles as $file) {
             $io->text($file->filePath);
@@ -125,12 +123,12 @@ class GenerateBoilerplateCommand extends Command
         }
 
         foreach ($sortedFiles as $file) {
-            $output->writeln(sprintf('Generating %s...', $file->fileName));
+            $output->writeln(sprintf('Generating %s...', $file->filePath));
             $this->generateFile($file, $answers, $filesDTO);
         }
     }
 
-    private function getFilesList(AnswersDTO $answers): array
+    private function getFilesList(AnswersDTO $answers): FilesDTO
     {
         $namespacePrefix = 'Controller';
         $formattedControllerNamespace = $answers->controllerNamespace ? $namespacePrefix . '\\' . trim($answers->controllerNamespace, '\\') : $namespacePrefix;
@@ -147,67 +145,76 @@ class GenerateBoilerplateCommand extends Command
         $files = match ($answers->generationType) {
             self::CONTROLLER => [
                 new FileDTO(
-                    fileName: 'Controller',
                     filePath: sprintf('src/%s/%sController.php', $controllerName, $useCaseName),
                     namespace: sprintf('App\\%s', $formattedControllerNamespace),
                     className: sprintf('%sController', $answers->useCaseName),
                     type: 'controller',
-                    template: 'controller.twig',
+                    template: 'Controller/controller.twig',
                     fqcn: sprintf('App\\%s\\%sController', $formattedControllerNamespace, $useCaseName)
                 ),
                 new FileDTO(
-                    fileName: 'RequestDTO',
                     filePath: sprintf('src/%s/DTO/%s.php', $resolverNamespace, $useCaseName),
                     namespace: sprintf('App\\%s\\DTO', str_replace('/', '\\', $resolverNamespace)),
                     className: sprintf('%s', $answers->useCaseName),
                     type: 'request-dto',
-                    template: 'request-dto.twig',
+                    template: 'Controller/request-dto.twig',
                     fqcn: sprintf('App\\%s\\DTO\\%s', str_replace('/', '\\', $resolverNamespace), $useCaseName)
                 ),
                 new FileDTO(
-                    fileName: 'RequestResolver',
                     filePath: sprintf('src/%s/Resolver/%sResolver.php', $resolverNamespace, $useCaseName),
                     namespace: sprintf('App\\%s\\Resolver', str_replace('/', '\\', $resolverNamespace)),
                     className: sprintf('%sResolver', $answers->useCaseName),
                     type: 'resolver',
-                    template: 'request-resolver.twig',
+                    template: 'Controller/request-resolver.twig',
                     fqcn: sprintf('App\\%s\\Resolver\\%sResolver', str_replace('/', '\\', $resolverNamespace), $useCaseName)
                 ),
                 new FileDTO(
-                    fileName: 'ValidationException',
                     filePath: sprintf('src/%s/Exception/ValidationException.php', $resolverNamespace),
                     namespace: sprintf('App\\%s\\Exception', str_replace('/', '\\', $resolverNamespace)),
                     className: 'ValidationException',
                     type: 'validation-exception',
-                    template: 'request-validation-exception.twig',
+                    template: 'Controller/request-validation-exception.twig',
                     fqcn: sprintf('App\\%s\\Exception\\ValidationException', str_replace('/', '\\', $resolverNamespace))
                 ),
                 new FileDTO(
-                    fileName: 'services',
                     filePath: sprintf('src/UseCase/%s/%s/Resources/config/services.yaml', $answers->useCaseType, $useCaseName),
                     namespace: sprintf('App\UseCase\%s\%s', $answers->useCaseType, $useCaseName),
                     className: sprintf('%s/%s', $answers->useCaseType, $useCaseName),
                     type: 'services',
-                    template: 'services.yaml.twig',
+                    template: 'Misc/services.yaml.twig',
                     fqcn: sprintf('App\\UseCase\\%s\\%s\\Resources\\config\\services', $answers->useCaseType, $useCaseName)
                 ),
                 new FileDTO(
-                    fileName: 'readme',
                     filePath: sprintf('src/UseCase/%s/%s/README.md', $answers->useCaseType, $useCaseName),
                     namespace: '',
                     className: ucfirst($answers->useCaseName),
                     type: 'readme',
-                    template: 'readme.twig',
+                    template: 'Misc/readme.twig',
                     fqcn: sprintf('App\\UseCase\\%s\\%s\\README', $answers->useCaseType, $useCaseName)
                 ),
                 new FileDTO(
-                    fileName: 'ControllerTest',
                     filePath: sprintf('tests/Functional/Controller/%s/%sControllerTest.php', $answers->controllerNamespace, $useCaseName),
-                    namespace: sprintf('App\\Tests\\Functional\\Controller\\%s', $formattedControllerNamespace),
+                    namespace: sprintf('App\\Tests\\Functional\\%s', $formattedControllerNamespace),
                     className: sprintf('%sControllerTest', $answers->useCaseName),
                     type: 'controller-test',
-                    template: 'test-functional-controller.twig',
+                    template: 'Tests/test-functional-controller.twig',
                     fqcn: sprintf('App\\Tests\\Functional\\%s\\%sControllerTest', $answers->controllerNamespace, $useCaseName)
+                ),
+                new FileDTO(
+                    filePath: sprintf('src/UseCase/%s/%s/Infrastructure/Repository.php', $answers->useCaseType, $useCaseName),
+                    namespace: sprintf('App\\UseCase\\%s\\%s\\Infrastructure', $answers->useCaseType, $useCaseName),
+                    className: 'Repository',
+                    type: 'repository',
+                    template: 'CQRS/repository.twig',
+                    fqcn: sprintf('App\\UseCase\\%s\\%s\\Infrastructure\\Repository', $answers->useCaseType, $useCaseName)
+                ),
+                new FileDTO(
+                    filePath: sprintf('src/UseCase/%s/%s/RepositoryInterface.php', $answers->useCaseType, $useCaseName),
+                    namespace: sprintf('App\\UseCase\\%s\\%s', $answers->useCaseType, $useCaseName),
+                    className: 'RepositoryInterface',
+                    type: 'repository-interface',
+                    template: 'CQRS/repositoryInterface.twig',
+                    fqcn: sprintf('App\\UseCase\\%s\\%s\\RepositoryInterface', $answers->useCaseType, $useCaseName)
                 ),
             ],
             default => throw new InvalidArgumentException('Invalid generation type.'),
@@ -216,99 +223,84 @@ class GenerateBoilerplateCommand extends Command
         $useCaseTypeSpecificFiles = match ($answers->useCaseType) {
             self::QUERY => [
                 new FileDTO(
-                    fileName: 'Query',
                     filePath: sprintf('src/UseCase/%s/%s/Query.php', $answers->useCaseType, $useCaseName),
                     namespace: sprintf('App\\UseCase\\%s\\%s', $answers->useCaseType, $useCaseName),
-                    className: sprintf('%sQuery', $answers->useCaseName),
+                    className: 'Query',
                     type: 'query',
-                    template: 'query.twig',
+                    template: 'CQRS/query.twig',
                     fqcn: sprintf('App\\UseCase\\%s\\%s\\Query', $answers->useCaseType, $useCaseName)
                 ),
                 new FileDTO(
-                    fileName: 'QueryHandler',
                     filePath: sprintf('src/UseCase/%s/%s/QueryHandler.php', $answers->useCaseType, $useCaseName),
                     namespace: sprintf('App\\UseCase\\%s\\%s', $answers->useCaseType, $useCaseName),
-                    className: sprintf('%sQueryHandler', $answers->useCaseName),
+                    className: 'QueryHandler',
                     type: 'query-handler',
-                    template: 'queryHandler.twig',
+                    template: 'CQRS/queryHandler.twig',
                     fqcn: sprintf('App\\UseCase\\%s\\%s\\QueryHandler', $answers->useCaseType, $useCaseName)
                 ),
                 new FileDTO(
-                    fileName: 'QueryTest',
                     filePath: sprintf('tests/Unit/UseCase/%s/%s/QueryTest.php', $answers->useCaseType, $useCaseName),
                     namespace: sprintf('App\\Tests\\Unit\\UseCase\\%s\\%s', $answers->useCaseType, $useCaseName),
-                    className: sprintf('%sQueryTest', $answers->useCaseName),
+                    className: 'QueryTest',
                     type: 'query-test',
-                    template: 'test-unit-query.twig',
+                    template: 'Tests/test-unit-query.twig',
                     fqcn: sprintf('App\\Tests\\Unit\\UseCase\\%s\\%s\\QueryTest', $answers->useCaseType, $useCaseName)
                 ),
                 new FileDTO(
-                    fileName: 'QueryHandlerTest',
                     filePath: sprintf('tests/Unit/UseCase/%s/%s/QueryHandlerTest.php', $answers->useCaseType, $useCaseName),
                     namespace: sprintf('App\\Tests\\Unit\\UseCase\\%s\\%s', $answers->useCaseType, $useCaseName),
-                    className: sprintf('%sQueryHandlerTest', $answers->useCaseName),
+                    className: 'QueryHandlerTest',
                     type: 'query-handler-test',
-                    template: 'test-unit-queryHandler.twig',
+                    template: 'Tests/test-unit-queryHandler.twig',
                     fqcn: sprintf('App\\Tests\\Unit\\UseCase\\%s\\%s\\QueryHandlerTest', $answers->useCaseType, $useCaseName)
                 ),
             ],
             self::COMMAND => [
                 new FileDTO(
-                    fileName: 'Command',
                     filePath: sprintf('src/UseCase/%s/%s/Command.php', $answers->useCaseType, $useCaseName),
                     namespace: sprintf('App\\UseCase\\%s\\%s', $answers->useCaseType, $useCaseName),
-                    className: sprintf('%sCommand', $answers->useCaseName),
+                    className: 'Command',
                     type: 'command',
-                    template: 'command.twig',
+                    template: 'CQRS/command.twig',
                     fqcn: sprintf('App\\UseCase\\%s\\%s\\Command', $answers->useCaseType, $useCaseName)
                 ),
                 new FileDTO(
-                    fileName: 'CommandHandler',
                     filePath: sprintf('src/UseCase/%s/%s/CommandHandler.php', $answers->useCaseType, $useCaseName),
                     namespace: sprintf('App\\UseCase\\%s\\%s', $answers->useCaseType, $useCaseName),
-                    className: sprintf('%sCommandHandler', $answers->useCaseName),
+                    className: 'CommandHandler',
                     type: 'command-handler',
-                    template: 'commandHandler.twig',
+                    template: 'CQRS/commandHandler.twig',
                     fqcn: sprintf('App\\UseCase\\%s\\%s\\CommandHandler', $answers->useCaseType, $useCaseName)
                 ),
                 new FileDTO(
-                    fileName: 'CommandTest',
                     filePath: sprintf('tests/Unit/UseCase/%s/%s/CommandTest.php', $answers->useCaseType, $useCaseName),
                     namespace: sprintf('App\\Tests\\Unit\\UseCase\\%s\\%s', $answers->useCaseType, $useCaseName),
-                    className: sprintf('%sCommandTest', $answers->useCaseName),
+                    className: 'CommandTest',
                     type: 'command-test',
-                    template: 'test-unit-command.twig',
+                    template: 'Tests/test-unit-command.twig',
                     fqcn: sprintf('App\\Tests\\Unit\\UseCase\\%s\\%s\\CommandTest', $answers->useCaseType, $useCaseName)
                 ),
                 new FileDTO(
-                    fileName: 'CommandHandlerTest',
                     filePath: sprintf('tests/Unit/UseCase/%s/%s/CommandHandlerTest.php', $answers->useCaseType, $useCaseName),
                     namespace: sprintf('App\\Tests\\Unit\\UseCase\\%s\\%s', $answers->useCaseType, $useCaseName),
-                    className: sprintf('%sCommandHandlerTest', $answers->useCaseName),
+                    className: 'CommandHandlerTest',
                     type: 'command-handler-test',
-                    template: 'test-unit-commandHandler.twig',
+                    template: 'Tests/test-unit-commandHandler.twig',
                     fqcn: sprintf('App\\Tests\\Unit\\UseCase\\%s\\%s\\CommandHandlerTest', $answers->useCaseType, $useCaseName)
                 ),
             ],
             default => throw new InvalidArgumentException('Invalid generation type.'),
         };
 
-        return array_merge($files, $useCaseTypeSpecificFiles);
+        return new FilesDTO(array_merge($files, $useCaseTypeSpecificFiles));
     }
 
     private function generateFile(FileDTO $file, AnswersDTO $answers, FilesDTO $filesDTO): void
     {
-        $formattedNamespace = rtrim($answers->controllerNamespace, '\\');
-
         $content = $this->twig->render($file->template, [
-            'use_case_name'        => $answers->useCaseName,
-            'use_case_type'        => $answers->useCaseType,
-            'controller_namespace' => $formattedNamespace,
-            'class_name'           => $answers->useCaseName,
-            'resolver_namespace'   => $answers->requestResolverNamespace ?? $formattedNamespace,
-            'file'                 => $file,
-            'files'                => $filesDTO,
-            'answers'              => $answers,
+            'file'    => $file,
+            'files'   => $filesDTO,
+            'answers' => $answers,
         ]);
 
         $this->filesystem->dumpFile($file->filePath, $content);

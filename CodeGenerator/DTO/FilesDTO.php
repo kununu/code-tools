@@ -24,8 +24,14 @@ final class FilesDTO
         return $this->files[strtolower($type)] ?? null;
     }
 
-    public function getAllFiles(): array
+    public function getAllFiles(bool $sorted = true): array
     {
-        return $this->files;
+        $files = $this->files;
+
+        if ($sorted) {
+            usort($files, static fn(FileDTO $a, FileDTO $b) => strcmp($a->filePath, $b->filePath));
+        }
+
+        return $files;
     }
 }

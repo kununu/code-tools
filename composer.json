@@ -46,9 +46,9 @@
     },
     "scripts": {
         "test-unit": "phpunit",
-        "cs-check": "phpcs --standard=phpcs.xml Kununu/ tests/",
-        "cs-fix": "phpcbf --standard=phpcs.xml Kununu/ tests/",
+        "cs-check": "phpcs --standard=phpcs.xml Kununu/ CodeGenerator/ tests/",
+        "cs-fix": "phpcbf --standard=phpcs.xml Kununu/ CodeGenerator/ tests/",
         "stan": "phpstan analyze",
-        "rector": "rector process --dry-run Kununu/ tests/"
+        "rector": "rector process --dry-run Kununu/ CodeGenerator/ tests/"
     }
 }

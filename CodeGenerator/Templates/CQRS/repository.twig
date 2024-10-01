@@ -1,0 +1,12 @@
+{% set repositoryInterface = files.getFileByType("repository-interface") %}
+<?php
+declare(strict_types=1);
+
+namespace {{ file.namespace }};
+
+use {{ repositoryInterface.fqcn }};
+use Kununu\Doctrine\DBAL\Repository\AbstractRepository;
+
+final class Repository extends AbstractRepository implements RepositoryInterface
+{
+}

@@ -19,7 +19,7 @@ final class {{ file.className }} extends AbstractCommandQueryBusController
         #[MapRequestPayload(resolver: {{ resolver.className }}::class)]
         {{ requestDto.className }} $requestData,
     ): JsonResponse {
-        $this->commandBus->handle(new {{ commandOrQuery.fileName }}($requestData));
+        $this->commandBus->handle(new {{ commandOrQuery.className }}($requestData));
 
         return JsonResponse::ok();
     }
