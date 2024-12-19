@@ -44,6 +44,14 @@ class EmptyLineAfterClassElementsSniff implements Sniff
                 break;
             }
 
+            if ($tokens[$nextToken]['code'] === T_FUNCTION) {
+                break;
+            }
+
+            if ($tokens[$nextToken]['code'] === T_CLOSE_CURLY_BRACKET) {
+                break;
+            }
+
             // Check if this is a property declaration by looking for variable or type declaration
             $isProperty = false;
             if ($tokens[$nextToken]['code'] === T_VARIABLE) {
@@ -74,6 +82,10 @@ class EmptyLineAfterClassElementsSniff implements Sniff
             // Check the next non-whitespace token
             $nextContent = $phpcsFile->findNext(T_WHITESPACE, $semicolon + 1, null, true);
             if ($nextContent === false) {
+                return;
+            }
+
+            if ($tokens[$nextContent]['code'] === T_CLOSE_CURLY_BRACKET) {
                 return;
             }
 
@@ -129,6 +141,10 @@ class EmptyLineAfterClassElementsSniff implements Sniff
         // Check the next non-whitespace token
         $nextContent = $phpcsFile->findNext(T_WHITESPACE, $semicolon + 1, null, true);
         if ($nextContent === false) {
+            return;
+        }
+
+        if ($tokens[$nextContent]['code'] === T_CLOSE_CURLY_BRACKET) {
             return;
         }
 

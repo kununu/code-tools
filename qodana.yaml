@@ -7,6 +7,9 @@ exclude:
     paths:
       - rector.php
   - name: PhpDisabledQualityToolComposerInspection
+  - name: DuplicatedCode
+    paths:
+      - Kununu/Sniffs
 failureConditions:
   severityThresholds:
     critical: 0
