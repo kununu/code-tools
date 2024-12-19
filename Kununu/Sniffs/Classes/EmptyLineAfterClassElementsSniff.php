@@ -44,6 +44,10 @@ class EmptyLineAfterClassElementsSniff implements Sniff
                 break;
             }
 
+            if ($tokens[$nextToken]['code'] === T_FUNCTION) {
+                break;
+            }
+
             // Check if this is a property declaration by looking for variable or type declaration
             $isProperty = false;
             if ($tokens[$nextToken]['code'] === T_VARIABLE) {
