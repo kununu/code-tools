@@ -86,19 +86,7 @@ class EmptyLineAfterClassElementsSniff implements Sniff
                 $fix = $phpcsFile->addFixableError($error, $semicolon, 'IncorrectLinesAfterLastProperty', $data);
 
                 if ($fix === true) {
-                    $phpcsFile->fixer->beginChangeset();
-                    if ($found > 1) {
-                        // Remove extra blank lines
-                        for ($i = ($semicolon + 1); $i < $nextContent; ++$i) {
-                            if ($tokens[$i]['line'] > ($tokens[$semicolon]['line'] + 2)) {
-                                $phpcsFile->fixer->replaceToken($i, '');
-                            }
-                        }
-                    } else {
-                        // Add a blank line
-                        $phpcsFile->fixer->addNewline($semicolon);
-                    }
-                    $phpcsFile->fixer->endChangeset();
+                    $this->fix($phpcsFile, $found, $semicolon, $nextContent, $tokens);
                 }
             }
         }
@@ -158,20 +146,28 @@ class EmptyLineAfterClassElementsSniff implements Sniff
             );
 
             if ($fix === true) {
-                $phpcsFile->fixer->beginChangeset();
-                if ($found > 1) {
-                    // Remove extra blank lines
-                    for ($i = ($semicolon + 1); $i < $nextContent; ++$i) {
-                        if ($tokens[$i]['line'] > ($tokens[$semicolon]['line'] + 2)) {
-                            $phpcsFile->fixer->replaceToken($i, '');
-                        }
-                    }
-                } else {
-                    // Add a blank line
-                    $phpcsFile->fixer->addNewline($semicolon);
-                }
-                $phpcsFile->fixer->endChangeset();
+                $this->fix($phpcsFile, $found, $semicolon, $nextContent, $tokens);
             }
         }
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $tokens
+     */
+    protected function fix(File $phpcsFile, mixed $found, int $semicolon, int $nextContent, array $tokens): void
+    {
+        $phpcsFile->fixer->beginChangeset();
+        if ($found > 1) {
+            // Remove extra blank lines
+            for ($i = ($semicolon + 1); $i < $nextContent; ++$i) {
+                if ($tokens[$i]['line'] > ($tokens[$semicolon]['line'] + 2)) {
+                    $phpcsFile->fixer->replaceToken($i, '');
+                }
+            }
+        } else {
+            // Add a blank line
+            $phpcsFile->fixer->addNewline($semicolon);
+        }
+        $phpcsFile->fixer->endChangeset();
     }
 }
