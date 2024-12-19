@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
 use Rector\Php83\Rector\ClassMethod\AddOverrideAttributeToOverriddenMethodsRector;
-use Rector\PHPUnit\Rector\StmtsAwareInterface\WithConsecutiveRector;
+use Rector\PHPUnit\PHPUnit100\Rector\StmtsAwareInterface\WithConsecutiveRector;
 use Rector\PHPUnit\Set\PHPUnitSetList;
 
 return RectorConfig::configure()
@@ -13,6 +13,6 @@ return RectorConfig::configure()
     ->withSkip([
         WithConsecutiveRector::class,
         AddOverrideAttributeToOverriddenMethodsRector::class,
-        __DIR__ . '/tests/bootstrap.php'
+        __DIR__ . '/tests/bootstrap.php',
     ])
     ->withImportNames();
