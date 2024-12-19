@@ -158,21 +158,19 @@ class EmptyLineAfterClassElementsSniff implements Sniff
             );
 
             if ($fix === true) {
+                $phpcsFile->fixer->beginChangeset();
                 if ($found > 1) {
                     // Remove extra blank lines
-                    $phpcsFile->fixer->beginChangeset();
                     for ($i = ($semicolon + 1); $i < $nextContent; ++$i) {
                         if ($tokens[$i]['line'] > ($tokens[$semicolon]['line'] + 2)) {
                             $phpcsFile->fixer->replaceToken($i, '');
                         }
                     }
-                    $phpcsFile->fixer->endChangeset();
                 } else {
                     // Add a blank line
-                    $phpcsFile->fixer->beginChangeset();
                     $phpcsFile->fixer->addNewline($semicolon);
-                    $phpcsFile->fixer->endChangeset();
                 }
+                $phpcsFile->fixer->endChangeset();
             }
         }
     }
