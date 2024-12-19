@@ -8,6 +8,7 @@
   - [Kununu.Files.LineLength](#kununufileslinelength)
   - [Kununu.Formatting.MethodSignatureArguments](#kununuformattingmethodsignaturearguments)
   - [Kununu.PHP.NoNewLineBeforeDeclareStrict](#kununuphpnonewlinebeforedeclarestrict)
+  - [Kununu.Classes.EmptyLineAfterClassElements](#kununuclassesemptylineafterclasselements)
 - [How to disable rules](#how-to-disable-rules)
 
 ## Out of the box usage
@@ -295,6 +296,31 @@ Is automatically fixable by phpcbf: `Yes`
 - ![kununu/code-tools](/docs/CodeSniffer/screenshots/cs-fix-no-empty-line.png)
 - **git diff**
 - ![kununu/code-tools](/docs/CodeSniffer/screenshots/git-diff-no-empty-line.png)
+</details>
+
+-----
+
+### Kununu.Classes.EmptyLineAfterClassElements
+| Property Name | Type | Default | 
+|---------------|------|---------|
+| none          | -    | -       |
+
+This sniff checks that there is a new line after the last class constant and last class property.
+
+Is automatically fixable by phpcbf: `Yes`
+
+```xml
+<rule ref="Kununu.Classes.EmptyLineAfterClassElements" />
+```
+<details>
+  <summary>See it in action</summary>
+
+- **phpcs**
+- ![kununu/code-tools](/docs/CodeSniffer/screenshots/cs-check-empty-line-after-class-elements.png)
+- **phpcbf**
+- ![kununu/code-tools](/docs/CodeSniffer/screenshots/cs-fix-empty-line-after-class-elements.png)
+- **git diff**
+- ![kununu/code-tools](/docs/CodeSniffer/screenshots/git-diff-empty-line-after-class-elements.png)
 </details>
 
 -----
