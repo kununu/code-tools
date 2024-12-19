@@ -85,6 +85,10 @@ class EmptyLineAfterClassElementsSniff implements Sniff
                 return;
             }
 
+            if ($tokens[$nextContent]['code'] === T_CLOSE_CURLY_BRACKET) {
+                return;
+            }
+
             // If there's not exactly one blank line after the last property
             if ($tokens[$nextContent]['line'] !== ($tokens[$semicolon]['line'] + 2)) {
                 $error = 'Expected 1 blank line after the last property declaration; %s found';
