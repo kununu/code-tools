@@ -12,7 +12,7 @@ class Fixme
     private const string SECOND = 'second';
 
     protected string $propertyOne;
-    private int $propertyTwo;
+    private readonly int $propertyTwo;
 
     public function __invoke(string $token): void
     {
