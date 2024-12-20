@@ -33,7 +33,18 @@ class EmptyLineAfterClassElementsSniff implements Sniff
 
         while ($position < $scopeEnd) {
             // Find next visibility modifier or var keyword
-            $modifier = $phpcsFile->findNext([T_PUBLIC, T_PROTECTED, T_PRIVATE, T_VAR], $position, $scopeEnd);
+            $modifier = $phpcsFile->findNext(
+                [
+                    T_PUBLIC,
+                    T_PROTECTED,
+                    T_PRIVATE,
+                    T_VAR,
+                    T_READONLY
+                ],
+                $position,
+                $scopeEnd
+            );
+
             if ($modifier === false) {
                 break;
             }
@@ -54,7 +65,7 @@ class EmptyLineAfterClassElementsSniff implements Sniff
 
             // Check if this is a property declaration by looking for variable or type declaration
             $isProperty = false;
-            if ($tokens[$nextToken]['code'] === T_VARIABLE) {
+            if ($tokens[$nextToken]['code'] === T_VARIABLE || $tokens[$nextToken]['code'] === T_READONLY) {
                 $isProperty = true;
             } elseif ($tokens[$nextToken]['code'] === T_STRING || $tokens[$nextToken]['code'] === T_NULLABLE) {
                 // Look for variable after type declaration
