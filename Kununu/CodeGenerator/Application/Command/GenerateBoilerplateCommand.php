@@ -10,6 +10,7 @@ use Kununu\CodeGenerator\Application\Service\OpenApiParser;
 use Kununu\CodeGenerator\Domain\DTO\BoilerplateConfiguration;
 use Kununu\CodeGenerator\Domain\Service\CodeGeneratorInterface;
 use Kununu\CodeGenerator\Infrastructure\Generator\TwigTemplateGenerator;
+use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -91,6 +92,12 @@ final class GenerateBoilerplateCommand extends Command
                 's',
                 InputOption::VALUE_NONE,
                 'Skip all existing files without confirmation'
+            )
+            ->addOption(
+                'manual',
+                'm',
+                InputOption::VALUE_NONE,
+                'Skip OpenAPI parsing and provide operation details manually'
             );
     }
 
@@ -119,13 +126,26 @@ final class GenerateBoilerplateCommand extends Command
             // Collect user inputs into a DTO
             $configuration = $this->collectConfiguration($input, $config);
 
-            // Parse OpenAPI specification if required
-            if ($configuration->openApiFilePath !== null) {
-                $this->getOpenApiParser()->parseFile($configuration->openApiFilePath);
+            // Check if manual mode is enabled
+            $manualMode = $input->getOption('manual');
 
-                if ($configuration->operationId !== null) {
-                    $operationDetails = $this->getOpenApiParser()->getOperationById($configuration->operationId);
-                    $configuration->setOperationDetails($operationDetails);
+            // If in interactive mode and manual mode is not explicitly set, ask the user
+            if (!$input->getOption('non-interactive') && !$manualMode && $configuration->openApiFilePath === null) {
+                $manualMode = $this->io->confirm('Would you like to provide operation details manually instead of using OpenAPI?', false);
+            }
+
+            if ($manualMode) {
+                // Collect operation details manually
+                $this->collectManualOperationDetails($configuration);
+            } else {
+                // Parse OpenAPI specification if required
+                if ($configuration->openApiFilePath !== null) {
+                    $this->getOpenApiParser()->parseFile($configuration->openApiFilePath);
+
+                    if ($configuration->operationId !== null) {
+                        $operationDetails = $this->getOpenApiParser()->getOperationById($configuration->operationId);
+                        $configuration->setOperationDetails($operationDetails);
+                    }
                 }
             }
 
@@ -204,6 +224,32 @@ final class GenerateBoilerplateCommand extends Command
                         $this->io->writeln(sprintf(' - <comment>%s</comment>', $file));
                     }
                 }
+
+                // Add route update information if we have operation details
+                if (isset($configuration->operationDetails)
+                    && isset($configuration->operationDetails['path'])
+                    && isset($configuration->operationDetails['method'])) {
+                    // Determine controller name from generated files or configuration
+                    $controllerName = null;
+                    foreach ($filesToGenerate as $file) {
+                        if (str_contains($file['path'], 'Controller')) {
+                            $controllerPath = $file['path'];
+                            // Extract namespace and class name from path
+                            $relativePath = str_replace($configuration->basePath . '/', '', $controllerPath);
+                            $relativePath = str_replace('.php', '', $relativePath);
+                            $controllerName = $configuration->namespace . '\\' . str_replace('/', '\\', $relativePath);
+                            break;
+                        }
+                    }
+
+                    if ($controllerName) {
+                        $this->io->section('Route Information:');
+                        $this->io->writeln('<comment>Please update your routes file with the following details:</comment>');
+                        $this->io->writeln(sprintf('Path: <info>%s</info>', $configuration->operationDetails['path']));
+                        $this->io->writeln(sprintf('Controller: <info>%s</info>', $controllerName));
+                        $this->io->writeln(sprintf('Methods: <info>[%s]</info>', $configuration->operationDetails['method']));
+                    }
+                }
             }
 
             return Command::SUCCESS;
@@ -243,48 +289,289 @@ final class GenerateBoilerplateCommand extends Command
         $skipExistingFromConfig = $config['skip_existing'] ?? false;
         $configuration->setSkipExisting($skipExistingFromCommandLine || $skipExistingFromConfig);
 
-        // Handle OpenAPI file path
-        $openApiFilePath = $input->getOption('openapi-file');
-        if ($openApiFilePath === null && $isInteractive) {
-            $openApiFilePath = $this->io->ask(
-                'Path to OpenAPI specification file',
-                $config['default_openapi_path'] ?? null
-            );
-        }
+        // If manual mode is enabled, we don't need to ask for OpenAPI file
+        if (!$input->getOption('manual')) {
+            // Handle OpenAPI file path
+            $openApiFilePath = $input->getOption('openapi-file');
+            if ($openApiFilePath === null && $isInteractive) {
+                $openApiFilePath = $this->io->ask(
+                    'Path to OpenAPI specification file',
+                    $config['default_openapi_path'] ?? null
+                );
+            }
 
-        // Resolve the path to absolute if it's not null
-        if ($openApiFilePath !== null) {
-            $openApiFilePath = $this->resolveFilePath($openApiFilePath);
-        }
+            // Resolve the path to absolute if it's not null
+            if ($openApiFilePath !== null) {
+                $openApiFilePath = $this->resolveFilePath($openApiFilePath);
+            }
 
-        $configuration->setOpenApiFilePath($openApiFilePath);
+            $configuration->setOpenApiFilePath($openApiFilePath);
 
-        // Handle Operation ID
-        $operationId = $input->getOption('operation-id');
-        if ($operationId === null && $isInteractive && $openApiFilePath !== null) {
-            // If we have the OpenAPI file, we can parse it and show available operations
-            $this->getOpenApiParser()->parseFile($openApiFilePath);
-            $operations = $this->getOpenApiParser()->listOperations();
+            // Handle Operation ID
+            $operationId = $input->getOption('operation-id');
+            if ($operationId === null && $isInteractive && $openApiFilePath !== null) {
+                // If we have the OpenAPI file, we can parse it and show available operations
+                $this->getOpenApiParser()->parseFile($openApiFilePath);
+                $operations = $this->getOpenApiParser()->listOperations();
 
-            if (empty($operations)) {
-                $this->io->warning('No operations found in the OpenAPI specification');
-            } else {
-                $this->io->writeln('Available operations:');
-                foreach ($operations as $index => $op) {
-                    $this->io->writeln(sprintf(' %d. <info>%s</info> - %s', $index + 1, $op['id'], $op['summary']));
-                }
-
-                $selection = $this->io->ask('Select operation by number or provide operationId');
-                if (is_numeric($selection) && isset($operations[(int) $selection - 1])) {
-                    $operationId = $operations[(int) $selection - 1]['id'];
+                if (empty($operations)) {
+                    $this->io->warning('No operations found in the OpenAPI specification');
                 } else {
-                    $operationId = $selection;
+                    $this->io->writeln('Available operations:');
+                    foreach ($operations as $index => $op) {
+                        $this->io->writeln(sprintf(' %d. <info>%s</info> - %s', $index + 1, $op['id'], $op['summary']));
+                    }
+
+                    $selection = $this->io->ask('Select operation by number or provide operationId');
+                    if (is_numeric($selection) && isset($operations[(int) $selection - 1])) {
+                        $operationId = $operations[(int) $selection - 1]['id'];
+                    } else {
+                        $operationId = $selection;
+                    }
                 }
             }
+            $configuration->setOperationId($operationId);
         }
-        $configuration->setOperationId($operationId);
 
         return $configuration;
+    }
+
+    /**
+     * Collect operation details manually from user input
+     */
+    private function collectManualOperationDetails(BoilerplateConfiguration $configuration): void
+    {
+        $this->io->section('Manual Operation Details');
+        $this->io->writeln('Please provide the following details for code generation:');
+
+        // Operation ID and basic information
+        $operationId = $this->io->ask('Operation ID (e.g., getUserById)', null, function($value) {
+            if (empty($value)) {
+                throw new RuntimeException('Operation ID cannot be empty');
+            }
+
+            return $value;
+        });
+        $summary = $this->io->ask('Summary (short description)', '');
+        $description = $this->io->ask('Description (longer explanation)', '');
+
+        // HTTP method
+        $method = $this->io->choice('HTTP Method', ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'], 'GET');
+
+        // URL path
+        $path = $this->io->ask('URL Path (e.g., /users/{userId})', '/', function($value) {
+            if (empty($value)) {
+                throw new RuntimeException('URL Path cannot be empty');
+            }
+
+            return $value;
+        });
+
+        // Parameters
+        $parameters = [];
+        if ($this->io->confirm('Does this operation have path or query parameters?', false)) {
+            $this->io->writeln('Enter parameters (leave name empty to finish):');
+
+            while (true) {
+                $paramName = $this->io->ask('Parameter name', null);
+                if (empty($paramName)) {
+                    break;
+                }
+
+                $paramIn = $this->io->choice('Parameter location', ['path', 'query', 'header'], 'path');
+                $paramRequired = $this->io->confirm('Is this parameter required?', true);
+                $paramDesc = $this->io->ask('Parameter description', '');
+                $paramType = $this->io->choice('Parameter type', ['string', 'integer', 'number', 'boolean', 'array'], 'string');
+
+                $parameters[] = [
+                    'name'        => $paramName,
+                    'in'          => $paramIn,
+                    'required'    => $paramRequired,
+                    'description' => $paramDesc,
+                    'schema'      => [
+                        'type' => $paramType,
+                    ],
+                ];
+
+                $this->io->writeln(sprintf('Added parameter: <info>%s</info> (%s)', $paramName, $paramType));
+            }
+        }
+
+        // Request body
+        $requestBody = null;
+        if (in_array($method, ['POST', 'PUT', 'PATCH']) && $this->io->confirm('Does this operation have a request body?', true)) {
+            $requestBody = [
+                'description' => $this->io->ask('Request body description', ''),
+                'required'    => $this->io->confirm('Is the request body required?', true),
+                'content'     => [],
+            ];
+
+            $contentType = $this->io->choice('Content type', ['application/json', 'application/xml', 'multipart/form-data'], 'application/json');
+
+            $properties = [];
+            $this->io->writeln('Enter request body properties (leave name empty to finish):');
+
+            while (true) {
+                $propName = $this->io->ask('Property name', null);
+                if (empty($propName)) {
+                    break;
+                }
+
+                $propType = $this->io->choice('Property type', ['string', 'integer', 'number', 'boolean', 'array', 'object'], 'string');
+                $propDesc = $this->io->ask('Property description', '');
+                $propRequired = $this->io->confirm('Is this property required?', true);
+
+                $properties[$propName] = [
+                    'type'        => $propType,
+                    'description' => $propDesc,
+                ];
+
+                // Handle array items
+                if ($propType === 'array') {
+                    $itemType = $this->io->choice('Array items type', ['string', 'integer', 'number', 'boolean', 'object'], 'string');
+                    $properties[$propName]['items'] = [
+                        'type' => $itemType,
+                    ];
+                }
+
+                $this->io->writeln(sprintf('Added property: <info>%s</info> (%s)', $propName, $propType));
+            }
+
+            $requestBody['content'][$contentType] = [
+                'schema' => [
+                    'type'       => 'object',
+                    'properties' => $properties,
+                ],
+            ];
+        }
+
+        // Responses
+        $responses = [];
+        $this->io->writeln('Enter responses (at least one is required):');
+
+        while (empty($responses) || $this->io->confirm('Add another response?', false)) {
+            $statusCode = $this->io->ask('Status code', '200', function($value) {
+                if (!preg_match('/^[1-5][0-9][0-9]$/', $value)) {
+                    throw new RuntimeException('Invalid status code. Must be a 3-digit HTTP status code.');
+                }
+
+                return $value;
+            });
+
+            $responseDesc = $this->io->ask('Response description', 'Successful operation');
+
+            $response = [
+                'description' => $responseDesc,
+                'content'     => [],
+            ];
+
+            if ($this->io->confirm('Does this response have a body?', true)) {
+                $contentType = $this->io->choice('Content type', ['application/json', 'application/xml', 'text/plain'], 'application/json');
+
+                if (in_array($contentType, ['application/json', 'application/xml'])) {
+                    $responseType = $this->io->choice('Response schema type', ['object', 'array', 'string', 'integer', 'number', 'boolean'], 'object');
+
+                    $schema = [
+                        'type' => $responseType,
+                    ];
+
+                    if ($responseType === 'object') {
+                        $properties = [];
+                        $this->io->writeln('Enter response properties (leave name empty to finish):');
+
+                        while (true) {
+                            $propName = $this->io->ask('Property name', null);
+                            if (empty($propName)) {
+                                break;
+                            }
+
+                            $propType = $this->io->choice('Property type', ['string', 'integer', 'number', 'boolean', 'array', 'object'], 'string');
+                            $propDesc = $this->io->ask('Property description', '');
+
+                            $properties[$propName] = [
+                                'type'        => $propType,
+                                'description' => $propDesc,
+                            ];
+
+                            // Handle array items
+                            if ($propType === 'array') {
+                                $itemType = $this->io->choice('Array items type', ['string', 'integer', 'number', 'boolean', 'object'], 'string');
+                                $properties[$propName]['items'] = [
+                                    'type' => $itemType,
+                                ];
+                            }
+
+                            $this->io->writeln(sprintf('Added property: <info>%s</info> (%s)', $propName, $propType));
+                        }
+
+                        $schema['properties'] = $properties;
+                    } elseif ($responseType === 'array') {
+                        $itemType = $this->io->choice('Array items type', ['string', 'integer', 'number', 'boolean', 'object'], 'object');
+                        $schema['items'] = [
+                            'type' => $itemType,
+                        ];
+
+                        if ($itemType === 'object') {
+                            $properties = [];
+                            $this->io->writeln('Enter item properties (leave name empty to finish):');
+
+                            while (true) {
+                                $propName = $this->io->ask('Property name', null);
+                                if (empty($propName)) {
+                                    break;
+                                }
+
+                                $propType = $this->io->choice('Property type', ['string', 'integer', 'number', 'boolean', 'array'], 'string');
+                                $propDesc = $this->io->ask('Property description', '');
+
+                                $properties[$propName] = [
+                                    'type'        => $propType,
+                                    'description' => $propDesc,
+                                ];
+
+                                $this->io->writeln(sprintf('Added property: <info>%s</info> (%s)', $propName, $propType));
+                            }
+
+                            $schema['items']['properties'] = $properties;
+                        }
+                    }
+
+                    $response['content'][$contentType] = [
+                        'schema' => $schema,
+                    ];
+                } else {
+                    // For text/plain and other simple types
+                    $response['content'][$contentType] = [
+                        'schema' => [
+                            'type' => 'string',
+                        ],
+                    ];
+                }
+            }
+
+            $responses[$statusCode] = $response;
+            $this->io->writeln(sprintf('Added response: <info>%s</info> - %s', $statusCode, $responseDesc));
+        }
+
+        // Create operation details structure
+        $operationDetails = [
+            'id'          => $operationId,
+            'path'        => $path,
+            'method'      => $method,
+            'summary'     => $summary,
+            'description' => $description,
+            'parameters'  => $parameters,
+            'responses'   => $responses,
+        ];
+
+        // Add request body if defined
+        if ($requestBody !== null) {
+            $operationDetails['requestBody'] = $requestBody;
+        }
+
+        // Set operation details in configuration
+        $configuration->setOperationDetails($operationDetails);
+        $this->io->success('Operation details collected successfully');
     }
 
     /**

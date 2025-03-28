@@ -8,12 +8,13 @@
 - [Configuration](#configuration)
   - [Default Configuration](#default-configuration)
   - [Custom Configuration](#custom-configuration)
+- [Manual Data Entry](#manual-data-entry)
 - [File Handling](#file-handling)
 - [Examples](#examples)
 - [Tips and Best Practices](#tips-and-best-practices)
 
 ## Overview
-The Code Generator is a tool designed to generate boilerplate code based on OpenAPI specifications. It automates the creation of controllers, repositories, commands, queries, and other components following best practices and design patterns.
+The Code Generator is a tool designed to generate boilerplate code based on OpenAPI specifications or manually provided operation details. It automates the creation of controllers, repositories, commands, queries, and other components following best practices and design patterns.
 
 ## Installation
 The Code Generator is included in the `kununu/code-tools` package. To use it, you need to have this package installed in your project:
@@ -42,6 +43,7 @@ The Code Generator supports the following options:
 | `--non-interactive` | - | Run in non-interactive mode (requires all options to be provided) | `false` |
 | `--force` | `-f` | Force overwrite existing files without confirmation | `false` |
 | `--skip-existing` | `-s` | Skip all existing files without confirmation | `false` |
+| `--manual` | `-m` | Skip OpenAPI parsing and provide operation details manually | `false` |
 | `--quiet` | `-q` | Do not output any messages | `false` |
 
 ## Configuration
@@ -90,6 +92,46 @@ generators:
   xml-serializer: true
 ```
 
+## Manual Data Entry
+The Code Generator now supports a manual data entry mode that allows you to skip OpenAPI parsing and provide operation details directly through an interactive interface. This is useful when:
+
+- You don't have an OpenAPI specification file
+- You want to quickly prototype an API without writing OpenAPI first
+- You need to generate code for a specific use case that doesn't match your OpenAPI spec
+
+To use the manual mode, run:
+
+```bash
+vendor/bin/code-generator --manual
+```
+
+Or simply run the command without specifying an OpenAPI file, and you'll be prompted if you want to enter details manually.
+
+The manual data entry process will guide you through providing:
+
+1. **Basic Operation Information**:
+   - Operation ID (e.g., `getUserById`)
+   - Summary and description
+   - HTTP method (GET, POST, PUT, PATCH, DELETE)
+   - URL path (e.g., `/users/{userId}`)
+
+2. **Parameters**:
+   - Path, query, and header parameters
+   - Parameter types and descriptions
+   - Required status
+
+3. **Request Body** (for POST, PUT, PATCH):
+   - Content type
+   - Schema properties with types and descriptions
+   - Support for nested objects and arrays
+
+4. **Responses**:
+   - Status codes and descriptions
+   - Response body schemas
+   - Support for different content types
+
+The manually entered data is structured in the same format as data parsed from OpenAPI specifications, ensuring consistent code generation regardless of the input source.
+
 ## File Handling
 The Code Generator provides several options for handling existing files:
 
@@ -117,6 +159,11 @@ vendor/bin/code-generator --force
 ### Generate code and skip all existing files
 ```bash
 vendor/bin/code-generator --skip-existing
+```
+
+### Generate code using manual data entry
+```bash
+vendor/bin/code-generator --manual
 ```
 
 ### Non-interactive mode with all required options
