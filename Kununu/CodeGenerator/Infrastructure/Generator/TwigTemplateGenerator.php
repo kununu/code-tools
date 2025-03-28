@@ -61,6 +61,18 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
     {
         $generatedFiles = [];
         $variables = $configuration->getTemplateVariables();
+        $filesToGenerate = $this->getFilesToGenerate($configuration);
+        $existingFiles = [];
+
+        // Collect existing files
+        foreach ($filesToGenerate as $file) {
+            if ($file['exists']) {
+                $existingFiles[] = $file['path'];
+            }
+        }
+
+        // Store existing files in configuration for the command to use
+        $configuration->existingFiles = $existingFiles;
 
         // Ensure we have an entity_name variable
         if (!isset($variables['entity_name']) && isset($variables['operation_id'])) {
@@ -85,6 +97,11 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
                 $configuration->basePath,
                 $variables
             );
+
+            // Skip this file if it's in the skipFiles list
+            if (isset($configuration->skipFiles) && in_array($outputPath, $configuration->skipFiles)) {
+                continue;
+            }
 
             // Create output directory if it doesn't exist
             $directory = dirname($outputPath);
@@ -135,10 +152,14 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
                 $variables
             );
 
+            // Check if file exists
+            $fileExists = $this->filesystem->exists($outputPath);
+
             $filesToGenerate[] = [
                 'path'          => $outputPath,
-                'template'      => $templateName,
                 'template_path' => $template['path'],
+                'template_name' => $templateName,
+                'exists'        => $fileExists,
             ];
         }
 

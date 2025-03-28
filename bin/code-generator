@@ -30,4 +30,4 @@ use Symfony\Component\Console\Application;
 $application = new Application('Code Generator', '1.0.0');
 $application->add(new GenerateBoilerplateCommand());
 $application->setDefaultCommand('app:generate:boilerplate', true);
-$application->run(); 
+$application->run();

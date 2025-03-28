@@ -1,0 +1,45 @@
+base_path: 'src'
+namespace: 'App'
+default_openapi_path: 'doc/api/openapi.yaml'
+skip_existing: false
+force: false
+
+# Path patterns for all available templates
+path_patterns:
+  # Controller
+  controller: '{basePath}/Controller/{operationName}Controller.php'
+  
+  # CQRS Query related templates
+  query: '{basePath}/UseCase/Query/{operationName}/Query.php'
+  query-handler: '{basePath}/UseCase/Query/{operationName}/QueryHandler.php'
+  criteria: '{basePath}/UseCase/Query/{operationName}/Criteria/Criteria.php'
+  read-model: '{basePath}/UseCase/Query/{operationName}/ReadModel/{entityName}.php'
+  query-repository-interface: '{basePath}/UseCase/Query/{operationName}/RepositoryInterface.php'
+  query-repository: '{basePath}/UseCase/Query/{operationName}/Infrastructure/DoctrineRepository.php'
+  query-exception: '{basePath}/UseCase/Query/{operationName}/Exception/{entityName}NotFoundException.php'
+  query-infrastructure-query: '{basePath}/UseCase/Query/{operationName}/Infrastructure/Query/{operationName}.php'
+  query-readme: '{basePath}/UseCase/Query/{operationName}/README.md'
+  
+  # CQRS Command related templates
+  command: '{basePath}/UseCase/Command/{operationName}/Command.php'
+  command-handler: '{basePath}/UseCase/Command/{operationName}/CommandHandler.php'
+  command-repository-interface: '{basePath}/UseCase/Command/{operationName}/RepositoryInterface.php'
+  command-repository: '{basePath}/UseCase/Command/{operationName}/Infrastructure/DoctrineRepository.php'
+  command-dto: '{basePath}/UseCase/Command/{operationName}/DTO/{entityName}.php'
+  command-readme: '{basePath}/UseCase/Command/{operationName}/README.md'
+
+  # Request related templates
+  request-data: '{basePath}/Controller/Request/DTO/{operationName}RequestData.php'
+  request-resolver: '{basePath}/Controller/Request/Resolver/{operationName}Resolver.php'
+
+  # XML Serializer
+  query-serializer-xml: '{basePath}/UseCase/Query/{operationName}/ReadModel/serializer/serializer.xml'
+
+# Enable/disable specific generators
+generators:
+  controller: true
+  dto: true
+  command: true
+  repository: true
+  xml-serializer: true
+  tests: true

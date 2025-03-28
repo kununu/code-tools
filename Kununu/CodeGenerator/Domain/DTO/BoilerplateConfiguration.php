@@ -16,6 +16,14 @@ final class BoilerplateConfiguration
     public array $pathPatterns = [];
     /** @var array<string, bool> Map of generator types to enabled/disabled status */
     public array $generators = [];
+    /** @var bool Whether to force overwrite existing files without confirmation */
+    public bool $force = false;
+    /** @var bool Whether to skip all existing files without confirmation */
+    public bool $skipExisting = false;
+    /** @var array<string> List of files that already exist */
+    public array $existingFiles = [];
+    /** @var array<string> List of files to skip (don't overwrite) */
+    public array $skipFiles = [];
 
     public function setOpenApiFilePath(?string $path): self
     {
@@ -27,6 +35,27 @@ final class BoilerplateConfiguration
     public function setOperationId(?string $operationId): self
     {
         $this->operationId = $operationId;
+
+        return $this;
+    }
+
+    public function setForce(bool $force): self
+    {
+        $this->force = $force;
+
+        return $this;
+    }
+
+    public function setSkipExisting(bool $skipExisting): self
+    {
+        $this->skipExisting = $skipExisting;
+
+        return $this;
+    }
+
+    public function addSkipFile(string $filePath): self
+    {
+        $this->skipFiles[] = $filePath;
 
         return $this;
     }

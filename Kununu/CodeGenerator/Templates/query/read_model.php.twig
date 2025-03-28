@@ -14,9 +14,7 @@ final readonly class {{ operation_id|replace({'get': ''}) }}
     ) {
     }
 {% else %}
-    /**
-     * @param array<mixed> $items
-     */
+
     public function __construct(public array $items = [])
     {
     }

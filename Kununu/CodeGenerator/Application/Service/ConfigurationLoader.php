@@ -82,6 +82,8 @@ final class ConfigurationLoader
             'base_path'            => 'src',
             'namespace'            => 'App',
             'default_openapi_path' => null,
+            'force'                => false,
+            'skip_existing'        => false,
             'templates'            => [
                 'path' => null, // Will use default templates
             ],

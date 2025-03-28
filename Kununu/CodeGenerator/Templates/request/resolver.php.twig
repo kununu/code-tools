@@ -17,10 +17,7 @@ final class {{ operation_id|properCapitalize }}Resolver extends AbstractRequestR
     {
     }
 
-    /**
-     * @return iterable<{{ operation_id|properCapitalize }}RequestData>
-     * @throws ValidationException
-     */
+    /** @throws ValidationException */
     public function resolve(Request $request, ArgumentMetadata $argument): iterable
     {
         if ($argument->getType() !== {{ operation_id|properCapitalize }}RequestData::class) {

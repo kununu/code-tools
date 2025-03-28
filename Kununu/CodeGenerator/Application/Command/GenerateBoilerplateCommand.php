@@ -47,6 +47,7 @@ final class GenerateBoilerplateCommand extends Command
                 'o',
                 InputOption::VALUE_OPTIONAL,
                 'Path to OpenAPI specification file (YAML or JSON). Can be relative or absolute.',
+                'tests/_data/OpenApi/openapi.yaml'
             )
             ->addOption(
                 'operation-id',
@@ -68,6 +69,12 @@ final class GenerateBoilerplateCommand extends Command
                 'Run in non-interactive mode (requires all options to be provided)'
             )
             ->addOption(
+                'force',
+                'f',
+                InputOption::VALUE_NONE,
+                'Force overwrite existing files without confirmation'
+            )
+            ->addOption(
                 'quiet',
                 'q',
                 InputOption::VALUE_NONE,
@@ -78,6 +85,12 @@ final class GenerateBoilerplateCommand extends Command
                 null,
                 InputOption::VALUE_NONE,
                 'Disable colored output'
+            )
+            ->addOption(
+                'skip-existing',
+                's',
+                InputOption::VALUE_NONE,
+                'Skip all existing files without confirmation'
             );
     }
 
@@ -116,25 +129,61 @@ final class GenerateBoilerplateCommand extends Command
                 }
             }
 
+            // Get list of files that would be generated
+            $filesToGenerate = $this->getCodeGenerator()->getFilesToGenerate($configuration);
+
+            if (empty($filesToGenerate)) {
+                $this->io->warning('No files will be generated with the current configuration.');
+
+                return Command::SUCCESS;
+            }
+
+            // Check for existing files before any generation
+            $existingFiles = [];
+            foreach ($filesToGenerate as $file) {
+                if ($file['exists']) {
+                    $existingFiles[] = $file['path'];
+                }
+            }
+
+            // Store existing files in configuration
+            $configuration->existingFiles = $existingFiles;
+
             // Preview files to be generated and ask for confirmation
             if (!$input->getOption('non-interactive') && !$input->getOption('quiet')) {
-                $filesToGenerate = $this->getCodeGenerator()->getFilesToGenerate($configuration);
-
-                if (empty($filesToGenerate)) {
-                    $this->io->warning('No files will be generated with the current configuration.');
-
-                    return Command::SUCCESS;
-                }
-
                 $this->io->section('Files to be generated:');
                 foreach ($filesToGenerate as $file) {
-                    $this->io->writeln(sprintf(' - <info>%s</info> (using %s)', $file['path'], $file['template_path']));
+                    $status = $file['exists'] ? '<comment>(exists)</comment>' : '<info>(new)</info>';
+                    $this->io->writeln(sprintf(' - %s %s (using %s)', $status, $file['path'], $file['template_path']));
                 }
 
                 if (!$this->io->confirm('Do you want to proceed with generating these files?', true)) {
                     $this->io->warning('Code generation canceled by user.');
 
                     return Command::SUCCESS;
+                }
+            }
+
+            // Check for existing files and handle overwrite logic
+            if (!$configuration->force && !empty($existingFiles) && !$configuration->skipExisting) {
+                $this->io->section('The following files already exist:');
+
+                foreach ($existingFiles as $existingFile) {
+                    // Ask for confirmation for each existing file
+                    if (!$this->io->confirm(sprintf('File <info>%s</info> exists. Overwrite? [Y/n]', $existingFile), true)) {
+                        // If user doesn't want to overwrite, add to skip list
+                        $configuration->addSkipFile($existingFile);
+                        $this->io->writeln(sprintf(' - <comment>Skipping</comment> %s', $existingFile));
+                    } else {
+                        $this->io->writeln(sprintf(' - <info>Will overwrite</info> %s', $existingFile));
+                    }
+                }
+            } elseif ($configuration->skipExisting && !empty($existingFiles)) {
+                // If skip-existing is enabled, add all existing files to the skip list
+                $this->io->section('Skipping all existing files:');
+                foreach ($existingFiles as $existingFile) {
+                    $configuration->addSkipFile($existingFile);
+                    $this->io->writeln(sprintf(' - <comment>Skipping</comment> %s', $existingFile));
                 }
             }
 
@@ -146,6 +195,14 @@ final class GenerateBoilerplateCommand extends Command
                 $this->io->success(sprintf('Generated %d files successfully', count($generatedFiles)));
                 foreach ($generatedFiles as $file) {
                     $this->io->writeln(sprintf(' - <info>%s</info>', $file));
+                }
+
+                // Show skipped files if any
+                if (!empty($configuration->skipFiles)) {
+                    $this->io->section('Skipped files:');
+                    foreach ($configuration->skipFiles as $file) {
+                        $this->io->writeln(sprintf(' - <comment>%s</comment>', $file));
+                    }
                 }
             }
 
@@ -175,6 +232,16 @@ final class GenerateBoilerplateCommand extends Command
         if (isset($config['generators']) && is_array($config['generators'])) {
             $configuration->setGenerators($config['generators']);
         }
+
+        // Set force option - command line takes precedence over config file
+        $forceFromCommandLine = $input->getOption('force');
+        $forceFromConfig = $config['force'] ?? false;
+        $configuration->setForce($forceFromCommandLine || $forceFromConfig);
+
+        // Set skip-existing option - command line takes precedence over config file
+        $skipExistingFromCommandLine = $input->getOption('skip-existing');
+        $skipExistingFromConfig = $config['skip_existing'] ?? false;
+        $configuration->setSkipExisting($skipExistingFromCommandLine || $skipExistingFromConfig);
 
         // Handle OpenAPI file path
         $openApiFilePath = $input->getOption('openapi-file');

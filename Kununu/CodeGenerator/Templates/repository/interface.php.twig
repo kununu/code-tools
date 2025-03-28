@@ -31,46 +31,20 @@ interface RepositoryInterface
 {% if method == 'GET' %}
 {% if parameters is defined and parameters|length > 0 %}
 {% if parameters|filter(p => p.in == 'path')|length > 0 and parameters|filter(p => p.in == 'query')|length > 0 %}
-    /**
-     * @throws Exception
-{% if operation_id starts with 'get' and 'by' in operation_id|replace({'get': ''})|lower %}
-     * @throws {{ entity_name }}NotFoundException
-{% endif %}
-     */
     public function get{{ entity_name }}By{{ parameters|filter(p => p.in == 'path')|first.name|capitalize }}WithCriteria(
         Uuid ${{ parameters|filter(p => p.in == 'path')|first.name }},
         Criteria $criteria
     ): {% if 'byuuid' in operation_id|replace({'get': ''})|lower %}{{ entity_name|slice(0, -1) }}{% else %}{{ operation_id|replace({'get': ''}) }}{% endif %};
 {% elseif parameters|filter(p => p.in == 'path')|length > 0 %}
-    /**
-     * @throws Exception
-{% if operation_id starts with 'get' and 'by' in operation_id|replace({'get': ''})|lower %}
-     * @throws {{ entity_name }}NotFoundException
-{% endif %}
-     */
     public function get{{ entity_name }}By{{ parameters|filter(p => p.in == 'path')|first.name|capitalize }}(Uuid ${{ parameters|filter(p => p.in == 'path')|first.name }}): {% if 'byuuid' in operation_id|replace({'get': ''})|lower %}{{ entity_name|slice(0, -1) }}{% else %}{{ operation_id|replace({'get': ''}) }}{% endif %};
 {% elseif parameters|filter(p => p.in == 'query')|length > 0 %}
-    /**
-     * @throws Exception
-{% if operation_id starts with 'get' and 'by' in operation_id|replace({'get': ''})|lower %}
-     * @throws {{ entity_name }}NotFoundException
-{% endif %}
-     */
     public function get{{ entity_name }}WithCriteria(Criteria $criteria): {% if 'byuuid' in operation_id|replace({'get': ''})|lower %}{{ entity_name|slice(0, -1) }}{% else %}{{ operation_id|replace({'get': ''}) }}{% endif %};
 {% endif %}
 {% else %}
-    /**
-     * @throws Exception
-{% if operation_id starts with 'get' and 'by' in operation_id|replace({'get': ''})|lower %}
-     * @throws {{ entity_name }}NotFoundException
-{% endif %}
-     */
     public function get{{ entity_name }}(): {% if 'byuuid' in operation_id|replace({'get': ''})|lower %}{{ entity_name|slice(0, -1) }}{% else %}{{ operation_id|replace({'get': ''}) }}{% endif %};
 {% endif %}
 {% else %}
-    /**
-     * Get {{ entity_name|lower }} by uuid
-     */
+
     public function findByUuid(string $uuid): ?object;
 {% endif %}
 }

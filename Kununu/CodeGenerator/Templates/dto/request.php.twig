@@ -9,12 +9,7 @@ final class {{ operation_id|properCapitalize }}Request
 {
 {% if request_body and request_body.content['application/json'].schema.properties %}
 {% for propertyName, property in request_body.content['application/json'].schema.properties %}
-    /**
-{% if property.description %}
-     * {{ property.description }}
-{% endif %}
-     * @var {{ property.type }}{{ property.type == 'array' ? '[]' : '' }}{{ property.type == 'object' ? '|array' : '' }}
-     */
+
 {% if property.type == 'string' %}
     #[Assert\Type('string')]
 {% if request_body.content['application/json'].schema.required and propertyName in request_body.content['application/json'].schema.required %}
