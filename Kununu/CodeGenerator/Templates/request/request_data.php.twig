@@ -1,0 +1,57 @@
+<?php
+declare(strict_types=1);
+
+namespace {{ namespace }}\Request\DTO;
+
+use App\Domain\Entity\AuditLog\Actor;
+use App\Request\DTO\Request;
+use App\Request\Exception\ValidationException;
+use Kununu\Collection\Convertible\ToArray;
+use Kununu\Utilities\DTO\Validated\AbstractValidatedDTO;
+use Symfony\Component\Validator\Constraints as Assert;
+
+final class {{ operation_id|properCapitalize }}RequestData extends AbstractValidatedDTO implements ToArray
+{
+{% if request_body and request_body.content['application/json'].schema.properties %}
+{% for propertyName, property in request_body.content['application/json'].schema.properties %}
+{% if property.type == 'string' %}
+    #[Assert\Type('string')]
+{% if request_body.content['application/json'].schema.required and propertyName in request_body.content['application/json'].schema.required %}
+    #[Assert\NotBlank]
+{% endif %}
+{% elseif property.type == 'integer' %}
+    #[Assert\Type('integer')]
+{% if request_body.content['application/json'].schema.required and propertyName in request_body.content['application/json'].schema.required %}
+    #[Assert\NotNull]
+{% endif %}
+{% elseif property.type == 'number' %}
+    #[Assert\Type('numeric')]
+{% if request_body.content['application/json'].schema.required and propertyName in request_body.content['application/json'].schema.required %}
+    #[Assert\NotNull]
+{% endif %}
+{% elseif property.type == 'boolean' %}
+    #[Assert\Type('boolean')]
+{% if request_body.content['application/json'].schema.required and propertyName in request_body.content['application/json'].schema.required %}
+    #[Assert\NotNull]
+{% endif %}
+{% elseif property.type == 'array' %}
+    #[Assert\Type('array')]
+{% if request_body.content['application/json'].schema.required and propertyName in request_body.content['application/json'].schema.required %}
+    #[Assert\NotNull]
+{% endif %}
+{% endif %}
+    public {% if property.nullable is defined and property.nullable %}?{% endif %}{{ property.type == 'array' ? 'array' : (property.type == 'integer' ? 'int' : (property.type == 'number' ? 'float' : (property.type == 'boolean' ? 'bool' : 'string'))) }} ${{ propertyName }}{% if property.nullable is defined and property.nullable %} = null{% endif %};
+{% endfor %}
+{% endif %}
+
+    public function toArray(): array
+    {
+        return [
+{% if request_body and request_body.content['application/json'].schema.properties %}
+{% for propertyName, property in request_body.content['application/json'].schema.properties %}
+            '{{ propertyName }}' => $this->{{ propertyName }},
+{% endfor %}
+{% endif %}
+        ];
+    }
+} 

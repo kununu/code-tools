@@ -7,3 +7,5 @@ composer.phar
 /tests/.results/
 .DS_Store
 *.local
+
+.code-generator.yaml

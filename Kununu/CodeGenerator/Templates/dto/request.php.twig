@@ -1,0 +1,65 @@
+<?php
+declare(strict_types=1);
+
+namespace {{ namespace }}\DTO\Request;
+
+use Symfony\Component\Validator\Constraints as Assert;
+
+final class {{ operation_id|properCapitalize }}Request
+{
+{% if request_body and request_body.content['application/json'].schema.properties %}
+{% for propertyName, property in request_body.content['application/json'].schema.properties %}
+    /**
+{% if property.description %}
+     * {{ property.description }}
+{% endif %}
+     * @var {{ property.type }}{{ property.type == 'array' ? '[]' : '' }}{{ property.type == 'object' ? '|array' : '' }}
+     */
+{% if property.type == 'string' %}
+    #[Assert\Type('string')]
+{% if request_body.content['application/json'].schema.required and propertyName in request_body.content['application/json'].schema.required %}
+    #[Assert\NotBlank]
+{% endif %}
+{% elseif property.type == 'integer' %}
+    #[Assert\Type('integer')]
+{% if request_body.content['application/json'].schema.required and propertyName in request_body.content['application/json'].schema.required %}
+    #[Assert\NotNull]
+{% endif %}
+{% elseif property.type == 'number' %}
+    #[Assert\Type('numeric')]
+{% if request_body.content['application/json'].schema.required and propertyName in request_body.content['application/json'].schema.required %}
+    #[Assert\NotNull]
+{% endif %}
+{% elseif property.type == 'boolean' %}
+    #[Assert\Type('boolean')]
+{% if request_body.content['application/json'].schema.required and propertyName in request_body.content['application/json'].schema.required %}
+    #[Assert\NotNull]
+{% endif %}
+{% elseif property.type == 'array' %}
+    #[Assert\Type('array')]
+{% if request_body.content['application/json'].schema.required and propertyName in request_body.content['application/json'].schema.required %}
+    #[Assert\NotNull]
+{% endif %}
+{% endif %}
+    public {{ property.type == 'array' ? 'array' : (property.type == 'integer' ? 'int' : (property.type == 'number' ? 'float' : (property.type == 'boolean' ? 'bool' : 'string'))) }} ${{ propertyName }};
+{% endfor %}
+{% endif %}
+
+{% if request_body and request_body.content['application/json'].schema.properties %}
+    public function __construct(
+{% for propertyName, property in request_body.content['application/json'].schema.properties %}
+        {{ property.type == 'array' ? 'array' : (property.type == 'integer' ? 'int' : (property.type == 'number' ? 'float' : (property.type == 'boolean' ? 'bool' : 'string'))) }} ${{ propertyName }}{% if not loop.last %},{% endif %}
+
+{% endfor %}
+    ) {
+{% for propertyName, property in request_body.content['application/json'].schema.properties %}
+        $this->{{ propertyName }} = ${{ propertyName }};
+{% endfor %}
+    }
+{% else %}
+    // No request body properties defined in OpenAPI spec
+    public function __construct()
+    {
+    }
+{% endif %}
+} 

@@ -1,0 +1,19 @@
+<?php
+declare(strict_types=1);
+
+namespace {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\Criteria;
+
+final readonly class Criteria
+{
+    public function __construct(
+{% if parameters is defined and parameters|length > 0 %}
+{% for param in parameters %}
+{% if param.in == 'query' %}
+        public ?{{ param.schema.type == 'array' ? 'array' : (param.schema.type == 'integer' ? 'int' : (param.schema.type == 'number' ? 'float' : (param.schema.type == 'boolean' ? 'bool' : 'string'))) }} ${{ param.name }} = null{% if not loop.last %},{% endif %}
+
+{% endif %}
+{% endfor %}
+{% endif %}
+    ) {
+    }
+} 

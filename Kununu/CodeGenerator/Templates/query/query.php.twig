@@ -1,0 +1,29 @@
+<?php
+declare(strict_types=1);
+
+namespace {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }};
+
+{% if parameters is defined and parameters|length > 0 and parameters|filter(p => p.in == 'query')|length > 0 %}
+use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\Criteria\Criteria;
+{% endif %}
+use Kununu\CQRS\Query\Query as CQRSQuery;
+{% if parameters is defined and parameters|length > 0 and parameters|filter(p => p.in == 'path')|length > 0 %}
+use Kununu\Utilities\DTO\Uuid\Uuid;
+{% endif %}
+
+final readonly class Query implements CQRSQuery
+{
+    public function __construct(
+{% if parameters is defined and parameters|length > 0 %}
+{% for param in parameters %}
+{% if param.in == 'path' %}
+        public Uuid ${{ param.name }},
+{% endif %}
+{% endfor %}
+{% if parameters|filter(p => p.in == 'query')|length > 0 %}
+        public Criteria $criteria
+{% endif %}
+{% endif %}
+    ) {
+    }
+} 

@@ -1,0 +1,39 @@
+<?php
+declare(strict_types=1);
+
+namespace {{ namespace }}\Request\Resolver;
+
+use {{ namespace }}\Request\DTO\{{ operation_id|properCapitalize }}RequestData;
+use App\Request\Exception\ValidationException;
+use App\Request\Resolver\AbstractRequestResolver;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Controller\ValueResolverInterface;
+use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadata;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+
+final class {{ operation_id|properCapitalize }}Resolver extends AbstractRequestResolver implements ValueResolverInterface
+{
+    public function __construct(private readonly ValidatorInterface $validator)
+    {
+    }
+
+    /**
+     * @return iterable<{{ operation_id|properCapitalize }}RequestData>
+     * @throws ValidationException
+     */
+    public function resolve(Request $request, ArgumentMetadata $argument): iterable
+    {
+        if ($argument->getType() !== {{ operation_id|properCapitalize }}RequestData::class) {
+            return [];
+        }
+
+        $requestData = $this->createFromPayload({{ operation_id|properCapitalize }}RequestData::class, $request);
+
+        $violations = $this->validator->validate($requestData);
+        if (count($violations) > 0) {
+            $this->throwValidationError($violations);
+        }
+
+        return [$requestData];
+    }
+} 

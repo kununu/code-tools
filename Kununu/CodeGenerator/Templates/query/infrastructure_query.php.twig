@@ -1,0 +1,28 @@
+<?php
+declare(strict_types=1);
+
+namespace {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\Infrastructure\Query;
+
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Query\Expression\ExpressionBuilder;
+use Kununu\Doctrine\DBAL\Repository\QueryInterface;
+
+final class {{ operation_id|properCapitalize }} implements QueryInterface
+{
+    public function getQuery(Connection $conn, ExpressionBuilder $expressionBuilder, ...$extraParams): string
+    {
+        return $conn
+            ->createQueryBuilder()
+            ->select('*')
+{% if 'byuuid' in operation_id|replace({'get': ''})|lower %}
+            ->from('{{ entity_name|slice(0, -1)|lower }}s', '{{ entity_name|slice(0, -1)|lower|slice(0, 1) }}')
+            ->andWhere($expressionBuilder->eq('{{ entity_name|slice(0, -1)|lower|slice(0, 1) }}.{{ entity_name|slice(0, -1)|lower }}_uuid', ':{{ entity_name|slice(0, -1)|lower }}Uuid'))
+{% else %}
+            ->from('{{ entity_name|lower }}', '{{ entity_name|lower|slice(0, 1) }}')
+{% if parameters is defined and parameters|length > 0 and parameters|filter(p => p.in == 'path')|length > 0 %}
+            ->andWhere($expressionBuilder->eq('{{ entity_name|lower|slice(0, 1) }}.{{ parameters|filter(p => p.in == 'path')|first.name }}', ':{{ parameters|filter(p => p.in == 'path')|first.name }}'))
+{% endif %}
+{% endif %}
+            ->getSQL();
+    }
+} 

@@ -1,0 +1,622 @@
+openapi: 3.1.0
+info:
+  title: Products API
+  version: 1.2.1
+  description: |
+    ### API for managing the following:
+    * Profile competitive visibility and contracts.
+    * AI tone of voice settings.
+  license:
+    name: Apache-2.0
+    url: https://kununu.com
+
+security:
+  [ ]
+
+servers:
+  - url: http://products/products
+    description: Local server (requires port-forwarding running)
+  - url: https://products-endpoint.rm.kununu.it:8443/products
+    description: Preview server (requires VPN enabled)
+
+tags:
+  - name: AI
+    description: Everything about products using AI
+  - name: Audit Log
+    description: Everything about Profile audit logs
+  - name: Competitive Visibility
+    description: Everything about Profile competitors
+  - name: Contracts
+    description: Everything about Contracts
+  - name: Products
+    description: Everything about Products
+
+paths:
+  /ai/{userUuid}/tov-settings:
+    get:
+      operationId: getToneOfVoiceSettings
+      summary: Get the tone of voice settings for a user uuid
+      tags:
+        - AI
+      parameters:
+        - $ref: '#/components/parameters/userUuid'
+      responses:
+        '200':
+          description: Successfully retrieved settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToneOfVoiceSettings'
+        '404':
+          description: Not found
+    post:
+      operationId: upsertToneOfVoiceSettings
+      summary: Create/update the tone of voice settings for a user uuid
+      tags:
+        - AI
+      parameters:
+        - $ref: '#/components/parameters/userUuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ToneOfVoiceSettings'
+      responses:
+        '201':
+          description: Settings created successfully
+        '400':
+          description: Invalid request body
+  /{profileUuid}/audit-log:
+    get:
+      operationId: getProfileAuditLog
+      summary: Get audit logs for a profile
+      tags:
+        - Audit Log
+      parameters:
+        - $ref: '#/components/parameters/profileUuid'
+      responses:
+        '200':
+          description: Successfully retrieved audit logs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditLogs'
+        '404':
+          description: Invalid profile uuid
+
+  /{profileUuid}/competitive-visibility:
+    get:
+      operationId: getProfileCompetitorsSelected
+      summary: Get selected competitors for a profile
+      tags:
+        - Competitive Visibility
+      parameters:
+        - $ref: '#/components/parameters/profileUuid'
+      responses:
+        '200':
+          description: Successfully retrieved selected competitors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SelectedCompetitors'
+
+        '404':
+          description: Profile not found
+
+  /{profileUuid}/competitive-visibility/competitors/{industryId}:
+    get:
+      operationId: getProfileCompetitors
+      summary: Get competitors for a profile in specific industry
+      tags:
+        - Competitive Visibility
+      parameters:
+        - $ref: '#/components/parameters/profileUuid'
+        - name: industryId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully retrieved competitors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetProfileCompetitors'
+        '404':
+          description: Not found
+
+  /{profileUuid}/competitive-visibility/profiles:
+    post:
+      operationId: createProfileCompetitor
+      summary: Create a new competitor profile
+      tags:
+        - Competitive Visibility
+      parameters:
+        - $ref: '#/components/parameters/profileUuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileCompetitor'
+      responses:
+        '201':
+          description: Competitor profile created successfully
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+    delete:
+      operationId: deleteProfileCompetitor
+      summary: Delete a competitor profile
+      tags:
+        - Competitive Visibility
+      parameters:
+        - $ref: '#/components/parameters/profileUuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileCompetitor'
+      responses:
+        '204':
+          description: Competitor profile deleted successfully
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '404':
+          description: Competitor profile not found
+
+  /{profileUuid}/competitive-visibility/industries:
+    post:
+      operationId: createProfileCompetitorIndustry
+      summary: Add an industry to a competitor profile
+      tags:
+        - Competitive Visibility
+      parameters:
+        - $ref: '#/components/parameters/profileUuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileCompetitorIndustry'
+      responses:
+        '201':
+          description: Industry added successfully
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+    delete:
+      operationId: deleteProfileCompetitorIndustry
+      summary: Remove an industry from a competitor profile
+      tags:
+        - Competitive Visibility
+      parameters:
+        - $ref: '#/components/parameters/profileUuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileCompetitorIndustry'
+      responses:
+        '204':
+          description: Industry removed successfully
+        '404':
+          description: Industry not found
+
+  /{profileUuid}/contracts:
+    get:
+      operationId: getProfileContracts
+      summary: Get Contracts for a profile
+      tags:
+        - Contracts
+      parameters:
+        - $ref: '#/components/parameters/profileUuid'
+        - name: isExpired
+          in: query
+          schema:
+            type: boolean
+          description: >
+            isExpired:
+            * `true` - filter only expired contracts
+            * `false` - filter only current and future contracts
+        - name: isActive
+          in: query
+          schema:
+            type: boolean
+          description: >
+            isActive:
+            * `true` - filter only active contracts
+            * `false` - filter only inactive contracts
+      responses:
+        '200':
+          description: Successfully retrieved profile contracts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileContracts'
+
+        '404':
+          description: Profile not found
+    post:
+      operationId: createProfileContract
+      summary: Create a new contract for a profile
+      tags:
+        - Contracts
+      parameters:
+        - $ref: '#/components/parameters/profileUuid'
+        - $ref: '#/components/parameters/kunUserUuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContractPayload'
+      responses:
+        '201':
+          description: Contract created successfully
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+  /contracts/{contractUuid}:
+    get:
+      operationId: getProfileContractByUuid
+      summary: Get a contract by UUID
+      tags:
+        - Contracts
+      parameters:
+        - $ref: '#/components/parameters/contractUuid'
+      responses:
+        '200':
+          description: Successfully retrieved contract
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contract'
+        '404':
+          description: Not found
+    delete:
+      operationId: deleteProfileContractByUuid
+      summary: Delete a contract by UUID
+      tags:
+        - Contracts
+      parameters:
+        - $ref: '#/components/parameters/contractUuid'
+        - $ref: '#/components/parameters/kunUserUuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                comment:
+                  $ref: '#/components/schemas/Comment'
+      responses:
+        '204':
+          description: Successfully deleted contract
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '404':
+          description: Not found
+    put:
+      operationId: editProfileContractByUuid
+      summary: Edit a contract by UUID
+      tags:
+        - Contracts
+      parameters:
+        - $ref: '#/components/parameters/contractUuid'
+        - $ref: '#/components/parameters/kunUserUuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContractPayload'
+      responses:
+        '200':
+          description: Successfully edited contract
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '404':
+          description: Not found
+
+  /products:
+    get:
+      operationId: getProducts
+      summary: Get all products
+      tags:
+        - Products
+      responses:
+        '200':
+          description: Successfully retrieved products
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Products'
+        '404':
+          description: Not found
+
+components:
+  parameters:
+    profileUuid:
+      name: profileUuid
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: UUID of the profile
+      example: "27df0abe-7d33-44cc-8e87-77341d31edfd"
+    contractUuid:
+      name: contractUuid
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: UUID of the contract
+      example: "b0c7df6a-fbef-4c5f-b44b-a3baa64d3af0"
+    kunUserUuid:
+      name: kun-user-uuid
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: User UUID
+    userUuid:
+      name: userUuid
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: UUID of the user
+      example: "a3333333-4f26-4097-8ea7-ed076bb97701"
+  schemas:
+    ValidationError:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: Validation error
+        errors:
+          type: object
+          additionalProperties:
+            type: string
+          description: Map of field names to error messages
+          example:
+            field_name: This field is missing.
+            field_name2: This value should not be blank.
+            field_name3: A_TRANSLATION_KEY
+    AuditLogs:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditLog'
+    AuditLog:
+        type: object
+        properties:
+          id:
+            type: integer
+          created_at:
+            type: string
+            format: date-time
+          event_type:
+            type: string
+            enum:
+              - contract_started
+              - contract_created
+              - contract_updated
+              - contract_deleted
+              - competitor_expired
+          actor_type:
+            type: string
+            enum:
+              - admin
+              - system
+          actor_uuid:
+            type: string
+            format: uuid
+          payload:
+            type: object
+            properties:
+              comment:
+                $ref: '#/components/schemas/Comment'
+            additionalProperties: true
+            description: Map of changed field names containing old and new values.
+            example:
+              comment: "This is a comment"
+              contract_updated: { "end_date": { "newValue": "2025-07-31", "oldValue": "2025-07-24" } }
+    SelectedCompetitors:
+      type: object
+      properties:
+        profile_competitors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Competitor'
+        profile_competitor_industries:
+          type: array
+          items:
+            $ref: '#/components/schemas/Industry'
+    GetProfileCompetitors:
+      type: object
+      properties:
+        competitor_profiles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Competitor'
+        industry_competitor_profiles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Competitor'
+    Competitor:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+    ProfileCompetitor:
+      type: object
+      required:
+        - competitor_profile_uuid
+      properties:
+        competitor_profile_uuid:
+          type: string
+          format: uuid
+    ProfileCompetitorIndustry:
+      type: object
+      required:
+        - competitor_industry_id
+      properties:
+        competitor_industry_id:
+          type: integer
+    Industry:
+      type: object
+      properties:
+        id:
+          type: integer
+
+    ProfileContracts:
+      type: object
+      properties:
+        contracts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Contract'
+    Contract:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type:
+            - string
+            - 'null'
+          format: date
+          examples:
+            - 2022-12-31
+            - null
+        product:
+          $ref: '#/components/schemas/Product'
+        external_id:
+          type:
+            - string
+            - 'null'
+          description: Salesforce ID
+          examples:
+            - C-12345678
+            - null
+        is_active:
+          type: boolean
+    ContractPayload:
+      type: object
+      properties:
+        product_uuid:
+          type: string
+          format: uuid
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type:
+            - string
+            - 'null'
+          format: date
+          examples:
+            - 2022-12-31
+            - null
+        external_id:
+          type:
+            - string
+            - 'null'
+          description: Salesforce ID
+          examples:
+            - C-12345678
+            - null
+        is_active:
+          type: boolean
+        comment:
+          $ref: '#/components/schemas/Comment'
+      required:
+        - product_uuid
+        - start_date
+        - end_date
+        - external_id
+        - is_active
+        - comment
+    Products:
+      type: object
+      properties:
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+    Product:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - ebp
+            - top_company
+            - hiring_extension
+        is_expirable:
+          type: boolean
+    Comment:
+      description: Comment for Audit Log
+      type:
+        - string
+        - 'null'
+      examples:
+        - 'This is a comment'
+        - null
+    ToneOfVoiceSettings:
+      type: object
+      additionalProperties: true
+      examples:
+        - {"language":"DE","formality":"CASUAL","salutation_style":"CASUAL"}

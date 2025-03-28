@@ -1,0 +1,30 @@
+<?php
+declare(strict_types=1);
+
+namespace {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }};
+
+use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\ReadModel\{{ operation_id|replace({'get': ''}) }};
+use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\Repository\RepositoryInterface;
+use Kununu\CQRS\Query\QueryHandler as CQRSQueryHandler;
+
+final readonly class QueryHandler implements CQRSQueryHandler
+{
+    public function __construct(private RepositoryInterface $repository)
+    {
+    }
+
+    public function handle(Query $query): {{ operation_id|replace({'get': ''}) }}
+    {
+{% if parameters is defined and parameters|length > 0 %}
+{% if parameters|filter(p => p.in == 'path')|length > 0 and parameters|filter(p => p.in == 'query')|length > 0 %}
+        return $this->repository->get{{ entity_name }}By{{ parameters|filter(p => p.in == 'path')|first.name|capitalize }}WithCriteria($query->{{ parameters|filter(p => p.in == 'path')|first.name }}, $query->criteria);
+{% elseif parameters|filter(p => p.in == 'path')|length > 0 %}
+        return $this->repository->get{{ entity_name }}By{{ parameters|filter(p => p.in == 'path')|first.name|capitalize }}($query->{{ parameters|filter(p => p.in == 'path')|first.name }});
+{% elseif parameters|filter(p => p.in == 'query')|length > 0 %}
+        return $this->repository->get{{ entity_name }}WithCriteria($query->criteria);
+{% endif %}
+{% else %}
+        return $this->repository->get{{ entity_name }}();
+{% endif %}
+    }
+} 

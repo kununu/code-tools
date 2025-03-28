@@ -1,0 +1,22 @@
+<?php
+declare(strict_types=1);
+
+namespace {{ namespace }}\UseCase\Command\{{ operation_id|properCapitalize }};
+
+use {{ namespace }}\Domain\Entity\AuditLog\Actor;
+{% if request_body and request_body.content['application/json'].schema.properties %}
+use {{ namespace }}\UseCase\Command\{{ operation_id|properCapitalize }}\DTO\{{ entity_name }};
+{% endif %}
+use Kununu\CQRS\Command\Command as CQRSCommand;
+
+final readonly class Command implements CQRSCommand
+{
+    public function __construct(
+{% if request_body and request_body.content['application/json'].schema.properties %}
+        public {{ entity_name }} ${{ entity_name|lower }},
+{% endif %}
+        public Actor $actor,
+        public ?string $comment = null
+    ) {
+    }
+} 

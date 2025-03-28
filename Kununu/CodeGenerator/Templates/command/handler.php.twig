@@ -1,0 +1,29 @@
+<?php
+declare(strict_types=1);
+
+namespace {{ namespace }}\UseCase\Command\{{ operation_id|properCapitalize }};
+
+use Kununu\CQRS\Command\CommandHandler as CQRSCommandHandler;
+use Throwable;
+
+final class CommandHandler implements CQRSCommandHandler
+{
+    public function __construct(private readonly RepositoryInterface $repository)
+    {
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function handle(Command $command): void
+    {
+        try {
+            // Your command logic here
+            ${{ entity_name|lower }} = $this->repository->findByUuid($command->{{ entity_name|lower }}->uuid->toString());
+        } catch (Throwable $e) {
+            $this->logger->error($e->getMessage(), ['exception' => $e]);
+
+            throw $e;
+        }
+    }
+} 

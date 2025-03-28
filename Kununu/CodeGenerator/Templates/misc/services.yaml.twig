@@ -1,0 +1,12 @@
+{% if method == 'GET' %}
+imports:
+  - { resource: jms_serializer.yaml }
+
+{% endif %}
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+
+  {{ namespace }}\UseCase\{{ method == 'GET' ? 'Query' : 'Command' }}\{{ operation_id|properCapitalize }}\:
+    resource: '../../../../../UseCase/{{ method == 'GET' ? 'Query' : 'Command' }}\{{ operation_id|properCapitalize }}/*'

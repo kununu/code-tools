@@ -1,0 +1,24 @@
+<?php
+declare(strict_types=1);
+
+namespace {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\ReadModel;
+
+final readonly class {{ operation_id|replace({'get': ''}) }}
+{
+{% if responses is defined and responses['200'] is defined and responses['200'].content is defined and responses['200'].content['application/json'] is defined and responses['200'].content['application/json'].schema is defined and responses['200'].content['application/json'].schema.properties is defined %}
+    public function __construct(
+{% for propertyName, property in responses['200'].content['application/json'].schema.properties %}
+        public {% if property.nullable is defined and property.nullable %}?{% endif %}{{ property.type == 'array' ? 'array' : (property.type == 'integer' ? 'int' : (property.type == 'number' ? 'float' : (property.type == 'boolean' ? 'bool' : 'string'))) }} ${{ propertyName }}{% if not loop.last %},{% endif %}
+
+{% endfor %}
+    ) {
+    }
+{% else %}
+    /**
+     * @param array<mixed> $items
+     */
+    public function __construct(public array $items = [])
+    {
+    }
+{% endif %}
+} 

@@ -1,0 +1,36 @@
+<?php
+declare(strict_types=1);
+
+namespace {{ namespace }}\UseCase\Command\{{ operation_id|properCapitalize }}\DTO;
+
+final readonly class {{ entity_name }}
+{
+{% if request_body and request_body.content['application/json'].schema.properties %}
+    public function __construct(
+{% for propertyName, property in request_body.content['application/json'].schema.properties %}
+        public {% if property.nullable is defined and property.nullable %}?{% endif %}{{ property.type == 'array' ? 'array' : (property.type == 'integer' ? 'int' : (property.type == 'number' ? 'float' : (property.type == 'boolean' ? 'bool' : 'string'))) }} ${{ propertyName }}{% if property.nullable is defined and property.nullable %} = null{% endif %}{% if not loop.last %},{% endif %}
+
+{% endfor %}
+    ) {
+    }
+{% else %}
+    public function __construct()
+    {
+    }
+{% endif %}
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    public static function fromArray(array $data): self
+    {
+        return new self(
+{% if request_body and request_body.content['application/json'].schema.properties %}
+{% for propertyName, property in request_body.content['application/json'].schema.properties %}
+            $data['{{ propertyName }}'] ?? {% if property.type == 'array' %}[]{% elseif property.type == 'string' %}''{% elseif property.type == 'integer' or property.type == 'number' %}0{% elseif property.type == 'boolean' %}false{% else %}null{% endif %}{% if not loop.last %},{% endif %}
+
+{% endfor %}
+{% endif %}
+        );
+    }
+} 

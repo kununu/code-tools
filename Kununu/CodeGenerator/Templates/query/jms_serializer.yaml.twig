@@ -1,0 +1,7 @@
+jms_serializer:
+  enum_support: true
+  metadata:
+    directories:
+      {{ operation_id|lower }}_read_model:
+        namespace_prefix: "{{ namespace }}\\UseCase\\Query\\{{ operation_id|properCapitalize }}\\ReadModel"
+        path: "%kernel.project_dir%/{{ basePath }}/UseCase/Query/{{ operation_id|properCapitalize }}/ReadModel/serializer"

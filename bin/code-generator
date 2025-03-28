@@ -1,0 +1,33 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+// Set up autoloading
+$autoloadPaths = [
+    __DIR__ . '/../vendor/autoload.php',    // when used as a library
+    __DIR__ . '/../../../autoload.php',     // when used in a project
+];
+
+$autoloaderFound = false;
+foreach ($autoloadPaths as $path) {
+    if (file_exists($path)) {
+        require_once $path;
+        $autoloaderFound = true;
+        break;
+    }
+}
+
+if (!$autoloaderFound) {
+    fwrite(STDERR, 'No autoloader found. Please run composer install.' . PHP_EOL);
+    exit(1);
+}
+
+use Kununu\CodeGenerator\Application\Command\GenerateBoilerplateCommand;
+use Symfony\Component\Console\Application;
+
+// Create application
+$application = new Application('Code Generator', '1.0.0');
+$application->add(new GenerateBoilerplateCommand());
+$application->setDefaultCommand('app:generate:boilerplate', true);
+$application->run(); 

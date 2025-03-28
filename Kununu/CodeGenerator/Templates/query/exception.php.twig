@@ -1,0 +1,14 @@
+<?php
+declare(strict_types=1);
+
+namespace {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\Exception;
+
+use Exception;
+
+final class {{ entity_name }}NotFoundException extends Exception
+{
+    public function __construct(string $value)
+    {
+        parent::__construct(sprintf('{{ entity_name }} with {% if 'byuuid' in operation_id|replace({'get': ''})|lower %}UUID{% else %}ID{% endif %} "%s" not found.', $value));
+    }
+} 

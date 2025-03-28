@@ -1,0 +1,149 @@
+<?php
+declare(strict_types=1);
+
+namespace {{ namespace }}\Controller{% if tags is defined and tags|length > 0 %}\{{ tags[0] }}{% endif %};
+
+{% if method == 'GET' %}
+{% if parameters is defined and parameters|length > 0 and parameters|filter(p => p.in == 'query')|length > 0 %}
+use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\Criteria\Criteria;
+{% endif %}
+use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\Query;
+use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\ReadModel\{{ operation_id|replace({'get': ''}) }};
+use Kununu\CQRS\Bundle\Controller\AbstractQueryBusController;
+use Kununu\ResponseSerializationBundle\Response\Response;
+{% if path is defined and path is not empty and '{' in path %}
+use Kununu\Utilities\DTO\Uuid\Uuid;
+use Ramsey\Uuid\Exception\InvalidUuidStringException;
+{% endif %}
+use Symfony\Component\HttpFoundation\Response as ResponseAlias;
+{% if parameters is defined and parameters|length > 0 and parameters|filter(p => p.in == 'query')|length > 0 %}
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
+{% endif %}
+{% else %}
+use {{ namespace }}\Request\DTO\{{ operation_id|properCapitalize }}RequestData;
+use {{ namespace }}\Request\Exception\ValidationException;
+use {{ namespace }}\Request\Resolver\{{ operation_id|properCapitalize }}Resolver;
+use {{ namespace }}\UseCase\Command\{{ operation_id|properCapitalize }}\Command;
+{% if path is defined and path is not empty and '{' in path %}
+use {{ namespace }}\Domain\Entity\{{ entity_name }}\Exception\{{ entity_name }}NotFoundException;
+{% endif %}
+use Kununu\CQRS\Bundle\Controller\AbstractCommandBusController;
+use Kununu\ResponseSerializationBundle\Response\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
+use Throwable;
+{% endif %}
+
+{% if method == 'GET' %}
+final class {{ operation_id|properCapitalize }}Controller extends AbstractQueryBusController
+{
+    public function __invoke(
+{% if parameters is defined and parameters|length > 0 %}
+{% for param in parameters %}
+{% if param.in == 'path' %}
+        string ${{ param.name }},
+{% endif %}
+{% endfor %}
+{% for param in parameters %}
+{% if param.in == 'query' %}
+        #[MapQueryParameter] ?{{ param.schema.type == 'array' ? 'array' : (param.schema.type == 'integer' ? 'int' : (param.schema.type == 'number' ? 'float' : (param.schema.type == 'boolean' ? 'bool' : 'string'))) }} ${{ param.name }} = null{% if not loop.last or not (loop.last and loop.first) %},{% endif %}
+
+{% endif %}
+{% endfor %}
+{% endif %}
+    ): {{ operation_id|replace({'get': ''}) }}|Response {
+        try {
+            return $this->queryBus->handle(
+                new Query(
+{% if parameters is defined and parameters|length > 0 %}
+{% for param in parameters %}
+{% if param.in == 'path' %}
+                    Uuid::fromString(${{ param.name }}),
+{% endif %}
+{% endfor %}
+{% if parameters|filter(p => p.in == 'query')|length > 0 %}
+                    new Criteria(
+{% for param in parameters %}
+{% if param.in == 'query' %}
+                        ${{ param.name }}{% if not loop.last %},{% endif %}
+
+{% endif %}
+{% endfor %}
+                    )
+{% endif %}
+{% endif %}
+                )
+            );
+{% if parameters is defined and parameters|length > 0 and parameters|filter(p => p.in == 'path')|length > 0 %}
+        } catch (InvalidUuidStringException) {
+            return new Response(
+                data: sprintf('Invalid {{ parameters|filter(p => p.in == 'path')|first.name }} uuid %s', ${{ parameters|filter(p => p.in == 'path')|first.name }}),
+                status: ResponseAlias::HTTP_BAD_REQUEST
+            );
+{% endif %}
+        } catch (\Exception $e) {
+            return new Response(
+                data: $e->getMessage(),
+                status: ResponseAlias::HTTP_BAD_REQUEST
+            );
+        }
+    }
+}
+{% else %}
+final class {{ operation_id|properCapitalize }}Controller extends AbstractCommandBusController
+{
+    public function __invoke(
+        #[MapRequestPayload(resolver: {{ operation_id|properCapitalize }}Resolver::class)]
+        {{ operation_id|properCapitalize }}RequestData $requestData,
+{% if parameters is defined and parameters|length > 0 %}
+{% for param in parameters %}
+{% if param.in == 'path' %}
+        string ${{ param.name }},
+{% endif %}
+{% endfor %}
+{% endif %}
+    ): JsonResponse {
+        try {
+            $this->commandBus->handle(
+                new Command(
+{% if parameters is defined and parameters|length > 0 and parameters|filter(p => p.in == 'path')|length > 0 %}
+                    array_merge(
+                        [
+{% for param in parameters %}
+{% if param.in == 'path' %}
+                            '{{ param.name }}' => ${{ param.name }},
+{% endif %}
+{% endfor %}
+                        ],
+                        $requestData->toArray()
+                    ),
+{% else %}
+                    $requestData->toArray(),
+{% endif %}
+                    $requestData->actor(),
+                    $requestData->comment ?? null
+                )
+            );
+
+            return JsonResponse::ok();
+        } catch (ValidationException $exception) {
+            throw $exception;
+{% if parameters is defined and parameters|length > 0 and parameters|filter(p => p.in == 'path')|length > 0 %}
+        } catch (Throwable $exception) {
+            return new JsonResponse([
+                'code'    => Response::HTTP_BAD_REQUEST,
+                'message' => $exception->getMessage(),
+                'errors'  => [],
+            ], Response::HTTP_BAD_REQUEST);
+{% else %}
+        } catch (Throwable $exception) {
+            return new JsonResponse([
+                'code'    => Response::HTTP_BAD_REQUEST,
+                'message' => $exception->getMessage(),
+                'errors'  => [],
+            ], Response::HTTP_BAD_REQUEST);
+{% endif %}
+        }
+    }
+}
+{% endif %} 

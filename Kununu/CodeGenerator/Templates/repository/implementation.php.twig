@@ -1,0 +1,129 @@
+<?php
+declare(strict_types=1);
+
+{% if method == 'GET' %}
+namespace {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\Infrastructure;
+
+{% if operation_id starts with 'get' and 'by' in operation_id|replace({'get': ''})|lower %}
+use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\Exception\{{ entity_name }}NotFoundException;
+{% if 'byuuid' in operation_id|replace({'get': ''})|lower %}
+use {{ namespace }}\UseCase\Query\Shared\ReadModel\{{ entity_name|slice(0, -1)|capitalize ~ 's' }}\{{ entity_name|slice(0, -1) }};
+{% else %}
+use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\ReadModel\{{ operation_id|replace({'get': ''}) }};
+{% endif %}
+{% else %}
+use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\ReadModel\{{ operation_id|replace({'get': ''}) }};
+{% endif %}
+use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\Infrastructure\Query\{{ operation_id|properCapitalize }};
+use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\RepositoryInterface;
+use Exception;
+use Kununu\Doctrine\DBAL\Repository\AbstractRepository;
+{% if parameters is defined and parameters|length > 0 and parameters|filter(p => p.in == 'path')|length > 0 %}
+use Kununu\Utilities\DTO\Uuid\Uuid;
+{% endif %}
+{% else %}
+namespace {{ namespace }}\Infrastructure\Repository;
+
+use {{ namespace }}\UseCase\Command\{{ operation_id|properCapitalize }}\Repository\RepositoryInterface;
+{% endif %}
+
+{% if method == 'GET' %}
+final class DoctrineRepository extends AbstractRepository implements RepositoryInterface
+{% else %}
+final class {{ operation_id|properCapitalize }}Repository implements RepositoryInterface
+{% endif %}
+{
+{% if method == 'GET' %}
+{% if parameters is defined and parameters|length > 0 %}
+{% if parameters|filter(p => p.in == 'path')|length > 0 and parameters|filter(p => p.in == 'query')|length > 0 %}
+    /**
+     * @throws Exception
+{% if operation_id starts with 'get' and 'by' in operation_id|replace({'get': ''})|lower %}
+     * @throws {{ entity_name }}NotFoundException
+{% endif %}
+     */
+    public function get{{ entity_name }}By{{ parameters|filter(p => p.in == 'path')|first.name|capitalize }}WithCriteria(
+        Uuid ${{ parameters|filter(p => p.in == 'path')|first.name }}, 
+        Criteria $criteria
+    ): {% if 'byuuid' in operation_id|replace({'get': ''})|lower %}{{ entity_name|slice(0, -1) }}{% else %}{{ operation_id|replace({'get': ''}) }}{% endif %} 
+    {
+        $result = $this->connection
+            ->executeQuery($this->getQuery(query: {{ operation_id|properCapitalize }}::class), [
+                '{{ parameters|filter(p => p.in == 'path')|first.name }}' => ${{ parameters|filter(p => p.in == 'path')|first.name }}->toString(),
+            ])
+            ->fetchAssociative();
+
+        if (!$result) {
+            throw new {{ entity_name }}NotFoundException(${{ parameters|filter(p => p.in == 'path')|first.name }}->toString());
+        }
+
+        return {% if 'byuuid' in operation_id|replace({'get': ''})|lower %}{{ entity_name|slice(0, -1) }}{% else %}{{ operation_id|replace({'get': ''}) }}{% endif %}::fromArray($result);
+    }
+{% elseif parameters|filter(p => p.in == 'path')|length > 0 %}
+    /**
+     * @throws Exception
+{% if operation_id starts with 'get' and 'by' in operation_id|replace({'get': ''})|lower %}
+     * @throws {{ entity_name }}NotFoundException
+{% endif %}
+     */
+    public function get{{ entity_name }}By{{ parameters|filter(p => p.in == 'path')|first.name|capitalize }}(Uuid ${{ parameters|filter(p => p.in == 'path')|first.name }}): {% if 'byuuid' in operation_id|replace({'get': ''})|lower %}{{ entity_name|slice(0, -1) }}{% else %}{{ operation_id|replace({'get': ''}) }}{% endif %}
+    {
+        $result = $this->connection
+            ->executeQuery($this->getQuery(query: {{ operation_id|properCapitalize }}::class), [
+                '{{ parameters|filter(p => p.in == 'path')|first.name }}' => ${{ parameters|filter(p => p.in == 'path')|first.name }}->toString(),
+            ])
+            ->fetchAssociative();
+
+        if (!$result) {
+            throw new {{ entity_name }}NotFoundException(${{ parameters|filter(p => p.in == 'path')|first.name }}->toString());
+        }
+
+        return {% if 'byuuid' in operation_id|replace({'get': ''})|lower %}{{ entity_name|slice(0, -1) }}{% else %}{{ operation_id|replace({'get': ''}) }}{% endif %}::fromArray($result);
+    }
+{% elseif parameters|filter(p => p.in == 'query')|length > 0 %}
+    /**
+     * @throws Exception
+     */
+    public function get{{ entity_name }}WithCriteria(Criteria $criteria): {% if 'byuuid' in operation_id|replace({'get': ''})|lower %}{{ entity_name|slice(0, -1) }}{% else %}{{ operation_id|replace({'get': ''}) }}{% endif %}
+    {
+        $result = $this->connection
+            ->executeQuery($this->getQuery(query: {{ operation_id|properCapitalize }}::class), [
+                // Map criteria params here
+            ])
+            ->fetchAssociative();
+
+        if (!$result) {
+            throw new \RuntimeException('No results found');
+        }
+
+        return {% if 'byuuid' in operation_id|replace({'get': ''})|lower %}{{ entity_name|slice(0, -1) }}{% else %}{{ operation_id|replace({'get': ''}) }}{% endif %}::fromArray($result);
+    }
+{% endif %}
+{% else %}
+    /**
+     * @throws Exception
+     */
+    public function get{{ entity_name }}(): {% if 'byuuid' in operation_id|replace({'get': ''})|lower %}{{ entity_name|slice(0, -1) }}{% else %}{{ operation_id|replace({'get': ''}) }}{% endif %}
+    {
+        $result = $this->connection
+            ->executeQuery($this->getQuery(query: {{ operation_id|properCapitalize }}::class))
+            ->fetchAssociative();
+
+        if (!$result) {
+            throw new \RuntimeException('No results found');
+        }
+
+        return {% if 'byuuid' in operation_id|replace({'get': ''})|lower %}{{ entity_name|slice(0, -1) }}{% else %}{{ operation_id|replace({'get': ''}) }}{% endif %}::fromArray($result);
+    }
+{% endif %}
+{% else %}
+    /**
+     * @inheritDoc
+     */
+    public function findByUuid(string $uuid): ?object {
+        // TODO: Implement findByUuid method
+        // This is just a stub implementation
+        return null;
+    }
+{% endif %}
+} 
