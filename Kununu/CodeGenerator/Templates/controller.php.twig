@@ -58,7 +58,8 @@ final class {{ operation_id|properCapitalize }}Controller extends AbstractQueryB
 {% if parameters is defined and parameters|length > 0 %}
 {% for param in parameters %}
 {% if param.in == 'path' %}
-                    Uuid::fromString(${{ param.name }}),
+                    Uuid::fromString(${{ param.name }}){% if parameters|filter(p => p.in == 'query')|length > 0 %},{% endif %}
+
 {% endif %}
 {% endfor %}
 {% if parameters|filter(p => p.in == 'query')|length > 0 %}
@@ -146,4 +147,4 @@ final class {{ operation_id|properCapitalize }}Controller extends AbstractComman
         }
     }
 }
-{% endif %} 
+{% endif %}

@@ -21,6 +21,9 @@ use Kununu\Doctrine\DBAL\Repository\AbstractRepository;
 {% if parameters is defined and parameters|length > 0 and parameters|filter(p => p.in == 'path')|length > 0 %}
 use Kununu\Utilities\DTO\Uuid\Uuid;
 {% endif %}
+{% if parameters is defined and parameters|length > 0 and parameters|filter(p => p.in == 'query')|length > 0 %}
+use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\Criteria\Criteria;
+{% endif %}
 {% else %}
 namespace {{ namespace }}\Infrastructure\Repository;
 

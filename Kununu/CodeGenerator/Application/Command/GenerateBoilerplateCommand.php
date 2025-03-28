@@ -47,7 +47,6 @@ final class GenerateBoilerplateCommand extends Command
                 'o',
                 InputOption::VALUE_OPTIONAL,
                 'Path to OpenAPI specification file (YAML or JSON). Can be relative or absolute.',
-                'tests/_data/OpenApi/openapi.yaml'
             )
             ->addOption(
                 'operation-id',

@@ -195,6 +195,14 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
             return false;
         }
 
+        // Skip criteria template if there are no query parameters
+        if ($templateName === 'criteria'
+            && (!isset($variables['parameters'])
+             || empty($variables['parameters'])
+             || empty(array_filter($variables['parameters'], fn($param) => $param['in'] === 'query')))) {
+            return false;
+        }
+
         // XML Serializer templates
         if ($templateName === 'query-serializer-xml' && strtoupper($method) !== 'GET') {
             return false;

@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }};
 
 use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\ReadModel\{{ operation_id|replace({'get': ''}) }};
-use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\Repository\RepositoryInterface;
 use Kununu\CQRS\Query\QueryHandler as CQRSQueryHandler;
 
 final readonly class QueryHandler implements CQRSQueryHandler
