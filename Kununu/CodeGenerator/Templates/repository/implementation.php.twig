@@ -32,7 +32,7 @@ use {{ namespace }}\UseCase\Command\{{ operation_id|properCapitalize }}\Reposito
 
 final class DoctrineRepository extends AbstractRepository implements RepositoryInterface
 {
-{% if method == 'GET' %}
+
 {% if parameters is defined and parameters|length > 0 %}
 {% if parameters|filter(p => p.in == 'path')|length > 0 and parameters|filter(p => p.in == 'query')|length > 0 %}
 
@@ -98,11 +98,5 @@ final class DoctrineRepository extends AbstractRepository implements RepositoryI
         return {% if 'byuuid' in operation_id|replace({'get': ''})|lower %}{{ entity_name|slice(0, -1) }}{% else %}{{ operation_id|replace({'get': ''}) }}{% endif %}::fromArray($result);
     }
 {% endif %}
-{% else %}
-    public function findByUuid(string $uuid): ?object {
-        // TODO: Implement findByUuid method
-        // This is just a stub implementation
-        return null;
-    }
-{% endif %}
+
 } 

@@ -168,7 +168,10 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
 
     private function registerDefaultTemplates(): void
     {
+        // Shared templates
         $this->registerTemplate('services-config', 'misc/services.yaml.twig', '{basePath}/UseCase/{cqrsType}/{operationName}/Resources/config/services.yaml');
+        $this->registerTemplate('query-infrastructure-query', 'query/infrastructure_query.php.twig', '{basePath}/UseCase/{cqrsType}/{operationName}/Infrastructure/Query/{operationName}.php');
+
         // Controller template
         $this->registerTemplate('controller', 'controller.php.twig', '{basePath}/Controller/{operationName}Controller.php');
 
@@ -180,7 +183,6 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
         $this->registerTemplate('read-model', 'query/read_model.php.twig', '{basePath}/UseCase/Query/{operationName}/ReadModel/{entityName}.php');
         $this->registerTemplate('query-repository-interface', 'repository/interface.php.twig', '{basePath}/UseCase/Query/{operationName}/RepositoryInterface.php');
         $this->registerTemplate('query-exception', 'query/exception.php.twig', '{basePath}/UseCase/Query/{operationName}/Exception/{entityName}NotFoundException.php');
-        $this->registerTemplate('query-infrastructure-query', 'query/infrastructure_query.php.twig', '{basePath}/UseCase/Query/{operationName}/Infrastructure/Query/{operationName}.php');
         $this->registerTemplate('query-serializer-xml', 'query/serializer.xml.twig', '{basePath}/UseCase/Query/{operationName}/ReadModel/serializer/serializer.xml');
         $this->registerTemplate('query-readme', 'query/readme.md.twig', '{basePath}/UseCase/Query/{operationName}/README.md');
         $this->registerTemplate('jms-serializer-config', 'query/jms_serializer.yaml.twig', '{basePath}/UseCase/Query/{operationName}/Resources/config/jms_serializer.yaml');
@@ -205,7 +207,7 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
         $method = $variables['method'] ?? '';
 
         // Filter templates based on HTTP method
-        $queryTemplates = ['query', 'query-handler', 'criteria', 'read-model', 'query-repository-interface', 'query-repository', 'query-exception', 'query-infrastructure-query', 'query-readme', 'jms-serializer-config'];
+        $queryTemplates = ['query', 'query-handler', 'criteria', 'read-model', 'query-repository-interface', 'query-repository', 'query-exception', 'query-readme', 'jms-serializer-config'];
         $commandTemplates = ['command', 'command-handler', 'request-data', 'request-resolver', 'command-dto', 'command-repository-interface', 'command-repository', 'command-readme'];
 
         if (strtoupper($method) === 'GET' && in_array($templateName, $commandTemplates)) {

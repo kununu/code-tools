@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\ReadModel;
 
-final readonly class {{ operation_id|replace({'get': ''}) }}
+final readonly class {{ entity_name|properCapitalize }}
 {
 {% if responses is defined and responses['200'] is defined and responses['200'].content is defined and responses['200'].content['application/json'] is defined and responses['200'].content['application/json'].schema is defined and responses['200'].content['application/json'].schema.properties is defined %}
     public function __construct(
