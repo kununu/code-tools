@@ -1,0 +1,49 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Functional\{{ namespace|replace({'\\\\': '\\'}) }}{% if tags is defined and tags|length > 0 %}\{{ tags[0] }}{% endif %};
+
+use Kununu\TestingBundle\Test\RequestBuilder;
+use Kununu\TestingBundle\Test\WebTestCase;
+use Symfony\Component\HttpFoundation\Response;
+
+final class {{ operation_id|properCapitalize }}ControllerTest extends WebTestCase
+{
+    private const string URI = '{{ path }}';
+
+    public function testReturnsSuccessfulResponse(): void
+    {
+        $this->markTestSkipped('This test has not been implemented yet.');
+        $response = $this->doRequest(
+            RequestBuilder::a{{ method|capitalize }}Request()
+                ->withUri(self::URI)
+                ->withHeader('Content-type', 'application/json')
+{% if method != 'GET' %}
+                ->withContent([
+                    // Add request body parameters here
+                ])
+{% endif %}
+        );
+
+        self::assertTrue($response->isSuccessful());
+        self::assertEquals(Response::HTTP_OK, $response->getStatusCode());
+    }
+{% if method != 'GET' %}
+
+    public function testReturnsBadRequestWithInvalidData(): void
+    {
+        $this->markTestSkipped('This test has not been implemented yet.');
+        $response = $this->doRequest(
+            RequestBuilder::a{{ method|capitalize }}Request()
+                ->withUri(self::URI)
+                ->withHeader('Content-type', 'application/json')
+                ->withContent([
+                    // Add invalid request body parameters here
+                ])
+        );
+
+        self::assertEquals(400, $response->getStatusCode());
+    }
+{% endif %}
+}

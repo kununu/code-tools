@@ -199,6 +199,11 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
         // Register repository implementation templates - they'll be filtered based on HTTP method
         $this->registerTemplate('query-repository', 'repository/implementation.php.twig', '{basePath}/UseCase/Query/{operationName}/Infrastructure/DoctrineRepository.php');
         $this->registerTemplate('command-repository', 'repository/implementation.php.twig', '{basePath}/UseCase/Command/{operationName}/Infrastructure/DoctrineRepository.php');
+
+        // Register test templates
+        $this->registerTemplate('query-unit-test', 'tests/unit_test.php.twig', '{basePath}/../tests/Unit/UseCase/Query/{operationName}/QueryHandlerTest.php');
+        $this->registerTemplate('command-unit-test', 'tests/unit_test.php.twig', '{basePath}/../tests/Unit/UseCase/Command/{operationName}/CommandHandlerTest.php');
+        $this->registerTemplate('controller-functional-test', 'tests/functional_test.php.twig', '{basePath}/../tests/Functional/Controller/{operationName}ControllerTest.php');
     }
 
     private function shouldGenerateFile(string $templateName, BoilerplateConfiguration $configuration): bool
@@ -207,8 +212,8 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
         $method = $variables['method'] ?? '';
 
         // Filter templates based on HTTP method
-        $queryTemplates = ['query', 'query-handler', 'criteria', 'read-model', 'query-repository-interface', 'query-repository', 'query-exception', 'query-readme', 'jms-serializer-config'];
-        $commandTemplates = ['command', 'command-handler', 'request-data', 'request-resolver', 'command-dto', 'command-repository-interface', 'command-repository', 'command-readme'];
+        $queryTemplates = ['query', 'query-handler', 'criteria', 'read-model', 'query-repository-interface', 'query-repository', 'query-exception', 'query-readme', 'jms-serializer-config', 'query-unit-test'];
+        $commandTemplates = ['command', 'command-handler', 'request-data', 'request-resolver', 'command-dto', 'command-repository-interface', 'command-repository', 'command-readme', 'command-unit-test'];
 
         if (strtoupper($method) === 'GET' && in_array($templateName, $commandTemplates)) {
             return false;
@@ -265,6 +270,13 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
             if (($templateName === 'query-serializer-xml' || $templateName === 'jms-serializer-config')
                 && isset($configuration->generators['xml-serializer'])
                 && $configuration->generators['xml-serializer'] === false) {
+                return false;
+            }
+
+            // Test templates
+            if (in_array($templateName, ['query-unit-test', 'command-unit-test', 'controller-functional-test'])
+                && isset($configuration->generators['tests'])
+                && $configuration->generators['tests'] === false) {
                 return false;
             }
         }

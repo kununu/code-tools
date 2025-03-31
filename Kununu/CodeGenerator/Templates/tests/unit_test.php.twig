@@ -1,0 +1,32 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Unit\{{ namespace|replace({'\\\\': '\\'}) }}{% if tags is defined and tags|length > 0 %}\{{ tags[0] }}{% endif %};
+
+{% if method == 'GET' %}
+use {{ namespace }}{% if tags is defined and tags|length > 0 %}\{{ tags[0] }}{% endif %}\UseCase\Query\{{ operation_id|properCapitalize }}\Query;
+use {{ namespace }}{% if tags is defined and tags|length > 0 %}\{{ tags[0] }}{% endif %}\UseCase\Query\{{ operation_id|properCapitalize }}\QueryHandler;
+{% else %}
+use {{ namespace }}{% if tags is defined and tags|length > 0 %}\{{ tags[0] }}{% endif %}\UseCase\Command\{{ operation_id|properCapitalize }}\Command;
+use {{ namespace }}{% if tags is defined and tags|length > 0 %}\{{ tags[0] }}{% endif %}\UseCase\Command\{{ operation_id|properCapitalize }}\CommandHandler;
+{% endif %}
+use PHPUnit\Framework\TestCase;
+
+final class {{ operation_id|properCapitalize }}{% if method == 'GET' %}Query{% else %}Command{% endif %}HandlerTest extends TestCase
+{
+    private {% if method == 'GET' %}Query{% else %}Command{% endif %} ${% if method == 'GET' %}query{% else %}command{% endif %};
+    private {% if method == 'GET' %}QueryHandler{% else %}CommandHandler{% endif %} ${% if method == 'GET' %}queryHandler{% else %}commandHandler{% endif %};
+
+    public function test{% if method == 'GET' %}Query{% else %}Command{% endif %}Handler(): void
+    {
+        $this->markTestSkipped('This test has not been implemented yet.');
+        $this->{% if method == 'GET' %}queryHandler{% else %}commandHandler{% endif %}->handle($this->{% if method == 'GET' %}query{% else %}command{% endif %});
+    }
+
+    protected function setUp(): void
+    {
+        $this->{% if method == 'GET' %}query{% else %}command{% endif %} = new {% if method == 'GET' %}Query{% else %}Command{% endif %}();
+        $this->{% if method == 'GET' %}queryHandler{% else %}commandHandler{% endif %} = new {% if method == 'GET' %}QueryHandler{% else %}CommandHandler{% endif %}();
+    }
+}

@@ -9,4 +9,4 @@ services:
     autoconfigure: true
 
   {{ namespace }}\UseCase\{{ method == 'GET' ? 'Query' : 'Command' }}\{{ operation_id|properCapitalize }}\:
-    resource: '../../../../../UseCase/{{ method == 'GET' ? 'Query' : 'Command' }}\{{ operation_id|properCapitalize }}/*'
+    resource: '../../../../../UseCase/{{ method == 'GET' ? 'Query' : 'Command' }}/{{ operation_id|properCapitalize }}/*'
