@@ -102,6 +102,12 @@ final class GenerateBoilerplateCommand extends Command
                 'm',
                 InputOption::VALUE_NONE,
                 'Skip OpenAPI parsing and provide operation details manually'
+            )
+            ->addOption(
+                'template-dir',
+                't',
+                InputOption::VALUE_OPTIONAL,
+                'Path to custom template directory'
             );
     }
 
@@ -117,7 +123,6 @@ final class GenerateBoilerplateCommand extends Command
             $output->setVerbosity(OutputInterface::VERBOSITY_QUIET);
         }
 
-        // Initialize service classes
         $this->configBuilder = new ConfigurationBuilder($this->io, $this->configLoader, $this->openApiParser);
         $this->fileGenerationHandler = new FileGenerationHandler($this->io, $this->codeGenerator);
         $this->manualOperationCollector = new ManualOperationCollector($this->io);
@@ -129,6 +134,14 @@ final class GenerateBoilerplateCommand extends Command
 
         try {
             $configuration = $this->prepareConfiguration($input);
+
+            // Re-initialize the code generator with the custom template directory if specified
+            if ($configuration->templateDir !== null) {
+                $filesystem = new Filesystem();
+                $this->codeGenerator = new TwigTemplateGenerator($filesystem, $configuration->templateDir);
+                $this->fileGenerationHandler = new FileGenerationHandler($this->io, $this->codeGenerator);
+            }
+
             $this->collectOperationDetails($input, $configuration);
 
             return $this->generateFiles($input, $configuration);

@@ -8,7 +8,7 @@ use Kununu\CodeGenerator\Domain\DTO\BoilerplateConfiguration;
 use Kununu\CodeGenerator\Domain\Service\CodeGeneratorInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-class FileGenerationHandler
+final class FileGenerationHandler
 {
     private SymfonyStyle $io;
     private CodeGeneratorInterface $codeGenerator;
@@ -74,9 +74,49 @@ class FileGenerationHandler
     private function previewFilesToGenerate(array $filesToGenerate): void
     {
         $this->io->section('Files to be generated:');
+
+        $rows = [];
         foreach ($filesToGenerate as $file) {
-            $status = $file['exists'] ? '<comment>(exists)</comment>' : '<info>(new)</info>';
-            $this->io->writeln(sprintf(' - %s %s (using %s)', $status, $file['path'], $file['template_path']));
+            $existsStatus = 'No';
+            if ($file['exists']) {
+                $existsStatus = isset($file['will_be_skipped']) && $file['will_be_skipped']
+                    ? 'Yes (will be skipped)'
+                    : 'Yes (will be overwritten)';
+            }
+            $rows[] = [$file['path'], $existsStatus];
+        }
+
+        $this->io->table(['File', 'Exists'], $rows);
+
+        // Show template source information if custom templates are being used
+        if (method_exists($this->codeGenerator, 'getTemplateSource')
+            && method_exists($this->codeGenerator, 'templateExistsInCustomDir')) {
+            $this->io->section('Template sources:');
+
+            $templateRows = [];
+            $customTemplatesUsed = false;
+
+            foreach ($filesToGenerate as $file) {
+                if (isset($file['template'])) {
+                    $templatePath = $file['template'];
+                    $source = $file['template_source'] ?? 'default';
+
+                    if ($source === 'custom') {
+                        $customTemplatesUsed = true;
+                    }
+
+                    $templateRows[] = [$templatePath, $source];
+                }
+            }
+
+            if (!empty($templateRows)) {
+                $this->io->table(['Template', 'Source'], $templateRows);
+                if ($customTemplatesUsed) {
+                    $this->io->note('Custom templates are being used when available, falling back to default templates when necessary.');
+                } else {
+                    $this->io->note('Using default templates. No custom templates were found.');
+                }
+            }
         }
     }
 

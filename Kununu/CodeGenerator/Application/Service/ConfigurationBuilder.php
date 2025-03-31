@@ -8,10 +8,7 @@ use Kununu\CodeGenerator\Domain\DTO\BoilerplateConfiguration;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-/**
- * Service responsible for building and configuring the BoilerplateConfiguration.
- */
-class ConfigurationBuilder
+final class ConfigurationBuilder
 {
     private SymfonyStyle $io;
     private ConfigurationLoader $configLoader;
@@ -48,6 +45,26 @@ class ConfigurationBuilder
 
         if (isset($config['generators']) && is_array($config['generators'])) {
             $configuration->setGenerators($config['generators']);
+        }
+
+        // Set template directory if specified in config
+        if (isset($config['templates']['path']) && $config['templates']['path'] !== null) {
+            $templateDir = $config['templates']['path'];
+            // Make sure the path is absolute
+            if (!str_starts_with($templateDir, '/')) {
+                $templateDir = getcwd() . '/' . $templateDir;
+            }
+            $configuration->setTemplateDir($templateDir);
+        }
+
+        // Command-line option overrides config file
+        if ($input->getOption('template-dir')) {
+            $templateDir = $input->getOption('template-dir');
+            // Make sure the path is absolute
+            if (!str_starts_with($templateDir, '/')) {
+                $templateDir = getcwd() . '/' . $templateDir;
+            }
+            $configuration->setTemplateDir($templateDir);
         }
 
         $forceFromCommandLine = $input->getOption('force');

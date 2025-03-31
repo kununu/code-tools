@@ -8,6 +8,7 @@
 - [Configuration](#configuration)
   - [Default Configuration](#default-configuration)
   - [Custom Configuration](#custom-configuration)
+  - [Custom Templates](#custom-templates)
 - [Manual Data Entry](#manual-data-entry)
 - [File Handling](#file-handling)
 - [Examples](#examples)
@@ -37,17 +38,20 @@ The Code Generator supports the following options:
 
 | Option | Short | Description | Default |
 |--------|-------|-------------|---------|
-| `--openapi-file` | `-o` | Path to OpenAPI specification file (YAML or JSON) | `tests/_data/OpenApi/openapi.yaml` |
-| `--operation-id` | `-i` | Operation ID from OpenAPI specification to use for generation | - |
-| `--config` | `-c` | Path to configuration file | `.code-generator.yaml` |
-| `--non-interactive` | - | Run in non-interactive mode (requires all options to be provided) | `false` |
-| `--force` | `-f` | Force overwrite existing files without confirmation | `false` |
+| `--config` | `-c` | Path to configuration file | `code-generator.yaml` |
+| `--operation-id` | `-o` | Operation ID from OpenAPI specification | - |
+| `--openapi` | `-a` | Path to OpenAPI specification file | - |
+| `--manual` | `-m` | Manually provide operation details instead of using OpenAPI | `false` |
+| `--force` | `-f` | Force overwrite of existing files without confirmation | `false` |
 | `--skip-existing` | `-s` | Skip all existing files without confirmation | `false` |
-| `--manual` | `-m` | Skip OpenAPI parsing and provide operation details manually | `false` |
-| `--quiet` | `-q` | Do not output any messages | `false` |
+| `--non-interactive` | `-n` | Run in non-interactive mode | `false` |
+| `--no-preview` | `-p` | Skip preview of files to be generated | `false` |
+| `--template-dir` | `-t` | Path to custom template directory | - |
+| `--quiet` | `-q` | Suppress all output | `false` |
+| `--no-color` | - | Disable colored output | `false` |
 
 ## Configuration
-The Code Generator can be configured using a YAML configuration file. By default, it looks for `.code-generator.yaml` in your project root.
+The Code Generator can be configured using a YAML configuration file. By default, it looks for `code-generator.yaml` in your project root.
 
 ### Default Configuration
 To create a default configuration file in your project, run:
@@ -56,32 +60,36 @@ To create a default configuration file in your project, run:
 vendor/bin/code-tools publish:config code-generator
 ```
 
-This will copy the default configuration file to your project root as `.code-generator.yaml`.
+This will copy the default configuration file to your project root as `code-generator.yaml`.
 
 ### Custom Configuration
 You can customize the configuration file to suit your needs. The following options are available:
 
 ```yaml
+# Base path for generated code
+base_path: 'src'
+
 # Base namespace for generated code
 namespace: 'App'
 
 # Default OpenAPI specification file path
-default_openapi_path: 'tests/_data/OpenApi/openapi.yaml'
+default_openapi_path: null
 
-# Whether to skip existing files without confirmation
-skip_existing: false
-
-# Whether to force overwrite existing files without confirmation
+# Force overwrite existing files
 force: false
 
-# Path patterns for all available templates
+# Skip existing files
+skip_existing: false
+
+# Custom templates directory
+templates:
+  path: 'dist/templates'
+
+# Custom path patterns for generated files
 path_patterns:
-  # Controller
   controller: '{basePath}/Controller/{operationName}Controller.php'
-  
-  # CQRS Query related templates
   query: '{basePath}/UseCase/Query/{operationName}/Query.php'
-  # ... other path patterns ...
+  # ... other path patterns
 
 # Enable/disable specific generators
 generators:
@@ -89,90 +97,99 @@ generators:
   dto: true
   command: true
   repository: true
-  xml-serializer: true
+  tests: true
 ```
 
+### Custom Templates
+The Code Generator now supports using custom templates instead of the built-in ones. You can specify a custom template directory in two ways:
+
+1. **Via Configuration File**:
+   ```yaml
+   templates:
+     path: 'dist/templates'
+   ```
+
+2. **Via Command Line**:
+   ```bash
+   vendor/bin/code-generator --template-dir=dist/templates
+   ```
+
+When using custom templates, the Code Generator will:
+
+1. Check if each required template exists in your custom directory
+2. Use the custom version if available
+3. Fall back to the built-in template if not found
+4. Show you which templates are being used from which source during generation
+
+This allows you to customize specific templates while still using the default ones for everything else.
+
+#### Template Structure
+Your custom templates should follow the same structure as the built-in templates. The main template directories are:
+
+- `command/` - Templates for command-related files
+- `query/` - Templates for query-related files
+- `repository/` - Templates for repository files
+- `request/` - Templates for request-related files
+- `tests/` - Templates for test files
+
+The most commonly customized templates are:
+
+- `controller.php.twig` - Controller template
+- `tests/unit_test.php.twig` - Unit test template
+- `tests/functional_test.php.twig` - Functional test template
+
 ## Manual Data Entry
-The Code Generator now supports a manual data entry mode that allows you to skip OpenAPI parsing and provide operation details directly through an interactive interface. This is useful when:
-
-- You don't have an OpenAPI specification file
-- You want to quickly prototype an API without writing OpenAPI first
-- You need to generate code for a specific use case that doesn't match your OpenAPI spec
-
-To use the manual mode, run:
+If you don't have an OpenAPI specification or prefer to provide operation details manually, you can use the `--manual` option:
 
 ```bash
 vendor/bin/code-generator --manual
 ```
 
-Or simply run the command without specifying an OpenAPI file, and you'll be prompted if you want to enter details manually.
-
-The manual data entry process will guide you through providing:
-
-1. **Basic Operation Information**:
-   - Operation ID (e.g., `getUserById`)
-   - Summary and description
-   - HTTP method (GET, POST, PUT, PATCH, DELETE)
-   - URL path (e.g., `/users/{userId}`)
-
-2. **Parameters**:
-   - Path, query, and header parameters
-   - Parameter types and descriptions
-   - Required status
-
-3. **Request Body** (for POST, PUT, PATCH):
-   - Content type
-   - Schema properties with types and descriptions
-   - Support for nested objects and arrays
-
-4. **Responses**:
-   - Status codes and descriptions
-   - Response body schemas
-   - Support for different content types
-
-The manually entered data is structured in the same format as data parsed from OpenAPI specifications, ensuring consistent code generation regardless of the input source.
+The tool will prompt you for all necessary information, including:
+- Operation ID
+- HTTP method
+- Path
+- Request parameters
+- Response structure
 
 ## File Handling
-The Code Generator provides several options for handling existing files:
+The Code Generator provides options for handling existing files:
 
-1. **Interactive Mode (Default)**: If a file already exists, you'll be prompted to confirm whether to overwrite it.
-2. **Force Mode (`--force`)**: All existing files will be overwritten without confirmation.
-3. **Skip Mode (`--skip-existing`)**: All existing files will be skipped without confirmation.
+- **Preview**: By default, the tool shows a preview of files to be generated, including whether they exist and will be overwritten or skipped
+- **Force Overwrite**: Use `--force` to overwrite all existing files without confirmation
+- **Skip Existing**: Use `--skip-existing` to skip all existing files without confirmation
 
 ## Examples
 
-### Generate code for a specific OpenAPI operation
+### Generate code from OpenAPI specification
 ```bash
-vendor/bin/code-generator --openapi-file=api/openapi.yaml --operation-id=getUserById
+vendor/bin/code-generator --openapi=api/openapi.yaml --operation-id=getUserProfile
 ```
 
-### Generate code with a custom configuration file
+### Generate code with custom configuration and templates
 ```bash
-vendor/bin/code-generator --config=my-config.yaml
+vendor/bin/code-generator --config=my-config.yaml --template-dir=my-templates
 ```
 
-### Generate code and force overwrite existing files
+### Generate code in non-interactive mode
 ```bash
-vendor/bin/code-generator --force
-```
-
-### Generate code and skip all existing files
-```bash
-vendor/bin/code-generator --skip-existing
-```
-
-### Generate code using manual data entry
-```bash
-vendor/bin/code-generator --manual
-```
-
-### Non-interactive mode with all required options
-```bash
-vendor/bin/code-generator --non-interactive --openapi-file=api/openapi.yaml --operation-id=getUserById
+vendor/bin/code-generator --non-interactive --openapi=api/openapi.yaml --operation-id=getUserProfile --force
 ```
 
 ## Tips and Best Practices
-- Always review generated code to ensure it meets your requirements.
-- Consider customizing the path patterns to match your project structure.
-- Enable only the generators you need to avoid creating unnecessary files.
-- Use the `--skip-existing` option when you want to preserve manually modified files.
+
+1. **Custom Templates**: Start by copying the built-in templates to your custom directory and then modify only what you need.
+
+2. **Configuration File**: Create a project-specific configuration file to maintain consistent settings.
+
+3. **Path Patterns**: Customize path patterns to match your project structure.
+
+4. **Test Templates**: The test templates are designed to be minimal and require implementation. They include `markTestSkipped()` to remind you to implement the tests.
+
+5. **Template Variables**: When creating custom templates, you have access to all the variables from the operation details, including:
+   - `operation_id` - The operation ID
+   - `method` - The HTTP method
+   - `path` - The API path
+   - `parameters` - Request parameters
+   - `namespace` - The base namespace
+   - `entity_name` - Extracted entity name from the operation ID

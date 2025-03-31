@@ -12,18 +12,13 @@ final class BoilerplateConfiguration
     public string $basePath = 'src';
     public string $namespace = 'App';
     public array $templateVariables = [];
-    /** @var array<string, string> Map of template names to custom path patterns */
     public array $pathPatterns = [];
-    /** @var array<string, bool> Map of generator types to enabled/disabled status */
     public array $generators = [];
-    /** @var bool Whether to force overwrite existing files without confirmation */
     public bool $force = false;
-    /** @var bool Whether to skip all existing files without confirmation */
     public bool $skipExisting = false;
-    /** @var array<string> List of files that already exist */
     public array $existingFiles = [];
-    /** @var array<string> List of files to skip (don't overwrite) */
     public array $skipFiles = [];
+    public ?string $templateDir = null;
 
     public function setOpenApiFilePath(?string $path): self
     {
@@ -97,11 +92,6 @@ final class BoilerplateConfiguration
         return $this;
     }
 
-    /**
-     * Set custom path patterns for templates from the configuration
-     *
-     * @param array<string, string> $patterns Map of template names to path patterns
-     */
     public function setPathPatterns(array $patterns): self
     {
         $this->pathPatterns = $patterns;
@@ -109,14 +99,16 @@ final class BoilerplateConfiguration
         return $this;
     }
 
-    /**
-     * Set generators configuration from the configuration file
-     *
-     * @param array<string, bool> $generators Map of generator types to enabled/disabled status
-     */
     public function setGenerators(array $generators): self
     {
         $this->generators = $generators;
+
+        return $this;
+    }
+
+    public function setTemplateDir(?string $templateDir): self
+    {
+        $this->templateDir = $templateDir;
 
         return $this;
     }

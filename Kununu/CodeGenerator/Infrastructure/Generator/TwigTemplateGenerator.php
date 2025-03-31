@@ -8,6 +8,7 @@ use Kununu\CodeGenerator\Domain\DTO\BoilerplateConfiguration;
 use Kununu\CodeGenerator\Domain\Service\CodeGeneratorInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Twig\Environment;
+use Twig\Error\LoaderError;
 use Twig\Loader\FilesystemLoader;
 use Twig\TwigFilter;
 
@@ -16,14 +17,26 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
     private Filesystem $filesystem;
     private Environment $twig;
     private array $templates = [];
-    private string $templateDir;
+    private string $defaultTemplateDir;
+    private ?string $customTemplateDir;
 
-    public function __construct(Filesystem $filesystem)
+    public function __construct(Filesystem $filesystem, ?string $customTemplateDir = null)
     {
         $this->filesystem = $filesystem;
-        $this->templateDir = dirname(__DIR__, 3) . '/CodeGenerator/Templates';
+        $this->defaultTemplateDir = dirname(__DIR__, 3) . '/CodeGenerator/Templates';
+        $this->customTemplateDir = $customTemplateDir;
 
-        $loader = new FilesystemLoader($this->templateDir);
+        // Set up Twig with multiple template directories
+        $loader = new FilesystemLoader([]);
+
+        // Add the default template directory
+        $loader->addPath($this->defaultTemplateDir, 'default');
+
+        // Add the custom template directory if provided
+        if ($this->customTemplateDir !== null && $this->filesystem->exists($this->customTemplateDir)) {
+            $loader->addPath($this->customTemplateDir, 'custom');
+        }
+
         $this->twig = new Environment($loader, [
             'cache'            => false,
             'debug'            => true,
@@ -38,23 +51,61 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
         $this->registerDefaultTemplates();
     }
 
-    /**
-     * Register custom Twig filters
-     */
     private function registerTwigFilters(): void
     {
         // Add a proper camel case filter that preserves existing uppercase letters
         $this->twig->addFilter(new TwigFilter('properCapitalize', function($string) {
             return $this->convertOperationIdToClassName($string);
         }));
+        $this->twig->addFilter(new TwigFilter('camel', fn($string) => lcfirst($this->pascalCase($string))));
+        $this->twig->addFilter(new TwigFilter('pascal', fn($string) => $this->pascalCase($string)));
+        $this->twig->addFilter(new TwigFilter('snake', fn($string) => $this->snakeCase($string)));
     }
 
     public function registerTemplate(string $templateName, string $templatePath, string $outputPattern): void
     {
+        $resolvedTemplatePath = $this->getTemplatePath($templatePath);
         $this->templates[$templateName] = [
-            'path'          => $templatePath,
+            'path'          => $resolvedTemplatePath,
+            'original_path' => $templatePath,
             'outputPattern' => $outputPattern,
         ];
+    }
+
+    private function getTemplatePath(string $templatePath): string
+    {
+        // Check if the template exists in the custom directory first
+        if ($this->customTemplateDir !== null) {
+            $customPath = $this->customTemplateDir . '/' . $templatePath;
+            if ($this->filesystem->exists($customPath)) {
+                return '@custom/' . $templatePath;
+            }
+        }
+
+        // Fall back to the default template
+        return '@default/' . $templatePath;
+    }
+
+    public function templateExistsInCustomDir(string $templatePath): bool
+    {
+        if ($this->customTemplateDir === null) {
+            return false;
+        }
+
+        $customPath = $this->customTemplateDir . '/' . $templatePath;
+
+        return $this->filesystem->exists($customPath);
+    }
+
+    public function getTemplateSource(string $templatePath): string
+    {
+        if ($this->customTemplateDir === null) {
+            return 'default';
+        }
+
+        $customPath = $this->customTemplateDir . '/' . $templatePath;
+
+        return $this->filesystem->exists($customPath) ? 'custom' : 'default';
     }
 
     public function generate(BoilerplateConfiguration $configuration): array
@@ -110,19 +161,21 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
             }
 
             // Render the template
-            $content = $this->twig->render($template['path'], $variables);
+            try {
+                $content = $this->twig->render($template['path'], $variables);
 
-            // Write to file
-            $this->filesystem->dumpFile($outputPath, $content);
-            $generatedFiles[] = $outputPath;
+                // Write to file
+                $this->filesystem->dumpFile($outputPath, $content);
+                $generatedFiles[] = $outputPath;
+            } catch (LoaderError $e) {
+                // If there's an error loading the template, log it and continue
+                error_log("Error loading template {$template['path']}: " . $e->getMessage());
+            }
         }
 
         return $generatedFiles;
     }
 
-    /**
-     * Get a list of files that would be generated without actually generating them
-     */
     public function getFilesToGenerate(BoilerplateConfiguration $configuration): array
     {
         $filesToGenerate = [];
@@ -152,14 +205,20 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
                 $variables
             );
 
-            // Check if file exists
-            $fileExists = $this->filesystem->exists($outputPath);
+            // Check if the file already exists
+            $exists = $this->filesystem->exists($outputPath);
 
+            // Determine if the file will be skipped based on configuration
+            $willBeSkipped = $exists && $configuration->skipExisting;
+
+            // Add to the list of files to generate
             $filesToGenerate[] = [
-                'path'          => $outputPath,
-                'template_path' => $template['path'],
-                'template_name' => $templateName,
-                'exists'        => $fileExists,
+                'path'            => $outputPath,
+                'exists'          => $exists,
+                'will_be_skipped' => $willBeSkipped,
+                'template'        => $template['original_path'],
+                'template_path'   => $template['path'],
+                'template_source' => $this->getTemplateSource($template['original_path']),
             ];
         }
 
@@ -168,14 +227,10 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
 
     private function registerDefaultTemplates(): void
     {
-        // Shared templates
-        $this->registerTemplate('services-config', 'misc/services.yaml.twig', '{basePath}/UseCase/{cqrsType}/{operationName}/Resources/config/services.yaml');
-        $this->registerTemplate('query-infrastructure-query', 'query/infrastructure_query.php.twig', '{basePath}/UseCase/{cqrsType}/{operationName}/Infrastructure/Query/{operationName}.php');
-
+        // Register all templates - they'll be filtered at generation time based on HTTP method
         // Controller template
         $this->registerTemplate('controller', 'controller.php.twig', '{basePath}/Controller/{operationName}Controller.php');
 
-        // Register all templates - they'll be filtered at generation time based on HTTP method
         // Query related templates
         $this->registerTemplate('query', 'query/query.php.twig', '{basePath}/UseCase/Query/{operationName}/Query.php');
         $this->registerTemplate('query-handler', 'query/handler.php.twig', '{basePath}/UseCase/Query/{operationName}/QueryHandler.php');
@@ -186,6 +241,8 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
         $this->registerTemplate('query-serializer-xml', 'query/serializer.xml.twig', '{basePath}/UseCase/Query/{operationName}/ReadModel/serializer/serializer.xml');
         $this->registerTemplate('query-readme', 'query/readme.md.twig', '{basePath}/UseCase/Query/{operationName}/README.md');
         $this->registerTemplate('jms-serializer-config', 'query/jms_serializer.yaml.twig', '{basePath}/UseCase/Query/{operationName}/Resources/config/jms_serializer.yaml');
+        $this->registerTemplate('query-infrastructure-query', 'query/infrastructure_query.php.twig', '{basePath}/UseCase/Query/{operationName}/Infrastructure/Query/{operationName}.php');
+        $this->registerTemplate('services-config', 'misc/services.yaml.twig', '{basePath}/UseCase/{cqrsType}/{operationName}/Resources/config/services.yaml');
 
         // Command related templates
         $this->registerTemplate('command', 'command/command.php.twig', '{basePath}/UseCase/Command/{operationName}/Command.php');
@@ -328,9 +385,6 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
 
     private function extractEntityNameFromOperationId(string $operationId): string
     {
-        // Extract entity name from operation ID
-        // Example: 'updateUserProfile' would return 'User'
-
         // Remove common prefixes
         $name = preg_replace('/^(get|create|update|delete|find|list)/', '', $operationId);
 

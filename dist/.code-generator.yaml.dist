@@ -4,6 +4,9 @@ default_openapi_path: 'doc/api/openapi.yaml'
 skip_existing: false
 force: false
 
+#templates:
+ # path: "path/to/templates_folder"
+
 # Path patterns for all available templates
 path_patterns:
   # Controller
