@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace {{ namespace }}\UseCase\Command\{{ operation_id|properCapitalize }};
+namespace {{ full_namespace }};
 
 use {{ namespace }}\Domain\Entity\AuditLog\Actor;
 {% if request_body and request_body.content['application/json'].schema.properties %}

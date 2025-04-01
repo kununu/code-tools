@@ -51,17 +51,6 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
         $this->registerDefaultTemplates();
     }
 
-    private function registerTwigFilters(): void
-    {
-        // Add a proper camel case filter that preserves existing uppercase letters
-        $this->twig->addFilter(new TwigFilter('properCapitalize', function($string) {
-            return $this->convertOperationIdToClassName($string);
-        }));
-        $this->twig->addFilter(new TwigFilter('camel', fn($string) => lcfirst($this->pascalCase($string))));
-        $this->twig->addFilter(new TwigFilter('pascal', fn($string) => $this->pascalCase($string)));
-        $this->twig->addFilter(new TwigFilter('snake', fn($string) => $this->snakeCase($string)));
-    }
-
     public function registerTemplate(string $templateName, string $templatePath, string $outputPattern): void
     {
         $resolvedTemplatePath = $this->getTemplatePath($templatePath);
@@ -70,20 +59,6 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
             'original_path' => $templatePath,
             'outputPattern' => $outputPattern,
         ];
-    }
-
-    private function getTemplatePath(string $templatePath): string
-    {
-        // Check if the template exists in the custom directory first
-        if ($this->customTemplateDir !== null) {
-            $customPath = $this->customTemplateDir . '/' . $templatePath;
-            if ($this->filesystem->exists($customPath)) {
-                return '@custom/' . $templatePath;
-            }
-        }
-
-        // Fall back to the default template
-        return '@default/' . $templatePath;
     }
 
     public function templateExistsInCustomDir(string $templatePath): bool
@@ -103,9 +78,7 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
             return 'default';
         }
 
-        $customPath = $this->customTemplateDir . '/' . $templatePath;
-
-        return $this->filesystem->exists($customPath) ? 'custom' : 'default';
+        return $this->templateExistsInCustomDir($templatePath) ? 'custom' : 'default';
     }
 
     public function generate(BoilerplateConfiguration $configuration): array
@@ -160,9 +133,15 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
                 $this->filesystem->mkdir($directory, 0755);
             }
 
+            // Create a copy of template variables for this specific template
+            $templateVariables = $variables;
+
+            // Set the dynamic namespace based on the output path
+            $templateVariables['full_namespace'] = $this->getDynamicNamespace($outputPath, $configuration->basePath, $configuration->namespace);
+
             // Render the template
             try {
-                $content = $this->twig->render($template['path'], $variables);
+                $content = $this->twig->render($template['path'], $templateVariables);
 
                 // Write to file
                 $this->filesystem->dumpFile($outputPath, $content);
@@ -205,6 +184,9 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
                 $variables
             );
 
+            // Dynamic namespace based on path pattern
+            $dynamicNamespace = $this->getDynamicNamespace($outputPath, $configuration->basePath, $configuration->namespace);
+
             // Check if the file already exists
             $exists = $this->filesystem->exists($outputPath);
 
@@ -219,10 +201,35 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
                 'template'        => $template['original_path'],
                 'template_path'   => $template['path'],
                 'template_source' => $this->getTemplateSource($template['original_path']),
+                'full_namespace'  => $dynamicNamespace,
             ];
         }
 
         return $filesToGenerate;
+    }
+
+    private function registerTwigFilters(): void
+    {
+        // Add a proper camel case filter that preserves existing uppercase letters
+        $this->twig->addFilter(new TwigFilter('properCapitalize', function($string) {
+            return $this->convertOperationIdToClassName($string);
+        }));
+
+        // Add filter to convert snake_case to camelCase
+        $this->twig->addFilter(new TwigFilter('snake_to_camel', function($string) {
+            return $this->convertSnakeToCamelCase($string);
+        }));
+    }
+
+    private function getTemplatePath(string $templatePath): string
+    {
+        // Check if the template exists in the custom directory first
+        if ($this->templateExistsInCustomDir($templatePath)) {
+            return '@custom/' . $templatePath;
+        }
+
+        // Fall back to the default template
+        return '@default/' . $templatePath;
     }
 
     private function registerDefaultTemplates(): void
@@ -398,5 +405,154 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
         }
 
         return ucfirst($name);
+    }
+
+    private function convertSnakeToCamelCase(string $string): string
+    {
+        if (empty($string)) {
+            return $string;
+        }
+
+        $string = ltrim($string, '_');
+
+        return lcfirst(str_replace('_', '', lcfirst(ucwords($string, '_'))));
+    }
+
+    /**
+     * Extracts a dynamic namespace from the output path
+     *
+     * This method determines the appropriate namespace based on the file path,
+     * taking into account the base path and base namespace while avoiding redundancy.
+     *
+     * For example, if the output path is "src/Controller/Admin/UserController.php"
+     * with base path "src" and base namespace "App", the resulting namespace
+     * would be "App\Controller\Admin".
+     *
+     * @param string $outputPath    The full output path for the file
+     * @param string $basePath      The base path for generated files
+     * @param string $baseNamespace The base namespace for the application
+     *
+     * @return string The dynamically generated namespace
+     */
+    private function getDynamicNamespace(string $outputPath, string $basePath, string $baseNamespace): string
+    {
+        // Normalize paths to use consistent directory separators
+        $normalizedOutputPath = str_replace('\\', '/', $outputPath);
+        $normalizedBasePath = str_replace('\\', '/', $basePath);
+
+        // Special handling for test files
+        if (str_contains($normalizedOutputPath, 'tests/')) {
+            return $this->getTestFileNamespace($normalizedOutputPath, $baseNamespace);
+        }
+
+        // Remove base path from the output path
+        $relativePath = $normalizedBasePath ?
+            preg_replace('#^' . preg_quote($normalizedBasePath . '/', '#') . '#', '', $normalizedOutputPath) :
+            $normalizedOutputPath;
+
+        // Get the directory part of the path (remove the file name)
+        $directory = dirname($relativePath);
+
+        // If we're at the root directory (.), use the base namespace
+        if ($directory === '.') {
+            return $baseNamespace;
+        }
+
+        // Convert directory separators to namespace separators
+        $namespaceSegments = explode('/', $directory);
+
+        // Remove any empty segments or segments that would create redundancy
+        $namespaceSegments = array_filter($namespaceSegments, function($segment) {
+            return !empty($segment) && $segment !== '.';
+        });
+
+        // Convert to namespace format
+        $namespaceAddition = implode('\\', $namespaceSegments);
+
+        // Check for common redundancy patterns in namespaces
+        return $this->normalizeNamespace($baseNamespace, $namespaceAddition);
+    }
+
+    /**
+     * Handles namespace generation for test files
+     *
+     * @param string $outputPath    The normalized output path
+     * @param string $baseNamespace The base namespace
+     *
+     * @return string The properly formatted test namespace
+     */
+    private function getTestFileNamespace(string $outputPath, string $baseNamespace): string
+    {
+        // Handle tests directory specially
+        $parts = explode('tests/', $outputPath, 2);
+        if (count($parts) > 1) {
+            $testPath = dirname($parts[1]);
+
+            // Convert to namespace format
+            $testNamespaceSegments = explode('/', $testPath);
+
+            // Remove any empty segments
+            $testNamespaceSegments = array_filter($testNamespaceSegments, function($segment) {
+                return !empty($segment) && $segment !== '.';
+            });
+
+            $testNamespace = implode('\\', $testNamespaceSegments);
+
+            // Check if Tests is already in the namespace to avoid duplication
+            if (!str_starts_with($testNamespace, 'Tests\\') && !str_starts_with($testNamespace, 'Test\\')) {
+                $testNamespace = 'Tests\\' . $testNamespace;
+            }
+
+            return $this->normalizeNamespace($baseNamespace, $testNamespace);
+        }
+
+        return $baseNamespace . '\\Tests';
+    }
+
+    /**
+     * Normalizes a namespace to prevent redundancy
+     *
+     * @param string $baseNamespace     The base namespace
+     * @param string $namespaceAddition The namespace addition
+     *
+     * @return string The normalized namespace
+     */
+    private function normalizeNamespace(string $baseNamespace, string $namespaceAddition): string
+    {
+        if (empty($namespaceAddition)) {
+            return $baseNamespace;
+        }
+
+        // Split into segments for analysis
+        $baseSegments = explode('\\', $baseNamespace);
+        $additionSegments = explode('\\', $namespaceAddition);
+
+        // Check for redundancy at the beginning of the addition
+        $redundantSegments = 0;
+        $baseSegmentsCount = count($baseSegments);
+
+        foreach ($additionSegments as $index => $segment) {
+            // Check if this segment would be redundant with the base namespace
+            $baseIndex = $baseSegmentsCount - $redundantSegments - 1;
+            if ($baseIndex >= 0 && strtolower($baseSegments[$baseIndex]) === strtolower($segment)) {
+                ++$redundantSegments;
+            } else {
+                break;
+            }
+        }
+
+        // Remove redundant segments
+        if ($redundantSegments > 0) {
+            $additionSegments = array_slice($additionSegments, $redundantSegments);
+        }
+
+        // Build the final namespace
+        $finalNamespace = $baseNamespace;
+
+        if (!empty($additionSegments)) {
+            $finalNamespace .= '\\' . implode('\\', $additionSegments);
+        }
+
+        return $finalNamespace;
     }
 }

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace {{ namespace }}\Controller{% if tags is defined and tags|length > 0 %}\{{ tags[0] }}{% endif %};
+namespace {{ full_namespace }}{% if tags is defined and tags|length > 0 %}\{{ tags[0] }}{% endif %};
 
 {% if method == 'GET' %}
 {% if parameters is defined and parameters|length > 0 and parameters|filter(p => p.in == 'query')|length > 0 %}

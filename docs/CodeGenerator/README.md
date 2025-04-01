@@ -138,6 +138,8 @@ The most commonly customized templates are:
 - `tests/unit_test.php.twig` - Unit test template
 - `tests/functional_test.php.twig` - Functional test template
 
+See the [TEMPLATES.md](TEMPLATES.md) file for more details on how to create and use custom templates.
+
 ## Manual Data Entry
 If you don't have an OpenAPI specification or prefer to provide operation details manually, you can use the `--manual` option:
 

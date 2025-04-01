@@ -6,7 +6,7 @@ namespace Kununu\CodeGenerator\Application\Service;
 
 use cebe\openapi\Reader;
 use cebe\openapi\spec\OpenApi;
-use RuntimeException;
+use Kununu\CodeGenerator\Domain\Exception\ParserException;
 
 /**
  * Parser for OpenAPI specifications - supports both 3.0 and 3.1 versions
@@ -28,7 +28,7 @@ final class OpenApiParser
     public function parseFile(string $filePath): void
     {
         if (!file_exists($filePath)) {
-            throw new RuntimeException(sprintf('OpenAPI file not found at %s', $filePath));
+            throw new ParserException(sprintf('OpenAPI file not found at %s', $filePath));
         }
 
         $extension = pathinfo($filePath, PATHINFO_EXTENSION);
@@ -36,7 +36,7 @@ final class OpenApiParser
         $this->openApi = match (strtolower($extension)) {
             'json' => Reader::readFromJsonFile($filePath),
             'yaml', 'yml' => Reader::readFromYamlFile($filePath),
-            default => throw new RuntimeException(sprintf('Unsupported file extension: %s', $extension)),
+            default => throw new ParserException(sprintf('Unsupported file extension: %s', $extension)),
         };
 
         // Validate except for strict mode, as OpenAPI 3.1 might introduce new fields
@@ -49,7 +49,7 @@ final class OpenApiParser
 
         if (!$this->openApi->validate($validationOptions)) {
             $errors = $this->openApi->getErrors();
-            throw new RuntimeException(sprintf(
+            throw new ParserException(sprintf(
                 'Invalid OpenAPI specification: %s',
                 implode(', ', $errors)
             ));
@@ -59,7 +59,7 @@ final class OpenApiParser
     public function listOperations(): array
     {
         if ($this->openApi === null) {
-            throw new RuntimeException('OpenAPI specification not loaded. Call parseFile() first.');
+            throw new ParserException('OpenAPI specification not loaded. Call parseFile() first.');
         }
 
         $operations = [];
@@ -88,7 +88,7 @@ final class OpenApiParser
     public function getOperationById(string $operationId): array
     {
         if ($this->openApi === null) {
-            throw new RuntimeException('OpenAPI specification not loaded. Call parseFile() first.');
+            throw new ParserException('OpenAPI specification not loaded. Call parseFile() first.');
         }
 
         foreach ($this->openApi->paths as $path => $pathItem) {
@@ -161,7 +161,7 @@ final class OpenApiParser
             }
         }
 
-        throw new RuntimeException(sprintf('Operation with ID "%s" not found in OpenAPI specification', $operationId));
+        throw new ParserException(sprintf('Operation with ID "%s" not found in OpenAPI specification', $operationId));
     }
 
     private function extractSchema($schema): ?array

@@ -20,6 +20,7 @@
         "devizzent/cebe-php-openapi": "^1.0"
     },
     "require-dev": {
+        "jetbrains/phpstorm-attributes": "^1.2",
         "kununu/scripts": "^5.1",
         "phpunit/phpunit": "^11.5"
     },

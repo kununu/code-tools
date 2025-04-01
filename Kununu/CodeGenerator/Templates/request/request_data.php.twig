@@ -1,15 +1,15 @@
 <?php
 declare(strict_types=1);
 
-namespace {{ namespace }}\Request\DTO;
+namespace {{ full_namespace }};
 
-use App\Domain\Entity\AuditLog\Actor;
-use App\Request\DTO\Request;
 use App\Request\Exception\ValidationException;
 use Kununu\Collection\Convertible\ToArray;
 use Kununu\Utilities\DTO\Validated\AbstractValidatedDTO;
+use Kununu\Utilities\Validator\ConstraintsBuilderConfig;
 use Symfony\Component\Validator\Constraints as Assert;
 
+#[ConstraintsBuilderConfig(allowExtraFields: false)]
 final class {{ operation_id|properCapitalize }}RequestData extends AbstractValidatedDTO implements ToArray
 {
 {% if request_body and request_body.content['application/json'].schema.properties %}
@@ -40,7 +40,7 @@ final class {{ operation_id|properCapitalize }}RequestData extends AbstractValid
     #[Assert\NotNull]
 {% endif %}
 {% endif %}
-    public {% if property.nullable is defined and property.nullable %}?{% endif %}{{ property.type == 'array' ? 'array' : (property.type == 'integer' ? 'int' : (property.type == 'number' ? 'float' : (property.type == 'boolean' ? 'bool' : 'string'))) }} ${{ propertyName }}{% if property.nullable is defined and property.nullable %} = null{% endif %};
+    public readonly {% if property.nullable is defined and property.nullable %}?{% endif %}{{ property.type == 'array' ? 'array' : (property.type == 'integer' ? 'int' : (property.type == 'number' ? 'float' : (property.type == 'boolean' ? 'bool' : 'string'))) }} ${{ propertyName|snake_to_camel }}{% if property.nullable is defined and property.nullable %} = null{% endif %};
 {% endfor %}
 {% endif %}
 
@@ -49,7 +49,7 @@ final class {{ operation_id|properCapitalize }}RequestData extends AbstractValid
         return [
 {% if request_body and request_body.content['application/json'].schema.properties %}
 {% for propertyName, property in request_body.content['application/json'].schema.properties %}
-            '{{ propertyName }}' => $this->{{ propertyName }},
+            '{{ propertyName }}' => $this->{{ propertyName|snake_to_camel }},
 {% endfor %}
 {% endif %}
         ];

@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 {% if method == 'GET' %}
-namespace {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }};
+namespace {{ full_namespace }};
 
 {% if operation_id starts with 'get' and 'by' in operation_id|replace({'get': ''})|lower %}
 use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\Exception\{{ entity_name }}NotFoundException;
@@ -22,7 +22,7 @@ use Kununu\Utilities\DTO\Uuid\Uuid;
 use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\Criteria\Criteria;
 {% endif %}
 {% else %}
-namespace {{ namespace }}\UseCase\Command\{{ operation_id|properCapitalize }};
+namespace {{ full_namespace }};
 
 {% endif %}
 

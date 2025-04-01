@@ -4,9 +4,22 @@ declare(strict_types=1);
 
 namespace Kununu\CodeGenerator\Application\Service;
 
-use RuntimeException;
+use Kununu\CodeGenerator\Domain\Exception\ConfigurationException;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+/**
+ * Collects operation details manually from the user through console interaction
+ *
+ * This class is used when no OpenAPI specification is available or manual mode is selected.
+ * It guides the user through a series of questions to gather all information needed for
+ * code generation, including:
+ * - Basic operation information (ID, method, path)
+ * - Request parameters
+ * - Request body schema
+ * - Response schemas
+ *
+ * The gathered information mimics the structure obtained from parsing OpenAPI specifications.
+ */
 final readonly class ManualOperationCollector
 {
     private SymfonyStyle $io;
@@ -16,6 +29,11 @@ final readonly class ManualOperationCollector
         $this->io = $io;
     }
 
+    /**
+     * Main method to collect all operation details interactively
+     *
+     * @return array Operation details in a format compatible with OpenAPI parsed data
+     */
     public function collectOperationDetails(): array
     {
         $this->io->section('Manual Operation Details');
@@ -44,7 +62,7 @@ final readonly class ManualOperationCollector
     {
         $operationId = $this->io->ask('Operation ID (e.g., getUserById)', null, function($value) {
             if (empty($value)) {
-                throw new RuntimeException('Operation ID cannot be empty');
+                throw new ConfigurationException('Operation ID cannot be empty');
             }
 
             return $value;
@@ -53,7 +71,7 @@ final readonly class ManualOperationCollector
         $method = $this->io->choice('HTTP Method', ['GET', 'POST', 'PUT', 'DELETE'], 'GET');
         $path = $this->io->ask('URL Path (e.g., /users/{userId})', '/', function($value) {
             if (empty($value)) {
-                throw new RuntimeException('URL Path cannot be empty');
+                throw new ConfigurationException('URL Path cannot be empty');
             }
 
             return $value;
@@ -118,17 +136,45 @@ final readonly class ManualOperationCollector
             'content'  => [],
         ];
 
-        $contentType = $this->io->choice('Content type', ['application/json', 'application/xml', 'multipart/form-data'], 'application/json');
+        $contentType = 'application/json';
+        // TODO: Allow user to select content type
+        // $contentType = $this->io->choice('Content type', ['application/json', 'application/xml', 'multipart/form-data'], 'application/json');
 
         $properties = $this->collectSchemaProperties('request body');
+        $requiredFields = $this->collectRequiredFields(array_keys($properties));
+
+        // Mark non-required properties as nullable
+        $this->markNonRequiredPropertiesAsNullable($properties, $requiredFields);
+
         $requestBody['content'][$contentType] = [
             'schema' => [
                 'type'       => 'object',
                 'properties' => $properties,
+                'required'   => $requiredFields,
             ],
         ];
 
         return $requestBody;
+    }
+
+    private function collectRequiredFields(array $propertyNames): array
+    {
+        if (empty($propertyNames)) {
+            return [];
+        }
+
+        $this->io->writeln('Select which fields are required (non-required fields will be nullable):');
+        $requiredFields = [];
+
+        foreach ($propertyNames as $propName) {
+            if ($this->io->confirm("Is '{$propName}' required?", false)) {
+                $requiredFields[] = $propName;
+            } else {
+                $this->io->writeln(" - <comment>{$propName}</comment> will be nullable");
+            }
+        }
+
+        return $requiredFields;
     }
 
     private function collectSchemaProperties(string $context): array
@@ -142,7 +188,7 @@ final readonly class ManualOperationCollector
                 break;
             }
 
-            $property = $this->collectPropertyDetails($propName);
+            $property = $this->collectPropertyDetails();
             $properties[$propName] = $property;
 
             $this->io->writeln(sprintf('Added property: <info>%s</info> (%s)', $propName, $property['type']));
@@ -151,7 +197,7 @@ final readonly class ManualOperationCollector
         return $properties;
     }
 
-    private function collectPropertyDetails(string $propName): array
+    private function collectPropertyDetails(): array
     {
         $propType = $this->io->choice('Property type', ['string', 'integer', 'number', 'boolean', 'array', 'object'], 'string');
 
@@ -179,20 +225,18 @@ final readonly class ManualOperationCollector
         $responses = [];
         $this->io->writeln('Enter responses (at least one is required):');
 
-        do {
-            $statusCode = $this->collectStatusCode();
+        $statusCode = $this->collectStatusCode();
 
-            $response = [
-                'content' => [],
-            ];
+        $response = [
+            'content' => [],
+        ];
 
-            if ($this->io->confirm('Does this response have a body?', true)) {
-                $response['content'] = $this->collectResponseContent();
-            }
+        if ($this->io->confirm('Does this response have a body?', true)) {
+            $response['content'] = $this->collectResponseContent();
+        }
 
-            $responses[$statusCode] = $response;
-            $this->io->writeln(sprintf('Added response: <info>%s</info> - %s', $statusCode, $responseDesc));
-        } while (empty($responses) || $this->io->confirm('Add another response?', false));
+        $responses[$statusCode] = $response;
+        $this->io->writeln(sprintf('Added response: <info>%s</info>', $statusCode));
 
         return $responses;
     }
@@ -201,7 +245,7 @@ final readonly class ManualOperationCollector
     {
         return $this->io->ask('Status code', '200', function($value) {
             if (!preg_match('/^[1-5][0-9][0-9]$/', $value)) {
-                throw new RuntimeException('Invalid status code. Must be a 3-digit HTTP status code.');
+                throw new ConfigurationException('Invalid status code. Must be a 3-digit HTTP status code.');
             }
 
             return $value;
@@ -211,7 +255,10 @@ final readonly class ManualOperationCollector
     private function collectResponseContent(): array
     {
         $content = [];
-        $contentType = $this->io->choice('Content type', ['application/json', 'application/xml', 'text/plain'], 'application/json');
+        $contentType = 'application/json';
+
+        // TODO: Eventually allow user to select content type
+        // $contentType = $this->io->choice('Content type', ['application/json', 'application/xml', 'text/plain'], 'application/json');
 
         if (in_array($contentType, ['application/json', 'application/xml'])) {
             $responseType = $this->io->choice('Response schema type', ['object', 'array', 'string', 'integer', 'number', 'boolean'], 'object');
@@ -239,6 +286,13 @@ final readonly class ManualOperationCollector
         if ($responseType === 'object') {
             $properties = $this->collectSchemaProperties('response');
             $schema['properties'] = $properties;
+
+            if (!empty($properties)) {
+                $schema['required'] = $this->collectRequiredFields(array_keys($properties));
+
+                // Mark non-required properties as nullable
+                $this->markNonRequiredPropertiesAsNullable($schema['properties'], $schema['required']);
+            }
         } elseif ($responseType === 'array') {
             $itemType = $this->io->choice('Array items type', ['string', 'integer', 'number', 'boolean', 'object'], 'object');
             $schema['items'] = [
@@ -248,9 +302,25 @@ final readonly class ManualOperationCollector
             if ($itemType === 'object') {
                 $properties = $this->collectSchemaProperties('item');
                 $schema['items']['properties'] = $properties;
+
+                if (!empty($properties)) {
+                    $schema['items']['required'] = $this->collectRequiredFields(array_keys($properties));
+
+                    // Mark non-required properties as nullable
+                    $this->markNonRequiredPropertiesAsNullable($schema['items']['properties'], $schema['items']['required']);
+                }
             }
         }
 
         return $schema;
+    }
+
+    private function markNonRequiredPropertiesAsNullable(array &$properties, array $requiredProperties): void
+    {
+        foreach ($properties as $propertyName => &$property) {
+            if (!in_array($propertyName, $requiredProperties)) {
+                $property['nullable'] = true;
+            }
+        }
     }
 }

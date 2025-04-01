@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace Kununu\CodeGenerator\Application\Service;
 
 use Exception;
-use RuntimeException;
+use Kununu\CodeGenerator\Domain\Exception\ConfigurationException;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Yaml\Yaml;
 
+/**
+ * Handles loading configuration from YAML or JSON files and provides default configurations
+ * when files are missing or incomplete.
+ */
 final class ConfigurationLoader
 {
     private Filesystem $filesystem;
@@ -42,7 +46,7 @@ final class ConfigurationLoader
         return match (strtolower($extension)) {
             'json' => $this->parseJson(file_get_contents($configPath), $configPath),
             'yaml', 'yml' => $this->parseYaml(file_get_contents($configPath), $configPath),
-            default => throw new RuntimeException(sprintf('Unsupported configuration file format: %s', $extension)),
+            default => throw new ConfigurationException(sprintf('Unsupported configuration file format: %s', $extension)),
         };
     }
 
@@ -51,7 +55,7 @@ final class ConfigurationLoader
         $config = json_decode($content, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new RuntimeException(sprintf(
+            throw new ConfigurationException(sprintf(
                 'Failed to parse JSON configuration file %s: %s',
                 $path,
                 json_last_error_msg()
@@ -68,11 +72,11 @@ final class ConfigurationLoader
 
             return $this->mergeWithDefaults($config);
         } catch (Exception $e) {
-            throw new RuntimeException(sprintf(
+            throw new ConfigurationException(sprintf(
                 'Failed to parse YAML configuration file %s: %s',
                 $path,
                 $e->getMessage()
-            ));
+            ), $e->getCode(), $e);
         }
     }
 

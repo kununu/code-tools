@@ -35,14 +35,16 @@ final class GenerateBoilerplateCommand extends Command
     private FileGenerationHandler $fileGenerationHandler;
     private ManualOperationCollector $manualOperationCollector;
 
-    public function __construct()
-    {
+    public function __construct(
+        ConfigurationLoader $configLoader,
+        OpenApiParser $openApiParser,
+        CodeGeneratorInterface $codeGenerator,
+    ) {
         parent::__construct();
 
-        $filesystem = new Filesystem();
-        $this->configLoader = new ConfigurationLoader($filesystem);
-        $this->openApiParser = new OpenApiParser();
-        $this->codeGenerator = new TwigTemplateGenerator($filesystem);
+        $this->configLoader = $configLoader;
+        $this->openApiParser = $openApiParser;
+        $this->codeGenerator = $codeGenerator;
     }
 
     protected function configure(): void

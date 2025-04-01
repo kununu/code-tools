@@ -2,21 +2,16 @@
 declare(strict_types=1);
 
 {% if method == 'GET' %}
-namespace {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\Infrastructure;
+namespace {{ full_namespace }};
 
 {% if operation_id starts with 'get' and 'by' in operation_id|replace({'get': ''})|lower %}
 use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\Exception\{{ entity_name }}NotFoundException;
-{% if 'byuuid' in operation_id|replace({'get': ''})|lower %}
-use {{ namespace }}\UseCase\Query\Shared\ReadModel\{{ entity_name|slice(0, -1)|capitalize ~ 's' }}\{{ entity_name|slice(0, -1) }};
-{% else %}
 use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\ReadModel\{{ operation_id|replace({'get': ''}) }};
-{% endif %}
 {% else %}
 use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\ReadModel\{{ operation_id|replace({'get': ''}) }};
 {% endif %}
 use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\Infrastructure\Query\{{ operation_id|properCapitalize }};
 use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\RepositoryInterface;
-use Exception;
 use Kununu\Doctrine\DBAL\Repository\AbstractRepository;
 {% if parameters is defined and parameters|length > 0 and parameters|filter(p => p.in == 'path')|length > 0 %}
 use Kununu\Utilities\DTO\Uuid\Uuid;
@@ -25,7 +20,7 @@ use Kununu\Utilities\DTO\Uuid\Uuid;
 use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\Criteria\Criteria;
 {% endif %}
 {% else %}
-namespace {{ namespace }}\Infrastructure\Repository;
+namespace {{ full_namespace }};
 
 use {{ namespace }}\UseCase\Command\{{ operation_id|properCapitalize }}\Repository\RepositoryInterface;
 {% endif %}

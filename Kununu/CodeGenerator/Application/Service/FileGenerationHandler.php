@@ -4,10 +4,21 @@ declare(strict_types=1);
 
 namespace Kununu\CodeGenerator\Application\Service;
 
+use Exception;
 use Kununu\CodeGenerator\Domain\DTO\BoilerplateConfiguration;
+use Kununu\CodeGenerator\Domain\Exception\FileGenerationException;
 use Kununu\CodeGenerator\Domain\Service\CodeGeneratorInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+/**
+ * Handles the generation of files based on templates and user configuration
+ *
+ * This service is responsible for:
+ * - Processing the list of files to be generated
+ * - Handling existing files (skip or overwrite)
+ * - Delegating the actual file generation to a code generator
+ * - Displaying summaries and information about the generation process
+ */
 final class FileGenerationHandler
 {
     private SymfonyStyle $io;
@@ -49,14 +60,25 @@ final class FileGenerationHandler
 
     public function generateFiles(BoilerplateConfiguration $configuration, array $filesToGenerate, bool $quiet): array
     {
-        $generatedFiles = $this->codeGenerator->generate($configuration);
+        try {
+            // Ensure operation details are properly formatted
+            $this->ensureValidOperationDetailsFormat($configuration);
 
-        if (!$quiet) {
-            $this->displayGenerationSummary($configuration, $generatedFiles);
-            $this->displayRouteInformation($configuration, $filesToGenerate);
+            $generatedFiles = $this->codeGenerator->generate($configuration);
+
+            if (!$quiet) {
+                $this->displayGenerationSummary($configuration, $generatedFiles);
+                $this->displayRouteInformation($configuration, $filesToGenerate);
+            }
+
+            return $generatedFiles;
+        } catch (Exception $e) {
+            throw new FileGenerationException(
+                sprintf('Error generating files: %s', $e->getMessage()),
+                $e->getCode(),
+                $e
+            );
         }
-
-        return $generatedFiles;
     }
 
     private function findExistingFiles(array $filesToGenerate): array
@@ -83,10 +105,11 @@ final class FileGenerationHandler
                     ? 'Yes (will be skipped)'
                     : 'Yes (will be overwritten)';
             }
-            $rows[] = [$file['path'], $existsStatus];
+            $namespace = $file['namespace'] ?? '-';
+            $rows[] = [$file['path'], $existsStatus, $namespace];
         }
 
-        $this->io->table(['File', 'Exists'], $rows);
+        $this->io->table(['File', 'Exists', 'Namespace'], $rows);
 
         // Show template source information if custom templates are being used
         if (method_exists($this->codeGenerator, 'getTemplateSource')
@@ -204,5 +227,87 @@ final class FileGenerationHandler
         }
 
         return null;
+    }
+
+    private function ensureValidOperationDetailsFormat(BoilerplateConfiguration $configuration): void
+    {
+        // Skip if no operation details are set
+        if (!isset($configuration->operationDetails)) {
+            return;
+        }
+
+        // Ensure request body schema has required field if it has properties
+        if (isset($configuration->operationDetails['requestBody'])
+            && isset($configuration->operationDetails['requestBody']['content'])) {
+            foreach ($configuration->operationDetails['requestBody']['content'] as $contentType => $content) {
+                if (isset($content['schema']) && isset($content['schema']['properties'])) {
+                    // Ensure required field exists
+                    if (!isset($content['schema']['required'])) {
+                        $configuration->operationDetails['requestBody']['content'][$contentType]['schema']['required'] = [];
+                    }
+
+                    // Mark non-required properties as nullable
+                    $this->markNonRequiredPropertiesAsNullable(
+                        $configuration->operationDetails['requestBody']['content'][$contentType]['schema']['properties'],
+                        $content['schema']['required'] ?? []
+                    );
+                }
+            }
+        }
+
+        // Ensure response schema has required field if it has properties
+        if (isset($configuration->operationDetails['responses'])) {
+            foreach ($configuration->operationDetails['responses'] as $statusCode => $response) {
+                if (isset($response['content'])) {
+                    foreach ($response['content'] as $contentType => $content) {
+                        if (isset($content['schema'])) {
+                            // For object type schemas
+                            if (isset($content['schema']['type'])
+                                && $content['schema']['type'] === 'object'
+                                && isset($content['schema']['properties'])) {
+                                // Ensure required field exists
+                                if (!isset($content['schema']['required'])) {
+                                    $configuration->operationDetails['responses'][$statusCode]['content'][$contentType]['schema']['required'] = [];
+                                }
+
+                                // Mark non-required properties as nullable
+                                $this->markNonRequiredPropertiesAsNullable(
+                                    $configuration->operationDetails['responses'][$statusCode]['content'][$contentType]['schema']['properties'],
+                                    $content['schema']['required'] ?? []
+                                );
+                            }
+
+                            // For array of objects
+                            if (isset($content['schema']['type'])
+                                && $content['schema']['type'] === 'array'
+                                && isset($content['schema']['items'])
+                                && isset($content['schema']['items']['type'])
+                                && $content['schema']['items']['type'] === 'object'
+                                && isset($content['schema']['items']['properties'])) {
+                                // Ensure required field exists
+                                if (!isset($content['schema']['items']['required'])) {
+                                    $configuration->operationDetails['responses'][$statusCode]['content'][$contentType]['schema']['items']['required'] = [];
+                                }
+
+                                // Mark non-required properties as nullable
+                                $this->markNonRequiredPropertiesAsNullable(
+                                    $configuration->operationDetails['responses'][$statusCode]['content'][$contentType]['schema']['items']['properties'],
+                                    $content['schema']['items']['required'] ?? []
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private function markNonRequiredPropertiesAsNullable(array &$properties, array $requiredProperties): void
+    {
+        foreach ($properties as $propertyName => &$property) {
+            if (!in_array($propertyName, $requiredProperties)) {
+                $property['nullable'] = true;
+            }
+        }
     }
 }
