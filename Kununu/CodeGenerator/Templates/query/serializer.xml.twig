@@ -1,6 +1,9 @@
+{% if templates.hasTemplate('read-model') %}
+{% set readModel = templates.getTemplateByType('read-model') %}
+{% endif %}
 <?xml version="1.0" encoding="UTF-8" ?>
 <serializer>
-    <class name="{{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\ReadModel\{{ operation_id|replace({'get': ''}) }}" exclusion-policy="all">
-        <virtual-property method="getArrayCopy" type="array" serialized-name="{{ operation_id|replace({'get': ''})|lower }}"/>
+    <class name="{% if readModel is defined %}{{ readModel.fqcn }}{% endif %}" exclusion-policy="all">
+        <virtual-property method="getArrayCopy" type="array" serialized-name="{% if readModel is defined %}{{ readModel.classname|lower }}{% endif %}"/>
     </class>
 </serializer>

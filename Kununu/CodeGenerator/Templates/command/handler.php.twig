@@ -7,11 +7,11 @@ use Kununu\CQRS\Command\CommandHandler as CQRSCommandHandler;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
-final readonly class CommandHandler implements CQRSCommandHandler
+final readonly class {{ classname }} implements CQRSCommandHandler
 {
     public function __construct(
-        private readonly RepositoryInterface $repository,
-        private readonly LoggerInterface $logger,
+        private RepositoryInterface $repository,
+        private LoggerInterface $logger,
     )
     {
     }

@@ -5,10 +5,19 @@ namespace {{ full_namespace }}{% if tags is defined and tags|length > 0 %}\{{ ta
 
 {% if method == 'GET' %}
 {% if parameters is defined and parameters|length > 0 and parameters|filter(p => p.in == 'query')|length > 0 %}
-use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\Criteria\Criteria;
+{% if templates.hasTemplate('criteria') %}
+{% set criteria = templates.getTemplateByType('criteria') %}
+use {{ criteria.fqcn }};
 {% endif %}
-use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\Query;
-use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\ReadModel\{{ operation_id|replace({'get': ''}) }};
+{% endif %}
+{% if templates.hasTemplate('query') %}
+{% set query = templates.getTemplateByType('query') %}
+use {{ query.fqcn }};
+{% endif %}
+{% if templates.hasTemplate('read-model') %}
+{% set readModel = templates.getTemplateByType('read-model') %}
+use {{ readModel.fqcn }};
+{% endif %}
 use Kununu\CQRS\Bundle\Controller\AbstractQueryBusController;
 use Kununu\ResponseSerializationBundle\Response\Response;
 {% if path is defined and path is not empty and '{' in path %}
@@ -20,13 +29,16 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 {% endif %}
 {% else %}
-use {{ namespace }}\Request\DTO\{{ operation_id|properCapitalize }}RequestData;
-use {{ namespace }}\Request\Exception\ValidationException;
-use {{ namespace }}\Request\Resolver\{{ operation_id|properCapitalize }}Resolver;
-use {{ namespace }}\UseCase\Command\{{ operation_id|properCapitalize }}\Command;
-{% if path is defined and path is not empty and '{' in path %}
-use {{ namespace }}\Domain\Entity\{{ entity_name }}\Exception\{{ entity_name }}NotFoundException;
+{% if templates.hasTemplate('request-data') %}
+{% set request = templates.getTemplateByType('request-data') %}
+use {{ request.fqcn }};
 {% endif %}
+{% if templates.hasTemplate('request-resolver') %}
+{% set resolver = templates.getTemplateByType('request-resolver') %}
+use {{ resolver.fqcn }};
+{% endif %}
+use {{ namespace }}\Request\Exception\ValidationException;
+use {{ namespace }}\UseCase\Command\{{ operation_id|properCapitalize }}\Command;
 use Kununu\CQRS\Bundle\Controller\AbstractCommandBusController;
 use Kununu\ResponseSerializationBundle\Response\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -35,7 +47,7 @@ use Throwable;
 {% endif %}
 
 {% if method == 'GET' %}
-final class {{ operation_id|properCapitalize }}Controller extends AbstractQueryBusController
+final class {{ classname }} extends AbstractQueryBusController
 {
     public function __invoke(
 {% if parameters is defined and parameters|length > 0 %}
@@ -51,7 +63,7 @@ final class {{ operation_id|properCapitalize }}Controller extends AbstractQueryB
 {% endif %}
 {% endfor %}
 {% endif %}
-    ): {{ operation_id|replace({'get': ''}) }}|Response {
+    ): {% if readModel is defined %}{{ readModel.classname }}{% endif %}|Response {
         try {
             return $this->queryBus->handle(
                 new Query(
@@ -91,7 +103,7 @@ final class {{ operation_id|properCapitalize }}Controller extends AbstractQueryB
     }
 }
 {% else %}
-final class {{ operation_id|properCapitalize }}Controller extends AbstractCommandBusController
+final class {{ classname }} extends AbstractCommandBusController
 {
     public function __invoke(
         #[MapRequestPayload(resolver: {{ operation_id|properCapitalize }}Resolver::class)]
@@ -121,8 +133,6 @@ final class {{ operation_id|properCapitalize }}Controller extends AbstractComman
 {% else %}
                     $requestData->toArray(),
 {% endif %}
-                    $requestData->actor(),
-                    $requestData->comment ?? null
                 )
             );
 

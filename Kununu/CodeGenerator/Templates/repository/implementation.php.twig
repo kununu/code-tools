@@ -1,43 +1,56 @@
 <?php
 declare(strict_types=1);
 
-{% if method == 'GET' %}
 namespace {{ full_namespace }};
 
-{% if operation_id starts with 'get' and 'by' in operation_id|replace({'get': ''})|lower %}
-use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\Exception\{{ entity_name }}NotFoundException;
-use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\ReadModel\{{ operation_id|replace({'get': ''}) }};
-{% else %}
-use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\ReadModel\{{ operation_id|replace({'get': ''}) }};
+{% if templates.hasTemplate('query-infrastructure-query') %}
+{% set infraQuery = templates.getTemplateByType('query-infrastructure-query') %}
+use {{ infraQuery.fqcn }};
 {% endif %}
-use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\Infrastructure\Query\{{ operation_id|properCapitalize }};
-use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\RepositoryInterface;
-use Kununu\Doctrine\DBAL\Repository\AbstractRepository;
+{% if method == 'GET' %}
+{% if parameters is defined and parameters|length > 0 and parameters|filter(p => p.in == 'query')|length > 0 %}
+{% if templates.hasTemplate('criteria') %}
+{% set criteria = templates.getTemplateByType('criteria') %}
+use {{ criteria.fqcn }};
+{% endif %}
+{% set readModel = templates.getTemplateByType('read-model') %}
+{% set readModelName = readModel.classname %}
+use {{ readModel.fqcn }};
+{% endif %}
+{% endif %}
+{% if method == 'GET' %}
+{% if templates.hasTemplate('query-exception') %}
+{% set exception = templates.getTemplateByType('query-exception') %}
+use {{ exception.fqcn }};
+{% endif %}
+{% if templates.hasTemplate('query-repository-interface') %}
+{% set interface = templates.getTemplateByType('query-repository-interface') %}
+use {{ interface.fqcn }};
+{% endif %}
+{% else %}
+{% if templates.hasTemplate('command-repository-interface') %}
+{% set interface = templates.getTemplateByType('command-repository-interface') %}
+use {{ interface.fqcn }};
+{% endif %}
+{% endif %}
+use Doctrine\DBAL\Exception;
 {% if parameters is defined and parameters|length > 0 and parameters|filter(p => p.in == 'path')|length > 0 %}
 use Kununu\Utilities\DTO\Uuid\Uuid;
 {% endif %}
-{% if parameters is defined and parameters|length > 0 and parameters|filter(p => p.in == 'query')|length > 0 %}
-use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\Criteria\Criteria;
-{% endif %}
-{% else %}
-namespace {{ full_namespace }};
+use Kununu\Doctrine\DBAL\Repository\AbstractRepository;
 
-use {{ namespace }}\UseCase\Command\{{ operation_id|properCapitalize }}\Repository\RepositoryInterface;
-{% endif %}
+final class {{ classname }} extends AbstractRepository implements {% if templates.hasTemplate('query-repository-interface') or templates.hasTemplate('command-repository-interface') %}{{ interface.classname }}{% else %}RepositoryInterface{% endif %}
 
-final class DoctrineRepository extends AbstractRepository implements RepositoryInterface
 {
-
-{% if parameters is defined and parameters|length > 0 %}
+{% if method == 'GET' %}
 {% if parameters|filter(p => p.in == 'path')|length > 0 and parameters|filter(p => p.in == 'query')|length > 0 %}
-
-    public function get{{ entity_name }}By{{ parameters|filter(p => p.in == 'path')|first.name|capitalize }}WithCriteria(
-        Uuid ${{ parameters|filter(p => p.in == 'path')|first.name }}, 
+    /** @throws Exception */
+    public function get{{ entity_name }}By{{ parameters|filter(p => p.in == 'path')|first.name|properCapitalize }}WithCriteria(
+        Uuid ${{ parameters|filter(p => p.in == 'path')|first.name }},
         Criteria $criteria
-    ): {% if 'byuuid' in operation_id|replace({'get': ''})|lower %}{{ entity_name|slice(0, -1) }}{% else %}{{ operation_id|replace({'get': ''}) }}{% endif %} 
-    {
+    ): {{ readModelName }} {
         $result = $this->connection
-            ->executeQuery($this->getQuery(query: {{ operation_id|properCapitalize }}::class), [
+            ->executeQuery($this->getQuery(query: {% if infraQuery is defined %}{{ infraQuery.classname }}{% endif %}::class), [
                 '{{ parameters|filter(p => p.in == 'path')|first.name }}' => ${{ parameters|filter(p => p.in == 'path')|first.name }}->toString(),
             ])
             ->fetchAssociative();
@@ -46,52 +59,24 @@ final class DoctrineRepository extends AbstractRepository implements RepositoryI
             throw new {{ entity_name }}NotFoundException(${{ parameters|filter(p => p.in == 'path')|first.name }}->toString());
         }
 
-        return {% if 'byuuid' in operation_id|replace({'get': ''})|lower %}{{ entity_name|slice(0, -1) }}{% else %}{{ operation_id|replace({'get': ''}) }}{% endif %}::fromArray($result);
-    }
-{% elseif parameters|filter(p => p.in == 'path')|length > 0 %}
-    public function get{{ entity_name }}By{{ parameters|filter(p => p.in == 'path')|first.name|capitalize }}(Uuid ${{ parameters|filter(p => p.in == 'path')|first.name }}): {% if 'byuuid' in operation_id|replace({'get': ''})|lower %}{{ entity_name|slice(0, -1) }}{% else %}{{ operation_id|replace({'get': ''}) }}{% endif %}
-    {
-        $result = $this->connection
-            ->executeQuery($this->getQuery(query: {{ operation_id|properCapitalize }}::class), [
-                '{{ parameters|filter(p => p.in == 'path')|first.name }}' => ${{ parameters|filter(p => p.in == 'path')|first.name }}->toString(),
-            ])
-            ->fetchAssociative();
-
-        if (!$result) {
-            throw new {{ entity_name }}NotFoundException(${{ parameters|filter(p => p.in == 'path')|first.name }}->toString());
-        }
-
-        return {% if 'byuuid' in operation_id|replace({'get': ''})|lower %}{{ entity_name|slice(0, -1) }}{% else %}{{ operation_id|replace({'get': ''}) }}{% endif %}::fromArray($result);
-    }
-{% elseif parameters|filter(p => p.in == 'query')|length > 0 %}
-    public function get{{ entity_name }}WithCriteria(Criteria $criteria): {% if 'byuuid' in operation_id|replace({'get': ''})|lower %}{{ entity_name|slice(0, -1) }}{% else %}{{ operation_id|replace({'get': ''}) }}{% endif %}
-    {
-        $result = $this->connection
-            ->executeQuery($this->getQuery(query: {{ operation_id|properCapitalize }}::class), [
-                // Map criteria params here
-            ])
-            ->fetchAssociative();
-
-        if (!$result) {
-            throw new \RuntimeException('No results found');
-        }
-
-        return {% if 'byuuid' in operation_id|replace({'get': ''})|lower %}{{ entity_name|slice(0, -1) }}{% else %}{{ operation_id|replace({'get': ''}) }}{% endif %}::fromArray($result);
+        return {{ readModelName }}::fromArray($result);
     }
 {% endif %}
 {% else %}
-    public function get{{ entity_name }}(): {% if 'byuuid' in operation_id|replace({'get': ''})|lower %}{{ entity_name|slice(0, -1) }}{% else %}{{ operation_id|replace({'get': ''}) }}{% endif %}
+    /** @throws Exception */
+    public function findByUuid(string $uuid): ?object
     {
         $result = $this->connection
-            ->executeQuery($this->getQuery(query: {{ operation_id|properCapitalize }}::class))
+            ->executeQuery($this->getQuery(query: {% if infraQuery is defined %}{{ infraQuery.classname }}{% endif %}::class), [
+                'uuid' => $uuid,
+            ])
             ->fetchAssociative();
 
         if (!$result) {
-            throw new \RuntimeException('No results found');
+            return null;
         }
 
-        return {% if 'byuuid' in operation_id|replace({'get': ''})|lower %}{{ entity_name|slice(0, -1) }}{% else %}{{ operation_id|replace({'get': ''}) }}{% endif %}::fromArray($result);
+        return $result;
     }
 {% endif %}
-
-} 
+}

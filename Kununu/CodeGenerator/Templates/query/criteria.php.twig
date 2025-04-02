@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace {{ full_namespace }};
 
-final readonly class Criteria
+final readonly class {{ classname }}
 {
     public function __construct(
 {% if parameters is defined and parameters|length > 0 %}

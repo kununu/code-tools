@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Kununu\CodeGenerator\Infrastructure\Generator;
 
 use Kununu\CodeGenerator\Domain\DTO\BoilerplateConfiguration;
+use Kununu\CodeGenerator\Domain\DTO\TemplateDTO;
+use Kununu\CodeGenerator\Domain\DTO\TemplatesDTO;
 use Kununu\CodeGenerator\Domain\Service\CodeGeneratorInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Twig\Environment;
@@ -103,6 +105,8 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
             $variables['entity_name'] = $this->extractEntityNameFromOperationId($variables['operation_id']);
         }
 
+        // Create TemplateDTO objects for each template
+        $templateDTOs = [];
         foreach ($this->templates as $templateName => $template) {
             // Determine if we should generate this file based on configuration
             if (!$this->shouldGenerateFile($templateName, $configuration)) {
@@ -127,28 +131,59 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
                 continue;
             }
 
-            // Create output directory if it doesn't exist
-            $directory = dirname($outputPath);
-            if (!$this->filesystem->exists($directory)) {
-                $this->filesystem->mkdir($directory, 0755);
-            }
-
             // Create a copy of template variables for this specific template
             $templateVariables = $variables;
 
             // Set the dynamic namespace based on the output path
             $templateVariables['full_namespace'] = $this->getDynamicNamespace($outputPath, $configuration->basePath, $configuration->namespace);
 
-            // Render the template
+            // Get the classname from the output path
+            $classname = $this->extractNameFromPath($outputPath, PATHINFO_FILENAME);
+            $templateVariables['classname'] = $classname;
+            $filename = $this->extractNameFromPath($outputPath, PATHINFO_BASENAME);
+            $templateVariables['filename'] = $filename;
+
+            // Build the FQCN by combining namespace and classname
+            $fqcn = $templateVariables['full_namespace'] . '\\' . $classname;
+
+            // Add templates variable to access other templates
+            $templateDTOs[] = new TemplateDTO(
+                $templateName,
+                $template['path'],
+                $templateVariables,
+                $template['original_path'],
+                $outputPath,
+                $templateVariables['full_namespace'],
+                $classname,
+                $fqcn,
+                $filename,
+                dirname($outputPath)
+            );
+        }
+
+        // Create TemplatesDTO instance
+        $templatesDTO = new TemplatesDTO($templateDTOs);
+
+        // Add templates DTO to variables for each template
+        foreach ($templateDTOs as $templateDTO) {
+            $templateVariables = $templateDTO->templateVariables;
+            $templateVariables['templates'] = $templatesDTO;
+
             try {
-                $content = $this->twig->render($template['path'], $templateVariables);
+                $content = $this->twig->render($templateDTO->template, $templateVariables);
+
+                // Create output directory if it doesn't exist
+                $directory = dirname($templateDTO->outputPath);
+                if (!$this->filesystem->exists($directory)) {
+                    $this->filesystem->mkdir($directory, 0755);
+                }
 
                 // Write to file
-                $this->filesystem->dumpFile($outputPath, $content);
-                $generatedFiles[] = $outputPath;
+                $this->filesystem->dumpFile($templateDTO->outputPath, $content);
+                $generatedFiles[] = $templateDTO->outputPath;
             } catch (LoaderError $e) {
                 // If there's an error loading the template, log it and continue
-                error_log("Error loading template {$template['path']}: " . $e->getMessage());
+                error_log("Error loading template {$templateDTO->template}: " . $e->getMessage());
             }
         }
 
@@ -159,6 +194,7 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
     {
         $filesToGenerate = [];
         $variables = $configuration->getTemplateVariables();
+        $templateDTOs = [];
 
         // Ensure we have an entity_name variable
         if (!isset($variables['entity_name']) && isset($variables['operation_id'])) {
@@ -187,21 +223,50 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
             // Dynamic namespace based on path pattern
             $dynamicNamespace = $this->getDynamicNamespace($outputPath, $configuration->basePath, $configuration->namespace);
 
-            // Check if the file already exists
-            $exists = $this->filesystem->exists($outputPath);
+            // Get the classname from the output path
+            $classname = $this->extractNameFromPath($outputPath, PATHINFO_FILENAME);
+            $filename = $this->extractNameFromPath($outputPath, PATHINFO_BASENAME);
 
-            // Determine if the file will be skipped based on configuration
+            // Build the FQCN by combining namespace and classname
+            $fqcn = $dynamicNamespace . '\\' . $classname;
+
+            // Create template variables for this specific template
+            $templateVariables = $variables;
+            $templateVariables['full_namespace'] = $dynamicNamespace;
+
+            // Create TemplateDTO
+            $templateDTOs[] = new TemplateDTO(
+                $templateName,
+                $template['path'],
+                $templateVariables,
+                $template['original_path'],
+                $outputPath,
+                $dynamicNamespace,
+                $classname,
+                $fqcn,
+                $filename,
+                dirname($outputPath)
+            );
+        }
+
+        // Create TemplatesDTO instance
+        $templatesDTO = new TemplatesDTO($templateDTOs);
+
+        // Convert DTOs to array format for backward compatibility
+        foreach ($templateDTOs as $templateDTO) {
+            $exists = $this->filesystem->exists($templateDTO->outputPath);
             $willBeSkipped = $exists && $configuration->skipExisting;
 
-            // Add to the list of files to generate
             $filesToGenerate[] = [
-                'path'            => $outputPath,
+                'path'            => $templateDTO->outputPath,
                 'exists'          => $exists,
                 'will_be_skipped' => $willBeSkipped,
-                'template'        => $template['original_path'],
-                'template_path'   => $template['path'],
-                'template_source' => $this->getTemplateSource($template['original_path']),
-                'full_namespace'  => $dynamicNamespace,
+                'template'        => $templateDTO->path,
+                'template_path'   => $templateDTO->template,
+                'template_source' => $this->getTemplateSource($templateDTO->path),
+                'full_namespace'  => $templateDTO->namespace,
+                'classname'       => $templateDTO->classname,
+                'fqcn'            => $templateDTO->fqcn,
             ];
         }
 
@@ -235,6 +300,9 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
     private function registerDefaultTemplates(): void
     {
         // Register all templates - they'll be filtered at generation time based on HTTP method
+        // Shared templates
+        $this->registerTemplate('query-infrastructure-query', 'shared/infrastructure_query.php.twig', '{basePath}/UseCase/{cqrsType}/{operationName}/Infrastructure/Query/{operationName}.php');
+
         // Controller template
         $this->registerTemplate('controller', 'controller.php.twig', '{basePath}/Controller/{operationName}Controller.php');
 
@@ -248,7 +316,6 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
         $this->registerTemplate('query-serializer-xml', 'query/serializer.xml.twig', '{basePath}/UseCase/Query/{operationName}/ReadModel/serializer/serializer.xml');
         $this->registerTemplate('query-readme', 'query/readme.md.twig', '{basePath}/UseCase/Query/{operationName}/README.md');
         $this->registerTemplate('jms-serializer-config', 'query/jms_serializer.yaml.twig', '{basePath}/UseCase/Query/{operationName}/Resources/config/jms_serializer.yaml');
-        $this->registerTemplate('query-infrastructure-query', 'query/infrastructure_query.php.twig', '{basePath}/UseCase/Query/{operationName}/Infrastructure/Query/{operationName}.php');
         $this->registerTemplate('services-config', 'misc/services.yaml.twig', '{basePath}/UseCase/{cqrsType}/{operationName}/Resources/config/services.yaml');
 
         // Command related templates
@@ -427,12 +494,6 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
      * For example, if the output path is "src/Controller/Admin/UserController.php"
      * with base path "src" and base namespace "App", the resulting namespace
      * would be "App\Controller\Admin".
-     *
-     * @param string $outputPath    The full output path for the file
-     * @param string $basePath      The base path for generated files
-     * @param string $baseNamespace The base namespace for the application
-     *
-     * @return string The dynamically generated namespace
      */
     private function getDynamicNamespace(string $outputPath, string $basePath, string $baseNamespace): string
     {
@@ -473,14 +534,6 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
         return $this->normalizeNamespace($baseNamespace, $namespaceAddition);
     }
 
-    /**
-     * Handles namespace generation for test files
-     *
-     * @param string $outputPath    The normalized output path
-     * @param string $baseNamespace The base namespace
-     *
-     * @return string The properly formatted test namespace
-     */
     private function getTestFileNamespace(string $outputPath, string $baseNamespace): string
     {
         // Handle tests directory specially
@@ -509,14 +562,6 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
         return $baseNamespace . '\\Tests';
     }
 
-    /**
-     * Normalizes a namespace to prevent redundancy
-     *
-     * @param string $baseNamespace     The base namespace
-     * @param string $namespaceAddition The namespace addition
-     *
-     * @return string The normalized namespace
-     */
     private function normalizeNamespace(string $baseNamespace, string $namespaceAddition): string
     {
         if (empty($namespaceAddition)) {
@@ -554,5 +599,10 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
         }
 
         return $finalNamespace;
+    }
+
+    private function extractNameFromPath(string $path, int $flag): string
+    {
+        return pathinfo($path, $flag);
     }
 }

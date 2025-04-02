@@ -10,7 +10,7 @@ use Kununu\Utilities\Validator\ConstraintsBuilderConfig;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ConstraintsBuilderConfig(allowExtraFields: false)]
-final class {{ operation_id|properCapitalize }}RequestData extends AbstractValidatedDTO implements ToArray
+final class {{ classname }} extends AbstractValidatedDTO implements ToArray
 {
 {% if request_body and request_body.content['application/json'].schema.properties %}
 {% for propertyName, property in request_body.content['application/json'].schema.properties %}

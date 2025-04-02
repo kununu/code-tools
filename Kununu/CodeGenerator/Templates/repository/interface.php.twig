@@ -1,47 +1,32 @@
 <?php
+{% if templates.hasTemplate('read-model') %}
+{% set readModel = templates.getTemplateByType('read-model') %}
+{% endif %}
 declare(strict_types=1);
 
-{% if method == 'GET' %}
 namespace {{ full_namespace }};
 
-{% if operation_id starts with 'get' and 'by' in operation_id|replace({'get': ''})|lower %}
-use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\Exception\{{ entity_name }}NotFoundException;
-{% if 'byuuid' in operation_id|replace({'get': ''})|lower %}
-use {{ namespace }}\UseCase\Query\Shared\ReadModel\{{ entity_name|slice(0, -1)|capitalize ~ 's' }}\{{ entity_name|slice(0, -1) }};
-{% else %}
-use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\ReadModel\{{ operation_id|replace({'get': ''}) }};
-{% endif %}
-{% else %}
-use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\ReadModel\{{ operation_id|replace({'get': ''}) }};
-{% endif %}
-use Exception;
+{% if method == 'GET' %}
+use {{ readModel.fqcn }};
 {% if parameters is defined and parameters|length > 0 and parameters|filter(p => p.in == 'path')|length > 0 %}
 use Kununu\Utilities\DTO\Uuid\Uuid;
 {% endif %}
 {% if parameters is defined and parameters|length > 0 and parameters|filter(p => p.in == 'query')|length > 0 %}
-use {{ namespace }}\UseCase\Query\{{ operation_id|properCapitalize }}\Criteria\Criteria;
+{% if templates.hasTemplate('criteria') %}
+{% set criteria = templates.getTemplateByType('criteria') %}
+use {{ criteria.fqcn }};
 {% endif %}
-{% else %}
-namespace {{ full_namespace }};
-
+{% endif %}
 {% endif %}
 
-interface RepositoryInterface
+interface {{ classname }}
 {
 {% if method == 'GET' %}
-{% if parameters is defined and parameters|length > 0 %}
 {% if parameters|filter(p => p.in == 'path')|length > 0 and parameters|filter(p => p.in == 'query')|length > 0 %}
-    public function get{{ entity_name }}By{{ parameters|filter(p => p.in == 'path')|first.name|capitalize }}WithCriteria(
+    public function get{{ entity_name }}By{{ parameters|filter(p => p.in == 'path')|first.name|properCapitalize }}WithCriteria(
         Uuid ${{ parameters|filter(p => p.in == 'path')|first.name }},
         Criteria $criteria
-    ): {% if 'byuuid' in operation_id|replace({'get': ''})|lower %}{{ entity_name|slice(0, -1) }}{% else %}{{ operation_id|replace({'get': ''}) }}{% endif %};
-{% elseif parameters|filter(p => p.in == 'path')|length > 0 %}
-    public function get{{ entity_name }}By{{ parameters|filter(p => p.in == 'path')|first.name|capitalize }}(Uuid ${{ parameters|filter(p => p.in == 'path')|first.name }}): {% if 'byuuid' in operation_id|replace({'get': ''})|lower %}{{ entity_name|slice(0, -1) }}{% else %}{{ operation_id|replace({'get': ''}) }}{% endif %};
-{% elseif parameters|filter(p => p.in == 'query')|length > 0 %}
-    public function get{{ entity_name }}WithCriteria(Criteria $criteria): {% if 'byuuid' in operation_id|replace({'get': ''})|lower %}{{ entity_name|slice(0, -1) }}{% else %}{{ operation_id|replace({'get': ''}) }}{% endif %};
-{% endif %}
-{% else %}
-    public function get{{ entity_name }}(): {% if 'byuuid' in operation_id|replace({'get': ''})|lower %}{{ entity_name|slice(0, -1) }}{% else %}{{ operation_id|replace({'get': ''}) }}{% endif %};
+    ): {{ readModel.classname }};
 {% endif %}
 {% else %}
 

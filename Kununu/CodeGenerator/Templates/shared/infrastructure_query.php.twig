@@ -7,7 +7,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\Expression\ExpressionBuilder;
 use Kununu\Doctrine\DBAL\Repository\QueryInterface;
 
-final class {{ operation_id|properCapitalize }} implements QueryInterface
+final class {{ classname }} implements QueryInterface
 {
     public function getQuery(Connection $conn, ExpressionBuilder $expressionBuilder, ...$extraParams): string
     {

@@ -3,7 +3,10 @@ declare(strict_types=1);
 
 namespace {{ full_namespace }};
 
-use {{ namespace }}\Request\DTO\{{ operation_id|properCapitalize }}RequestData;
+{% if templates.hasTemplate('request-data') %}
+{% set requestData = templates.getTemplateByType('request-data') %}
+use {{ requestData.fqcn }};
+{% endif %}
 use App\Request\Exception\ValidationException;
 use App\Request\Resolver\AbstractRequestResolver;
 use Symfony\Component\HttpFoundation\Request;
@@ -11,7 +14,7 @@ use Symfony\Component\HttpKernel\Controller\ValueResolverInterface;
 use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadata;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-final class {{ operation_id|properCapitalize }}Resolver extends AbstractRequestResolver implements ValueResolverInterface
+final class {{ classname }} extends AbstractRequestResolver implements ValueResolverInterface
 {
     public function __construct(private readonly ValidatorInterface $validator)
     {

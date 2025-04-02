@@ -1,22 +1,36 @@
+{% if templates.hasTemplate('query') %}
+{% set commandOrQuery = templates.getTemplateByType('query') %}
+{% endif %}
+{% if templates.hasTemplate('command') %}
+{% set commandOrQuery = templates.getTemplateByType('command') %}
+{% endif %}
+{% if templates.hasTemplate('query-handler') %}
+{% set handler = templates.getTemplateByType('query-handler') %}
+{% endif %}
+{% if templates.hasTemplate('command-handler') %}
+{% set handler = templates.getTemplateByType('command-handler') %}
+{% endif %}
 <?php
-
 declare(strict_types=1);
 
-namespace Tests\Unit\{{ namespace|replace({'\\\\': '\\'}) }}{% if tags is defined and tags|length > 0 %}\{{ tags[0] }}{% endif %};
+namespace {{ full_namespace }};
 
-{% if method == 'GET' %}
-use {{ namespace }}{% if tags is defined and tags|length > 0 %}\{{ tags[0] }}{% endif %}\UseCase\Query\{{ operation_id|properCapitalize }}\Query;
-use {{ namespace }}{% if tags is defined and tags|length > 0 %}\{{ tags[0] }}{% endif %}\UseCase\Query\{{ operation_id|properCapitalize }}\QueryHandler;
-{% else %}
-use {{ namespace }}{% if tags is defined and tags|length > 0 %}\{{ tags[0] }}{% endif %}\UseCase\Command\{{ operation_id|properCapitalize }}\Command;
-use {{ namespace }}{% if tags is defined and tags|length > 0 %}\{{ tags[0] }}{% endif %}\UseCase\Command\{{ operation_id|properCapitalize }}\CommandHandler;
+{% if commandOrQuery is defined %}
+use {{ commandOrQuery.fqcn }};
+{% endif %}
+{% if handler is defined %}
+use {{ handler.fqcn }};
 {% endif %}
 use PHPUnit\Framework\TestCase;
 
-final class {{ operation_id|properCapitalize }}{% if method == 'GET' %}Query{% else %}Command{% endif %}HandlerTest extends TestCase
+final class {{ classname }} extends TestCase
 {
-    private {% if method == 'GET' %}Query{% else %}Command{% endif %} ${% if method == 'GET' %}query{% else %}command{% endif %};
-    private {% if method == 'GET' %}QueryHandler{% else %}CommandHandler{% endif %} ${% if method == 'GET' %}queryHandler{% else %}commandHandler{% endif %};
+{% if commandOrQuery is defined %}
+    private {{ commandOrQuery.classname }} ${{ commandOrQuery.classname|lower }};
+{% endif %}
+{% if handler is defined %}
+    private {{ handler.classname }} ${{ handler.classname|lower }};
+{% endif %}
 
     public function test{% if method == 'GET' %}Query{% else %}Command{% endif %}Handler(): void
     {
@@ -26,7 +40,7 @@ final class {{ operation_id|properCapitalize }}{% if method == 'GET' %}Query{% e
 
     protected function setUp(): void
     {
-        $this->{% if method == 'GET' %}query{% else %}command{% endif %} = new {% if method == 'GET' %}Query{% else %}Command{% endif %}();
-        $this->{% if method == 'GET' %}queryHandler{% else %}commandHandler{% endif %} = new {% if method == 'GET' %}QueryHandler{% else %}CommandHandler{% endif %}();
+        $this->{{ commandOrQuery.classname|lower }} = new {{ commandOrQuery.classname }}();
+        $this->{{ handler.classname|lower }} = new {{ handler.classname }}();
     }
 }

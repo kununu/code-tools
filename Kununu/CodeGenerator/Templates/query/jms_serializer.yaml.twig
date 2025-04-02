@@ -1,7 +1,14 @@
+{% if templates.hasTemplate('read-model') %}
+{% set readModel = templates.getTemplateByType('read-model') %}
+{% endif %}
+{% if templates.hasTemplate('query-serializer-xml') %}
+{% set xml = templates.getTemplateByType('query-serializer-xml') %}
+{% set xmlFileName = xml.filename %}
+{% endif %}
 jms_serializer:
   enum_support: true
   metadata:
     directories:
       {{ operation_id|lower }}_read_model:
-        namespace_prefix: "{{ namespace }}\\UseCase\\Query\\{{ operation_id|properCapitalize }}\\ReadModel"
-        path: "%kernel.project_dir%/{{ basePath }}/UseCase/Query/{{ operation_id|properCapitalize }}/ReadModel/serializer"
+        namespace_prefix: "{% if readModel %}{{ readModel.templateVariables.full_namespace|replace({'\\': '\\\\'}) }}{% endif %}"
+        path: "%kernel.project_dir%/{% if xml %}{{ xml.dirname }}{% endif %}"

@@ -1,14 +1,13 @@
 <?php
-
 declare(strict_types=1);
 
-namespace Tests\Functional\{{ namespace|replace({'\\\\': '\\'}) }}{% if tags is defined and tags|length > 0 %}\{{ tags[0] }}{% endif %};
+namespace {{ full_namespace }};
 
 use Kununu\TestingBundle\Test\RequestBuilder;
 use Kununu\TestingBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
 
-final class {{ operation_id|properCapitalize }}ControllerTest extends WebTestCase
+final class {{ classname }} extends WebTestCase
 {
     private const string URI = '{{ path }}';
 

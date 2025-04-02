@@ -1,3 +1,9 @@
+{% if templates.hasTemplate('query-handler') %}
+{% set handler = templates.getTemplateByType('query-handler') %}
+{% endif %}
+{% if templates.hasTemplate('command-handler') %}
+{% set handler = templates.getTemplateByType('command-handler') %}
+{% endif %}
 {% if method == 'GET' %}
 imports:
   - { resource: jms_serializer.yaml }
@@ -8,5 +14,5 @@ services:
     autowire: true
     autoconfigure: true
 
-  {{ namespace }}\UseCase\{{ method == 'GET' ? 'Query' : 'Command' }}\{{ operation_id|properCapitalize }}\:
-    resource: '../../../../../UseCase/{{ method == 'GET' ? 'Query' : 'Command' }}/{{ operation_id|properCapitalize }}/*'
+  {{ handler.templateVariables.full_namespace }}\:
+    resource: '../../../../..{{ handler.templateVariables.full_namespace|replace({(handler.templateVariables.namespace): '', '\\': '/'}) }}/*'
