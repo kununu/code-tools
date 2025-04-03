@@ -14,12 +14,12 @@ final class TestOpenApiParser implements OpenApiParserInterface
     private array $parseFileResult = [];
     private bool $skipFileExistsCheck = false;
 
-    public function parseFile(string $openApiFilePath): array
+    public function parseFile(string $filePath): array
     {
         $this->parseFileWasCalled = true;
 
-        if (!$this->skipFileExistsCheck && !file_exists($openApiFilePath)) {
-            throw new ParserException("File not found: {$openApiFilePath}");
+        if (!$this->skipFileExistsCheck && !file_exists($filePath)) {
+            throw new ParserException("File not found: {$filePath}");
         }
 
         return $this->parseFileResult;

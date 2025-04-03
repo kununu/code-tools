@@ -121,9 +121,15 @@ final class BoilerplateConfiguration
 
     public function getTemplateVariables(): array
     {
-        return array_merge($this->templateVariables, [
+        $variables = $this->templateVariables;
+
+        // Only add CQRS type if operationDetails is set with a method
+        if (isset($this->operationDetails['method'])) {
+            $variables['cqrsType'] = $this->operationDetails['method'] === 'GET' ? 'Query' : 'Command';
+        }
+
+        return array_merge($variables, [
             'basePath' => $this->basePath,
-            'cqrsType' => $this->operationDetails['method'] === 'GET' ? 'Query' : 'Command',
         ]);
     }
 }

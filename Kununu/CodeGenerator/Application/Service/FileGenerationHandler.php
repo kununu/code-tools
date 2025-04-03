@@ -45,7 +45,7 @@ final class FileGenerationHandler
         if (!$skipPreview) {
             $this->previewFilesToGenerate($filesToGenerate);
 
-            if (!$this->io->confirm('Do you want to proceed with generating these files?', true)) {
+            if (!$this->io->confirm('Do you want to proceed with generating these files?')) {
                 $this->io->warning('Code generation canceled by user.');
 
                 return [];
@@ -172,7 +172,7 @@ final class FileGenerationHandler
 
         foreach ($existingFiles as $existingFile) {
             if (!$this->io->confirm(
-                sprintf('File <info>%s</info> exists. Overwrite? [Y/n]', $existingFile), true)
+                sprintf('File <info>%s</info> exists. Overwrite? [Y/n]', $existingFile))
             ) {
                 $configuration->addSkipFile($existingFile);
                 $this->io->writeln(sprintf(' - <comment>Skipping</comment> %s', $existingFile));
@@ -214,7 +214,13 @@ final class FileGenerationHandler
         $this->io->writeln('<comment>Please update your routes file with the following details:</comment>');
         $this->io->writeln(sprintf('Path: <info>%s</info>', $configuration->operationDetails['path']));
         $this->io->writeln(sprintf('Controller: <info>%s</info>', $controllerName));
-        $this->io->writeln(sprintf('Methods: <info>[%s]</info>', $configuration->operationDetails['method']));
+
+        // Ensure the method is properly formatted as a string
+        $method = is_array($configuration->operationDetails['method'])
+            ? implode(', ', $configuration->operationDetails['method'])
+            : (string) $configuration->operationDetails['method'];
+
+        $this->io->writeln(sprintf('Methods: <info>[%s]</info>', $method));
     }
 
     private function findControllerName(BoilerplateConfiguration $configuration, array $filesToGenerate): ?string
@@ -222,10 +228,20 @@ final class FileGenerationHandler
         foreach ($filesToGenerate as $file) {
             if (str_contains($file['path'], 'Controller')) {
                 $controllerPath = $file['path'];
-                $relativePath = str_replace($configuration->basePath . '/', '', $controllerPath);
+                $basePath = $configuration->basePath . '/';
+                $relativePath = str_replace($basePath, '', $controllerPath);
                 $relativePath = str_replace('.php', '', $relativePath);
 
-                return $configuration->namespace . '\\' . str_replace('/', '\\', $relativePath);
+                // Ensure relativePath is a string before exploding
+                if (is_string($relativePath)) {
+                    $namespaceParts = explode('/', $relativePath);
+                    $namespaceString = implode('\\', $namespaceParts);
+
+                    return $configuration->namespace . '\\' . $namespaceString;
+                }
+
+                // Fallback if relativePath is not a string
+                return $configuration->namespace . '\\Controller';
             }
         }
 
@@ -241,10 +257,9 @@ final class FileGenerationHandler
         }
 
         // Ensure request body schema has required field if it has properties
-        if (isset($configuration->operationDetails['requestBody'])
-            && isset($configuration->operationDetails['requestBody']['content'])) {
+        if (isset($configuration->operationDetails['requestBody']['content'])) {
             foreach ($configuration->operationDetails['requestBody']['content'] as $contentType => $content) {
-                if (isset($content['schema']) && isset($content['schema']['properties'])) {
+                if (isset($content['schema']['properties'])) {
                     // Ensure required field exists
                     if (!isset($content['schema']['required'])) {
                         $configuration->operationDetails['requestBody']['content'][$contentType]['schema']['required'] = [];
@@ -282,12 +297,8 @@ final class FileGenerationHandler
                             }
 
                             // For array of objects
-                            if (isset($content['schema']['type'])
-                                && $content['schema']['type'] === 'array'
-                                && isset($content['schema']['items'])
-                                && isset($content['schema']['items']['type'])
-                                && $content['schema']['items']['type'] === 'object'
-                                && isset($content['schema']['items']['properties'])) {
+                            if (
+                                isset($content['schema']['items']['properties'], $content['schema']['items']['type'], $content['schema']['type']) && $content['schema']['type'] === 'array' && $content['schema']['items']['type'] === 'object') {
                                 // Ensure required field exists
                                 if (!isset($content['schema']['items']['required'])) {
                                     $configuration->operationDetails['responses'][$statusCode]['content'][$contentType]['schema']['items']['required'] = [];

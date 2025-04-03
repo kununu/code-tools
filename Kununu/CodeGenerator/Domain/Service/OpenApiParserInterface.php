@@ -5,7 +5,7 @@ namespace Kununu\CodeGenerator\Domain\Service;
 
 interface OpenApiParserInterface
 {
-    public function parseFile(string $openApiFilePath): array;
+    public function parseFile(string $filePath): array;
 
     public function listOperations(): array;
 

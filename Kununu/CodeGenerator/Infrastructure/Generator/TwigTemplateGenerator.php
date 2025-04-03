@@ -10,6 +10,8 @@ use Kununu\CodeGenerator\Domain\Service\CodeGeneratorInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Twig\Environment;
 use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
+use Twig\Error\SyntaxError;
 use Twig\Loader\FilesystemLoader;
 use Twig\TwigFilter;
 
@@ -21,6 +23,9 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
     private string $defaultTemplateDir;
     private ?string $customTemplateDir;
 
+    /**
+     * @throws LoaderError
+     */
     public function __construct(Filesystem $filesystem, ?string $customTemplateDir = null)
     {
         $this->filesystem = $filesystem;
@@ -168,7 +173,7 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
         $templatesDTO = new TemplatesDTO($templateDTOs);
 
         // Add templates DTO to variables for each template
-        foreach ($templateDTOs as $templateDTO) {
+        foreach ($templatesDTO->getAllTemplates() as $templateDTO) {
             $templateVariables = $templateDTO->templateVariables;
             $templateVariables['templates'] = $templatesDTO;
 
@@ -176,15 +181,17 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
                 $content = $this->twig->render($templateDTO->template, $templateVariables);
 
                 // Create output directory if it doesn't exist
-                $directory = dirname($templateDTO->outputPath);
-                if (!$this->filesystem->exists($directory)) {
-                    $this->filesystem->mkdir($directory, 0755);
-                }
+                if ($templateDTO->outputPath !== null) {
+                    $directory = dirname($templateDTO->outputPath);
+                    if (!$this->filesystem->exists($directory)) {
+                        $this->filesystem->mkdir($directory, 0755);
+                    }
 
-                // Write to file
-                $this->filesystem->dumpFile($templateDTO->outputPath, $content);
-                $generatedFiles[] = $templateDTO->outputPath;
-            } catch (LoaderError $e) {
+                    // Write to file
+                    $this->filesystem->dumpFile($templateDTO->outputPath, $content);
+                    $generatedFiles[] = $templateDTO->outputPath;
+                }
+            } catch (LoaderError|RuntimeError|SyntaxError $e) {
                 // If there's an error loading the template, log it and continue
                 error_log("Error loading template {$templateDTO->template}: " . $e->getMessage());
             }
@@ -260,9 +267,21 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
         $templatesDTO = new TemplatesDTO($templateDTOs);
 
         // Convert DTOs to array format for backward compatibility
-        foreach ($templateDTOs as $templateDTO) {
-            $exists = $this->filesystem->exists($templateDTO->outputPath);
+        foreach ($templatesDTO->getAllTemplates() as $templateDTO) {
+            $exists = false;
+
+            // Check if outputPath is not null before checking if it exists
+            if ($templateDTO->outputPath !== null) {
+                $exists = $this->filesystem->exists($templateDTO->outputPath);
+            }
+
             $willBeSkipped = $exists && $configuration->skipExisting;
+            $templateSource = '';
+
+            // Make sure template path is not null before getting the source
+            if ($templateDTO->path !== null) {
+                $templateSource = $this->getTemplateSource($templateDTO->path);
+            }
 
             $filesToGenerate[] = [
                 'path'            => $templateDTO->outputPath,
@@ -270,7 +289,7 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
                 'will_be_skipped' => $willBeSkipped,
                 'template'        => $templateDTO->path,
                 'template_path'   => $templateDTO->template,
-                'template_source' => $this->getTemplateSource($templateDTO->path),
+                'template_source' => $templateSource,
                 'full_namespace'  => $templateDTO->namespace,
                 'classname'       => $templateDTO->classname,
                 'fqcn'            => $templateDTO->fqcn,
@@ -386,9 +405,8 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
 
         // Skip criteria template if there are no query parameters
         if ($templateName === 'criteria'
-            && (!isset($variables['parameters'])
-             || empty($variables['parameters'])
-             || empty(array_filter($variables['parameters'], fn($param) => $param['in'] === 'query')))) {
+            && (empty($variables['parameters'])
+             || empty(array_filter($variables['parameters'], static fn($param) => $param['in'] === 'query')))) {
             return false;
         }
 
@@ -462,33 +480,43 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
 
     private function generateOutputPath(string $pattern, string $basePath, array $variables): string
     {
-        // Replace {basePath} placeholder
-        $outputPath = str_replace('{basePath}', $basePath, $pattern);
+        // Replace all placeholders in the pattern
+        $output = $pattern;
 
-        if (isset($variables['cqrsType'])) {
-            $outputPath = str_replace('{cqrsType}', $variables['cqrsType'], $outputPath);
-        }
+        // Always replace basePath
+        $output = str_replace('{basePath}', $basePath, $output);
 
-        // Replace operation-related placeholders
+        // Replace operation name if available
         if (isset($variables['operation_id'])) {
             $operationName = $this->convertOperationIdToClassName($variables['operation_id']);
-            $outputPath = str_replace('{operationName}', $operationName, $outputPath);
+            $output = str_replace('{operationName}', $operationName, $output);
         }
 
-        // Replace entity placeholder
+        // Replace entity name if available
         if (isset($variables['entity_name'])) {
-            $outputPath = str_replace('{entityName}', $variables['entity_name'], $outputPath);
-        } elseif (isset($variables['operation_id'])) {
-            // Extract entity name from operation ID if not provided
-            $entityName = $this->extractEntityNameFromOperationId($variables['operation_id']);
-            $outputPath = str_replace('{entityName}', $entityName, $outputPath);
+            $entityName = $this->convertOperationIdToClassName($variables['entity_name']);
+            $output = str_replace('{entityName}', $entityName, $output);
         }
 
-        return $outputPath;
+        // Replace method if available
+        if (isset($variables['method'])) {
+            $output = str_replace('{method}', strtolower($variables['method']), $output);
+        }
+
+        // Replace CQRS type if available
+        if (isset($variables['cqrsType'])) {
+            $output = str_replace('{cqrsType}', $variables['cqrsType'], $output);
+        }
+
+        return $output;
     }
 
     private function convertOperationIdToClassName(string $operationId): string
     {
+        if (empty($operationId)) {
+            return '';
+        }
+
         // Properly capitalize each word in camelCase strings
         // e.g., "getToneOfVoiceSettings" becomes "GetToneOfVoiceSettings"
         $parts = preg_split('/(?=[A-Z])/', $operationId, -1, PREG_SPLIT_NO_EMPTY);
@@ -504,11 +532,15 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
 
     private function extractEntityNameFromOperationId(string $operationId): string
     {
+        if (empty($operationId)) {
+            return '';
+        }
+
         // Remove common prefixes
-        $name = preg_replace('/^(get|create|update|delete|find|list)/', '', $operationId);
+        $name = (string) preg_replace('/^(get|create|update|delete|find|list)/', '', $operationId);
 
         // Remove common suffixes
-        $name = preg_replace('/(List|Collection|Item|By.*)$/', '', $name);
+        $name = (string) preg_replace('/(List|Collection|Item|By.*)$/', '', $name);
 
         // Return the first part of the remaining string (likely the entity name)
         $matches = [];
@@ -559,7 +591,7 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
         // phpcs:enable
 
         // Get the directory part of the path (remove the file name)
-        $directory = dirname($relativePath);
+        $directory = dirname((string) $relativePath);
 
         // If we're at the root directory (.), use the base namespace
         if ($directory === '.') {
@@ -623,7 +655,7 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
         $redundantSegments = 0;
         $baseSegmentsCount = count($baseSegments);
 
-        foreach ($additionSegments as $index => $segment) {
+        foreach ($additionSegments as $segment) {
             // Check if this segment would be redundant with the base namespace
             $baseIndex = $baseSegmentsCount - $redundantSegments - 1;
             if ($baseIndex >= 0 && strtolower($baseSegments[$baseIndex]) === strtolower($segment)) {
@@ -650,6 +682,12 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
 
     private function extractNameFromPath(string $path, int $flag): string
     {
-        return pathinfo($path, $flag);
+        if (empty($path)) {
+            return '';
+        }
+
+        $result = pathinfo($path, $flag);
+
+        return is_string($result) ? $result : '';
     }
 }

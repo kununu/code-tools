@@ -3,6 +3,10 @@ declare(strict_types=1);
 
 namespace Kununu\CodeGenerator\Application\Service;
 
+use cebe\openapi\exceptions\IOException;
+use cebe\openapi\exceptions\TypeErrorException;
+use cebe\openapi\exceptions\UnresolvableReferenceException;
+use cebe\openapi\json\InvalidJsonPointerSyntaxException;
 use cebe\openapi\Reader;
 use cebe\openapi\spec\OpenApi;
 use Kununu\CodeGenerator\Domain\Exception\ParserException;
@@ -25,6 +29,9 @@ final class OpenApiParser implements OpenApiParserInterface
 {
     private ?OpenApi $openApi = null;
 
+    /**
+     * @throws IOException|TypeErrorException|UnresolvableReferenceException|InvalidJsonPointerSyntaxException
+     */
     public function parseFile(string $filePath): array
     {
         if (!file_exists($filePath)) {
@@ -39,15 +46,7 @@ final class OpenApiParser implements OpenApiParserInterface
             default => throw new ParserException(sprintf('Unsupported file extension: %s', $extension)),
         };
 
-        // Validate except for strict mode, as OpenAPI 3.1 might introduce new fields
-        $validationOptions = [
-            'validateSchema'   => true,
-            'validateSpec'     => true,
-            'validateSemantic' => true,
-            'strictValidation' => false, // Set to false to handle OpenAPI 3.1 extensions
-        ];
-
-        if (!$this->openApi->validate($validationOptions)) {
+        if (!$this->openApi->validate()) {
             $errors = $this->openApi->getErrors();
             throw new ParserException(sprintf(
                 'Invalid OpenAPI specification: %s',
@@ -116,12 +115,28 @@ final class OpenApiParser implements OpenApiParserInterface
                     // Parse parameters
                     if (isset($operation->parameters)) {
                         foreach ($operation->parameters as $parameter) {
+                            // Handle Reference vs Parameter objects
+                            $paramName = '';
+                            $paramIn = '';
+                            $paramRequired = false;
+                            $paramDescription = '';
+                            $paramSchema = null;
+
+                            // Check if it's a Reference or Parameter
+                            if (property_exists($parameter, 'name') && property_exists($parameter, 'in')) {
+                                $paramName = $parameter->name;
+                                $paramIn = $parameter->in;
+                                $paramRequired = $parameter->required ?? false;
+                                $paramDescription = $parameter->description ?? '';
+                                $paramSchema = $parameter->schema ?? null;
+                            }
+
                             $operationDetails['parameters'][] = [
-                                'name'        => $parameter->name,
-                                'in'          => $parameter->in,
-                                'required'    => $parameter->required ?? false,
-                                'description' => $parameter->description ?? '',
-                                'schema'      => $this->extractSchema($parameter->schema ?? null),
+                                'name'        => $paramName,
+                                'in'          => $paramIn,
+                                'required'    => $paramRequired,
+                                'description' => $paramDescription,
+                                'schema'      => $this->extractSchema($paramSchema),
                             ];
                         }
                     }
@@ -171,7 +186,7 @@ final class OpenApiParser implements OpenApiParserInterface
         throw new ParserException(sprintf('Operation with ID "%s" not found in OpenAPI specification', $operationId));
     }
 
-    private function extractSchema($schema): ?array
+    private function extractSchema(mixed $schema): ?array
     {
         if ($schema === null) {
             return null;
@@ -239,10 +254,7 @@ final class OpenApiParser implements OpenApiParserInterface
         return $result;
     }
 
-    /**
-     * Extract composition schemas (oneOf, anyOf, allOf) from OpenAPI 3.1
-     */
-    private function extractCompositionSchema(array &$target, $schema): void
+    private function extractCompositionSchema(array &$target, mixed $schema): void
     {
         foreach (['oneOf', 'anyOf', 'allOf'] as $composition) {
             if (isset($schema->$composition)) {

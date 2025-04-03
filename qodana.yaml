@@ -6,6 +6,7 @@ exclude:
   - name: All
     paths:
       - rector.php
+      - bin
   - name: PhpDisabledQualityToolComposerInspection
   - name: DuplicatedCode
     paths:

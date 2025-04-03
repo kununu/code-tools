@@ -20,7 +20,7 @@ final class ConfigurationBuilder
     private SymfonyStyle $io;
     private ConfigurationLoaderInterface $configLoader;
     private OpenApiParserInterface $openApiParser;
-    private ?BoilerplateConfiguration $configuration = null;
+    private BoilerplateConfiguration $configuration;
 
     public function __construct(
         SymfonyStyle $io,
@@ -38,7 +38,7 @@ final class ConfigurationBuilder
         $this->configuration = new BoilerplateConfiguration();
 
         $this->initializeBasicConfig($config);
-        $this->applyCommandLineOverrides($input, $config);
+        $this->applyCommandLineOverrides($input);
 
         if (!$input->getOption('manual')) {
             $this->configureOpenApiSettings($input, $config, !$input->getOption('non-interactive'));
@@ -61,7 +61,7 @@ final class ConfigurationBuilder
         }
 
         // Set template directory if specified in config
-        if (isset($config['templates']['path']) && $config['templates']['path'] !== null) {
+        if (isset($config['templates']['path'])) {
             $templateDir = $config['templates']['path'];
             // Make sure the path is absolute
             if (!str_starts_with($templateDir, '/')) {
@@ -74,7 +74,7 @@ final class ConfigurationBuilder
         $this->configuration->setSkipExisting($config['skip_existing'] ?? false);
     }
 
-    private function applyCommandLineOverrides(InputInterface $input, array $config): void
+    private function applyCommandLineOverrides(InputInterface $input): void
     {
         // Template directory command-line override
         if ($input->getOption('template-dir')) {

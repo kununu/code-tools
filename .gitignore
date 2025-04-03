@@ -9,3 +9,4 @@ composer.phar
 *.local
 
 .code-generator.yaml
+.cursor-rules.yaml

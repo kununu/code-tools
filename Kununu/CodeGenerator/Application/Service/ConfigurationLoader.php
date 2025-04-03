@@ -33,6 +33,9 @@ final class ConfigurationLoader implements ConfigurationLoaderInterface
         if ($extension === '') {
             // No extension, try to determine format from content
             $content = file_get_contents($configPath);
+            if ($content === false) {
+                throw new ConfigurationException(sprintf('Failed to read configuration file: %s', $configPath));
+            }
 
             if (str_starts_with(trim($content), '{')) {
                 // Looks like JSON
@@ -44,12 +47,24 @@ final class ConfigurationLoader implements ConfigurationLoaderInterface
         }
 
         return match (strtolower($extension)) {
-            'json' => $this->parseJson(file_get_contents($configPath), $configPath),
-            'yaml', 'yml' => $this->parseYaml(file_get_contents($configPath), $configPath),
+            'json' => $this->parseFileContent($configPath, 'json'),
+            'yaml', 'yml' => $this->parseFileContent($configPath, 'yaml'),
             // phpcs:disable Kununu.Files.LineLength
             default => throw new ConfigurationException(sprintf('Unsupported configuration file format: %s', $extension)),
             // phpcs:enable
         };
+    }
+
+    private function parseFileContent(string $configPath, string $format): array
+    {
+        $content = file_get_contents($configPath);
+        if ($content === false) {
+            throw new ConfigurationException(sprintf('Failed to read configuration file: %s', $configPath));
+        }
+
+        return $format === 'json'
+            ? $this->parseJson($content, $configPath)
+            : $this->parseYaml($content, $configPath);
     }
 
     private function parseJson(string $content, string $path): array

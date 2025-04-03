@@ -94,7 +94,7 @@ final readonly class ManualOperationCollector
         $this->io->writeln('Enter parameters (leave name empty to finish):');
 
         while (true) {
-            $paramName = $this->io->ask('Parameter name', null);
+            $paramName = $this->io->ask('Parameter name');
             if (empty($paramName)) {
                 break;
             }
@@ -113,7 +113,7 @@ final readonly class ManualOperationCollector
     private function collectParameterDetails(string $paramName): array
     {
         $paramIn = $this->io->choice('Parameter location', ['path', 'query', 'header'], 'path');
-        $paramRequired = $this->io->confirm('Is this parameter required?', true);
+        $paramRequired = $this->io->confirm('Is this parameter required?');
         $paramType = $this->io->choice(
             'Parameter type',
             [
@@ -138,12 +138,12 @@ final readonly class ManualOperationCollector
 
     private function collectRequestBody(): ?array
     {
-        if (!$this->io->confirm('Does this operation have a request body?', true)) {
+        if (!$this->io->confirm('Does this operation have a request body?')) {
             return null;
         }
 
         $requestBody = [
-            'required' => $this->io->confirm('Is the request body required?', true),
+            'required' => $this->io->confirm('Is the request body required?'),
             'content'  => [],
         ];
 
@@ -194,7 +194,7 @@ final readonly class ManualOperationCollector
         $this->io->writeln(sprintf('Enter %s properties (leave name empty to finish):', $context));
 
         while (true) {
-            $propName = $this->io->ask('Property name', null);
+            $propName = $this->io->ask('Property name');
             if (empty($propName)) {
                 break;
             }
@@ -250,7 +250,7 @@ final readonly class ManualOperationCollector
             'content' => [],
         ];
 
-        if ($this->io->confirm('Does this response have a body?', true)) {
+        if ($this->io->confirm('Does this response have a body?')) {
             $response['content'] = $this->collectResponseContent();
         }
 
@@ -276,26 +276,15 @@ final readonly class ManualOperationCollector
         $content = [];
         $contentType = 'application/json';
 
-        // TODO: Eventually allow user to select content type
-        // $contentType = $this->io->choice('Content type', ['application/json', 'application/xml', 'text/plain'], 'application/json');
-
-        if (in_array($contentType, ['application/json', 'application/xml'])) {
-            $responseType = $this->io->choice(
-                'Response schema type',
-                ['object', 'array', 'string', 'integer', 'number', 'boolean'],
-                'object'
-            );
-            $schema = $this->buildResponseSchema($responseType);
-            $content[$contentType] = [
-                'schema' => $schema,
-            ];
-        } else {
-            $content[$contentType] = [
-                'schema' => [
-                    'type' => 'string',
-                ],
-            ];
-        }
+        $responseType = $this->io->choice(
+            'Response schema type',
+            ['object', 'array', 'string', 'integer', 'number', 'boolean'],
+            'object'
+        );
+        $schema = $this->buildResponseSchema($responseType);
+        $content[$contentType] = [
+            'schema' => $schema,
+        ];
 
         return $content;
     }
