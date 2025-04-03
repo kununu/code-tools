@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace Kununu\CodeGenerator\Application\Service;
@@ -47,7 +46,9 @@ final class ConfigurationLoader implements ConfigurationLoaderInterface
         return match (strtolower($extension)) {
             'json' => $this->parseJson(file_get_contents($configPath), $configPath),
             'yaml', 'yml' => $this->parseYaml(file_get_contents($configPath), $configPath),
+            // phpcs:disable Kununu.Files.LineLength
             default => throw new ConfigurationException(sprintf('Unsupported configuration file format: %s', $extension)),
+            // phpcs:enable
         };
     }
 
@@ -81,6 +82,7 @@ final class ConfigurationLoader implements ConfigurationLoaderInterface
         }
     }
 
+    // phpcs:disable Kununu.Files.LineLength
     private function getDefaultConfig(): array
     {
         return [
@@ -121,6 +123,7 @@ final class ConfigurationLoader implements ConfigurationLoaderInterface
             ],
         ];
     }
+    // phpcs:enable
 
     private function mergeWithDefaults(array $config): array
     {

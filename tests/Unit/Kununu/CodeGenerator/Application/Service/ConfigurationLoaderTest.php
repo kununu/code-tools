@@ -1,11 +1,11 @@
 <?php
-
 declare(strict_types=1);
 
 namespace Tests\Unit\Kununu\CodeGenerator\Application\Service;
 
 use Kununu\CodeGenerator\Application\Service\ConfigurationLoader;
 use Kununu\CodeGenerator\Domain\Exception\ConfigurationException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -74,9 +74,7 @@ final class ConfigurationLoaderTest extends TestCase
         $this->configLoader->loadConfig($filePath);
     }
 
-    /**
-     * @dataProvider invalidConfigProvider
-     */
+    #[DataProvider('invalidConfigProvider')]
     public function testInvalidConfigurationThrowsException(string $extension, string $content): void
     {
         $filePath = $this->fixturesDir . '/test_invalid.' . $extension;
@@ -100,9 +98,7 @@ final class ConfigurationLoaderTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider validConfigProvider
-     */
+    #[DataProvider('validConfigProvider')]
     public function testValidConfigurationLoads(string $extension, string $content, array $expectedConfig): void
     {
         $filePath = $this->fixturesDir . '/test_valid.' . $extension;

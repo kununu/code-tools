@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace Tests\Unit\Kununu\CodeGenerator\Application\Service;
@@ -225,6 +224,7 @@ final class ManualOperationCollectorTest extends TestCase
         $result = $this->collector->collectOperationDetails();
 
         // Assertions
+        // phpcs:disable Kununu.Files.LineLength
         $this->assertSame('createTestData', $result['id']);
         $this->assertSame('POST', $result['method']);
         $this->assertSame('/test', $result['path']);
@@ -240,6 +240,7 @@ final class ManualOperationCollectorTest extends TestCase
         $this->assertContains('name', $result['requestBody']['content']['application/json']['schema']['required']);
         $this->assertArrayHasKey('nullable', $result['requestBody']['content']['application/json']['schema']['properties']['age']);
         $this->assertArrayHasKey('201', $result['responses']);
+        // phpcs:enable
     }
 
     public function testCollectOperationDetailsPutWithNoRequestBody(): void
@@ -433,6 +434,7 @@ final class ManualOperationCollectorTest extends TestCase
         $result = $this->collector->collectOperationDetails();
 
         // Assertions
+        // phpcs:disable Kununu.Files.LineLength
         $this->assertSame('listTestData', $result['id']);
         $this->assertSame('GET', $result['method']);
         $this->assertSame('/tests', $result['path']);
@@ -452,5 +454,6 @@ final class ManualOperationCollectorTest extends TestCase
         $this->assertContains('id', $result['responses']['200']['content']['application/json']['schema']['items']['required']);
         $this->assertContains('name', $result['responses']['200']['content']['application/json']['schema']['items']['required']);
         $this->assertArrayHasKey('nullable', $result['responses']['200']['content']['application/json']['schema']['items']['properties']['active']);
+        // phpcs:enable
     }
 }

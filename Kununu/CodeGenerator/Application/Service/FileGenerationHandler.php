@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace Kununu\CodeGenerator\Application\Service;
@@ -135,7 +134,9 @@ final class FileGenerationHandler
             if (!empty($templateRows)) {
                 $this->io->table(['Template', 'Source'], $templateRows);
                 if ($customTemplatesUsed) {
-                    $this->io->note('Custom templates are being used when available, falling back to default templates when necessary.');
+                    $this->io->note(
+                        'Custom templates are being used when available, fall back to default templates when necessary.'
+                    );
                 } else {
                     $this->io->note('Using default templates. No custom templates were found.');
                 }
@@ -170,7 +171,9 @@ final class FileGenerationHandler
         $this->io->section('The following files already exist:');
 
         foreach ($existingFiles as $existingFile) {
-            if (!$this->io->confirm(sprintf('File <info>%s</info> exists. Overwrite? [Y/n]', $existingFile), true)) {
+            if (!$this->io->confirm(
+                sprintf('File <info>%s</info> exists. Overwrite? [Y/n]', $existingFile), true)
+            ) {
                 $configuration->addSkipFile($existingFile);
                 $this->io->writeln(sprintf(' - <comment>Skipping</comment> %s', $existingFile));
             } else {
@@ -229,6 +232,7 @@ final class FileGenerationHandler
         return null;
     }
 
+    // phpcs:disable Kununu.Files.LineLength
     private function ensureValidOperationDetailsFormat(BoilerplateConfiguration $configuration): void
     {
         // Skip if no operation details are set
@@ -301,6 +305,7 @@ final class FileGenerationHandler
             }
         }
     }
+    // phpcs:enable Kununu.Files.LineLength
 
     private function markNonRequiredPropertiesAsNullable(array &$properties, array $requiredProperties): void
     {

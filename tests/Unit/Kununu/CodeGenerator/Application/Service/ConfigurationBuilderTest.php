@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace Tests\Unit\Kununu\CodeGenerator\Application\Service;
@@ -93,7 +92,10 @@ final class ConfigurationBuilderTest extends TestCase
         $this->assertInstanceOf(BoilerplateConfiguration::class, $config);
         $this->assertSame('src', $config->basePath);
         $this->assertSame('App', $config->namespace);
-        $this->assertSame(['controller' => '{basePath}/Controller/{operationName}Controller.php'], $config->pathPatterns);
+        $this->assertSame(
+            ['controller' => '{basePath}/Controller/{operationName}Controller.php'],
+            $config->pathPatterns
+        );
         $this->assertSame(['controller' => true, 'repository' => true], $config->generators);
         $this->assertFalse($config->force);
         $this->assertFalse($config->skipExisting);

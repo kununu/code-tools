@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace Kununu\CodeGenerator\Infrastructure\Generator;
@@ -135,7 +134,11 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
             $templateVariables = $variables;
 
             // Set the dynamic namespace based on the output path
-            $templateVariables['full_namespace'] = $this->getDynamicNamespace($outputPath, $configuration->basePath, $configuration->namespace);
+            $templateVariables['full_namespace'] = $this->getDynamicNamespace(
+                $outputPath,
+                $configuration->basePath,
+                $configuration->namespace
+            );
 
             // Get the classname from the output path
             $classname = $this->extractNameFromPath($outputPath, PATHINFO_FILENAME);
@@ -221,7 +224,11 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
             );
 
             // Dynamic namespace based on path pattern
-            $dynamicNamespace = $this->getDynamicNamespace($outputPath, $configuration->basePath, $configuration->namespace);
+            $dynamicNamespace = $this->getDynamicNamespace(
+                $outputPath,
+                $configuration->basePath,
+                $configuration->namespace
+            );
 
             // Get the classname from the output path
             $classname = $this->extractNameFromPath($outputPath, PATHINFO_FILENAME);
@@ -297,6 +304,7 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
         return '@default/' . $templatePath;
     }
 
+    // phpcs:disable Kununu.Files.LineLength
     private function registerDefaultTemplates(): void
     {
         // Register all templates - they'll be filtered at generation time based on HTTP method
@@ -336,6 +344,7 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
         $this->registerTemplate('command-unit-test', 'tests/unit_test.php.twig', '{basePath}/../tests/Unit/UseCase/Command/{operationName}/CommandHandlerTest.php');
         $this->registerTemplate('controller-functional-test', 'tests/functional_test.php.twig', '{basePath}/../tests/Functional/Controller/{operationName}ControllerTest.php');
     }
+    // phpcs:enable
 
     private function shouldGenerateFile(string $templateName, BoilerplateConfiguration $configuration): bool
     {
@@ -343,8 +352,29 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
         $method = $variables['method'] ?? '';
 
         // Filter templates based on HTTP method
-        $queryTemplates = ['query', 'query-handler', 'criteria', 'read-model', 'query-repository-interface', 'query-repository', 'query-exception', 'query-readme', 'jms-serializer-config', 'query-unit-test'];
-        $commandTemplates = ['command', 'command-handler', 'request-data', 'request-resolver', 'command-dto', 'command-repository-interface', 'command-repository', 'command-readme', 'command-unit-test'];
+        $queryTemplates = [
+            'query',
+            'query-handler',
+            'criteria',
+            'read-model',
+            'query-repository-interface',
+            'query-repository',
+            'query-exception',
+            'query-readme',
+            'jms-serializer-config',
+            'query-unit-test',
+        ];
+        $commandTemplates = [
+            'command',
+            'command-handler',
+            'request-data',
+            'request-resolver',
+            'command-dto',
+            'command-repository-interface',
+            'command-repository',
+            'command-readme',
+            'command-unit-test',
+        ];
 
         if (strtoupper($method) === 'GET' && in_array($templateName, $commandTemplates)) {
             return false;
@@ -384,14 +414,29 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
             }
 
             // Command templates
-            if (in_array($templateName, ['command', 'command-handler', 'command-dto', 'command-repository-interface', 'command-repository'])
+            if (in_array($templateName,
+                [
+                    'command',
+                    'command-handler',
+                    'command-dto',
+                    'command-repository-interface',
+                    'command-repository',
+                ]
+            )
                 && isset($configuration->generators['command'])
                 && $configuration->generators['command'] === false) {
                 return false;
             }
 
             // Repository templates
-            if (in_array($templateName, ['query-repository-interface', 'query-repository', 'command-repository-interface', 'command-repository'])
+            if (in_array($templateName,
+                [
+                    'query-repository-interface',
+                    'query-repository',
+                    'command-repository-interface',
+                    'command-repository',
+                ]
+            )
                 && isset($configuration->generators['repository'])
                 && $configuration->generators['repository'] === false) {
                 return false;
@@ -507,9 +552,11 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
         }
 
         // Remove base path from the output path
+        // phpcs:disable Kununu.Files.LineLength
         $relativePath = $normalizedBasePath ?
             preg_replace('#^' . preg_quote($normalizedBasePath . '/', '#') . '#', '', $normalizedOutputPath) :
             $normalizedOutputPath;
+        // phpcs:enable
 
         // Get the directory part of the path (remove the file name)
         $directory = dirname($relativePath);

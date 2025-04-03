@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace Tests\Unit\Kununu\CodeGenerator\Application\Service;
@@ -7,6 +6,7 @@ namespace Tests\Unit\Kununu\CodeGenerator\Application\Service;
 use Kununu\CodeGenerator\Application\Service\OpenApiParser;
 use Kununu\CodeGenerator\Domain\Exception\ParserException;
 use Kununu\CodeGenerator\Domain\Service\OpenApiParserInterface;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Throwable;
@@ -122,9 +122,7 @@ final class OpenApiParserTest extends TestCase
         $this->parser->getOperationById('nonExistentOperation');
     }
 
-    /**
-     * @dataProvider validSpecProvider
-     */
+    #[DataProvider('validSpecProvider')]
     public function testParseFileSucceedsWithValidSpecification(string $extension, string $content): void
     {
         $filePath = $this->fixturesDir . '/test_valid.' . $extension;

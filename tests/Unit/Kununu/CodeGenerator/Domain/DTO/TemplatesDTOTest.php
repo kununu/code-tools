@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace Tests\Unit\Kununu\CodeGenerator\Domain\DTO;
@@ -7,6 +6,7 @@ namespace Tests\Unit\Kununu\CodeGenerator\Domain\DTO;
 use InvalidArgumentException;
 use Kununu\CodeGenerator\Domain\DTO\TemplateDTO;
 use Kununu\CodeGenerator\Domain\DTO\TemplatesDTO;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -70,9 +70,7 @@ final class TemplatesDTOTest extends TestCase
         $this->assertFalse($templatesDTO->hasTemplate('nonexistent'));
     }
 
-    /**
-     * @dataProvider caseInsensitiveTypeProvider
-     */
+    #[DataProvider('caseInsensitiveTypeProvider')]
     public function testTypeCaseInsensitivity(string $registerType, string $lookupType): void
     {
         $template = $this->createTemplate($registerType);

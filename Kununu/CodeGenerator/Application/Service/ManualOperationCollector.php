@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace Kununu\CodeGenerator\Application\Service;
@@ -103,7 +102,9 @@ final readonly class ManualOperationCollector
             $parameter = $this->collectParameterDetails($paramName);
             $parameters[] = $parameter;
 
-            $this->io->writeln(sprintf('Added parameter: <info>%s</info> (%s)', $paramName, $parameter['schema']['type']));
+            $this->io->writeln(
+                sprintf('Added parameter: <info>%s</info> (%s)', $paramName, $parameter['schema']['type'])
+            );
         }
 
         return $parameters;
@@ -113,7 +114,17 @@ final readonly class ManualOperationCollector
     {
         $paramIn = $this->io->choice('Parameter location', ['path', 'query', 'header'], 'path');
         $paramRequired = $this->io->confirm('Is this parameter required?', true);
-        $paramType = $this->io->choice('Parameter type', ['string', 'integer', 'number', 'boolean', 'array'], 'string');
+        $paramType = $this->io->choice(
+            'Parameter type',
+            [
+                'string',
+                'integer',
+                'number',
+                'boolean',
+                'array',
+            ],
+            'string'
+        );
 
         return [
             'name'     => $paramName,
@@ -199,14 +210,22 @@ final readonly class ManualOperationCollector
 
     private function collectPropertyDetails(): array
     {
-        $propType = $this->io->choice('Property type', ['string', 'integer', 'number', 'boolean', 'array', 'object'], 'string');
+        $propType = $this->io->choice(
+            'Property type',
+            ['string', 'integer', 'number', 'boolean', 'array', 'object'],
+            'string'
+        );
 
         $property = [
             'type' => $propType,
         ];
 
         if ($propType === 'array') {
-            $itemType = $this->io->choice('Array items type', ['string', 'integer', 'number', 'boolean', 'object'], 'string');
+            $itemType = $this->io->choice(
+                'Array items type',
+                ['string', 'integer', 'number', 'boolean', 'object'],
+                'string'
+            );
             $property['items'] = [
                 'type' => $itemType,
             ];
@@ -261,7 +280,11 @@ final readonly class ManualOperationCollector
         // $contentType = $this->io->choice('Content type', ['application/json', 'application/xml', 'text/plain'], 'application/json');
 
         if (in_array($contentType, ['application/json', 'application/xml'])) {
-            $responseType = $this->io->choice('Response schema type', ['object', 'array', 'string', 'integer', 'number', 'boolean'], 'object');
+            $responseType = $this->io->choice(
+                'Response schema type',
+                ['object', 'array', 'string', 'integer', 'number', 'boolean'],
+                'object'
+            );
             $schema = $this->buildResponseSchema($responseType);
             $content[$contentType] = [
                 'schema' => $schema,
@@ -294,7 +317,11 @@ final readonly class ManualOperationCollector
                 $this->markNonRequiredPropertiesAsNullable($schema['properties'], $schema['required']);
             }
         } elseif ($responseType === 'array') {
-            $itemType = $this->io->choice('Array items type', ['string', 'integer', 'number', 'boolean', 'object'], 'object');
+            $itemType = $this->io->choice(
+                'Array items type',
+                ['string', 'integer', 'number', 'boolean', 'object'],
+                'object'
+            );
             $schema['items'] = [
                 'type' => $itemType,
             ];
@@ -307,7 +334,9 @@ final readonly class ManualOperationCollector
                     $schema['items']['required'] = $this->collectRequiredFields(array_keys($properties));
 
                     // Mark non-required properties as nullable
-                    $this->markNonRequiredPropertiesAsNullable($schema['items']['properties'], $schema['items']['required']);
+                    $this->markNonRequiredPropertiesAsNullable(
+                        $schema['items']['properties'], $schema['items']['required']
+                    );
                 }
             }
         }

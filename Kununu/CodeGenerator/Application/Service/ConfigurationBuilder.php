@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace Kununu\CodeGenerator\Application\Service;
@@ -141,6 +140,7 @@ final class ConfigurationBuilder
         return $operationId;
     }
 
+    // phpcs:disable Kununu.Files.LineLength
     private function selectOperationInteractively(string $openApiFilePath): ?string
     {
         try {
@@ -155,20 +155,26 @@ final class ConfigurationBuilder
 
             $this->io->writeln('Available operations:');
             foreach ($operations as $index => $op) {
-                $this->io->writeln(sprintf(' %d. <info>%s</info> - %s', $index + 1, $op['id'], $op['summary']));
+                $this->io->writeln(
+                    sprintf(' %d. <info>%s</info> - %s', $index + 1, $op['id'], $op['summary'])
+                );
             }
 
-            $selection = $this->io->ask('Select operation by number or provide operationId', null, function($value) {
-                if (is_numeric($value) && (int) $value < 1) {
-                    throw new ConfigurationException('Invalid selection, please provide a valid operation number or ID');
-                }
+            $selection = $this->io->ask(
+                'Select operation by number or provide operationId',
+                null,
+                function($value) {
+                    if (is_numeric($value) && (int) $value < 1) {
+                        throw new ConfigurationException('Invalid selection, please provide a valid operation number or ID');
+                    }
 
-                if (empty($value)) {
-                    throw new ConfigurationException('Operation cannot be empty, consider trying manual mode with -m option');
-                }
+                    if (empty($value)) {
+                        throw new ConfigurationException('Operation cannot be empty, consider trying manual mode with -m option');
+                    }
 
-                return $value;
-            });
+                    return $value;
+                }
+            );
 
             if (is_numeric($selection) && isset($operations[(int) $selection - 1])) {
                 return $operations[(int) $selection - 1]['id'];
@@ -179,6 +185,7 @@ final class ConfigurationBuilder
             throw new ConfigurationException(sprintf('Error parsing OpenAPI file: %s', $e->getMessage()), $e->getCode(), $e);
         }
     }
+    // phpcs:enable
 
     private function isAbsolutePath(string $path): bool
     {

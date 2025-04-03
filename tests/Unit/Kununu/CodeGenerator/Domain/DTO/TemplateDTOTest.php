@@ -1,10 +1,10 @@
 <?php
-
 declare(strict_types=1);
 
 namespace Tests\Unit\Kununu\CodeGenerator\Domain\DTO;
 
 use Kununu\CodeGenerator\Domain\DTO\TemplateDTO;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -57,9 +57,7 @@ final class TemplateDTOTest extends TestCase
         $this->assertSame('src/Controller', $dto->dirname);
     }
 
-    /**
-     * @dataProvider templateVariablesProvider
-     */
+    #[DataProvider('templateVariablesProvider')]
     public function testVariousTemplateVariables(array $variables): void
     {
         $dto = new TemplateDTO('type', 'template.twig', $variables);

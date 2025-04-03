@@ -1,10 +1,10 @@
 <?php
-
 declare(strict_types=1);
 
 namespace Tests\Unit\Kununu\CodeGenerator\Domain\DTO;
 
 use Kununu\CodeGenerator\Domain\DTO\BoilerplateConfiguration;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -190,9 +190,7 @@ final class BoilerplateConfigurationTest extends TestCase
         $this->assertSame('Users', $this->config->templateVariables['pluralized_name']);
     }
 
-    /**
-     * @dataProvider operationDetailsCqrsTypeProvider
-     */
+    #[DataProvider('operationDetailsCqrsTypeProvider')]
     public function testGetTemplateVariablesWithCqrsType(string $method, string $expectedCqrsType): void
     {
         $this->config->setOperationDetails(['method' => $method]);

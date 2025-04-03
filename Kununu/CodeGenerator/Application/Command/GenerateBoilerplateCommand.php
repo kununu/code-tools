@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace Kununu\CodeGenerator\Application\Command;
@@ -178,7 +177,10 @@ final class GenerateBoilerplateCommand extends Command
         $manualMode = $input->getOption('manual');
 
         if (!$input->getOption('non-interactive') && !$manualMode && $configuration->openApiFilePath === null) {
-            $manualMode = $this->io->confirm('Would you like to provide operation details manually instead of using OpenAPI?', false);
+            $manualMode = $this->io->confirm(
+                'Would you like to provide operation details manually instead of using OpenAPI?',
+                false
+            );
         }
 
         return $manualMode;
