@@ -110,67 +110,7 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
         }
 
         // Create TemplateDTO objects for each template
-        $templateDTOs = [];
-        foreach ($this->templates as $templateName => $template) {
-            // Determine if we should generate this file based on configuration
-            if (!$this->shouldGenerateFile($templateName, $configuration)) {
-                continue;
-            }
-
-            // Get output pattern - prefer custom pattern from config if available
-            $outputPattern = $template['outputPattern'];
-            if (!empty($configuration->pathPatterns) && isset($configuration->pathPatterns[$templateName])) {
-                $outputPattern = $configuration->pathPatterns[$templateName];
-            }
-
-            // Generate output path from pattern
-            $outputPath = $this->generateOutputPath(
-                $outputPattern,
-                $configuration->basePath,
-                $variables
-            );
-
-            // Skip this file if it's in the skipFiles list
-            if (isset($configuration->skipFiles) && in_array($outputPath, $configuration->skipFiles)) {
-                continue;
-            }
-
-            // Create a copy of template variables for this specific template
-            $templateVariables = $variables;
-
-            // Set the dynamic namespace based on the output path
-            $templateVariables['full_namespace'] = $this->getDynamicNamespace(
-                $outputPath,
-                $configuration->basePath,
-                $configuration->namespace
-            );
-
-            // Get the classname from the output path
-            $classname = $this->extractNameFromPath($outputPath, PATHINFO_FILENAME);
-            $templateVariables['classname'] = $classname;
-            $filename = $this->extractNameFromPath($outputPath, PATHINFO_BASENAME);
-            $templateVariables['filename'] = $filename;
-
-            // Build the FQCN by combining namespace and classname
-            $fqcn = $templateVariables['full_namespace'] . '\\' . $classname;
-
-            // Add templates variable to access other templates
-            $templateDTOs[] = new TemplateDTO(
-                $templateName,
-                $template['path'],
-                $templateVariables,
-                $template['original_path'],
-                $outputPath,
-                $templateVariables['full_namespace'],
-                $classname,
-                $fqcn,
-                $filename,
-                dirname($outputPath)
-            );
-        }
-
-        // Create TemplatesDTO instance
-        $templatesDTO = new TemplatesDTO($templateDTOs);
+        $templatesDTO = $this->buildTemplateDTOs($configuration, $variables);
 
         // Add templates DTO to variables for each template
         foreach ($templatesDTO->getAllTemplates() as $templateDTO) {
@@ -193,7 +133,7 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
                 }
             } catch (LoaderError|RuntimeError|SyntaxError $e) {
                 // If there's an error loading the template, log it and continue
-                error_log("Error loading template {$templateDTO->template}: " . $e->getMessage());
+                error_log(sprintf('Error loading template %s: %s', $templateDTO->template, $e->getMessage()));
             }
         }
 
@@ -204,67 +144,13 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
     {
         $filesToGenerate = [];
         $variables = $configuration->getTemplateVariables();
-        $templateDTOs = [];
 
         // Ensure we have an entity_name variable
         if (!isset($variables['entity_name']) && isset($variables['operation_id'])) {
             $variables['entity_name'] = $this->extractEntityNameFromOperationId($variables['operation_id']);
         }
 
-        foreach ($this->templates as $templateName => $template) {
-            // Determine if we should generate this file based on configuration
-            if (!$this->shouldGenerateFile($templateName, $configuration)) {
-                continue;
-            }
-
-            // Get output pattern - prefer custom pattern from config if available
-            $outputPattern = $template['outputPattern'];
-            if (!empty($configuration->pathPatterns) && isset($configuration->pathPatterns[$templateName])) {
-                $outputPattern = $configuration->pathPatterns[$templateName];
-            }
-
-            // Generate output path from pattern
-            $outputPath = $this->generateOutputPath(
-                $outputPattern,
-                $configuration->basePath,
-                $variables
-            );
-
-            // Dynamic namespace based on path pattern
-            $dynamicNamespace = $this->getDynamicNamespace(
-                $outputPath,
-                $configuration->basePath,
-                $configuration->namespace
-            );
-
-            // Get the classname from the output path
-            $classname = $this->extractNameFromPath($outputPath, PATHINFO_FILENAME);
-            $filename = $this->extractNameFromPath($outputPath, PATHINFO_BASENAME);
-
-            // Build the FQCN by combining namespace and classname
-            $fqcn = $dynamicNamespace . '\\' . $classname;
-
-            // Create template variables for this specific template
-            $templateVariables = $variables;
-            $templateVariables['full_namespace'] = $dynamicNamespace;
-
-            // Create TemplateDTO
-            $templateDTOs[] = new TemplateDTO(
-                $templateName,
-                $template['path'],
-                $templateVariables,
-                $template['original_path'],
-                $outputPath,
-                $dynamicNamespace,
-                $classname,
-                $fqcn,
-                $filename,
-                dirname($outputPath)
-            );
-        }
-
-        // Create TemplatesDTO instance
-        $templatesDTO = new TemplatesDTO($templateDTOs);
+        $templatesDTO = $this->buildTemplateDTOs($configuration, $variables);
 
         // Convert DTOs to array format for backward compatibility
         foreach ($templatesDTO->getAllTemplates() as $templateDTO) {
@@ -689,5 +575,70 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
         $result = pathinfo($path, $flag);
 
         return is_string($result) ? $result : '';
+    }
+
+    public function buildTemplateDTOs(BoilerplateConfiguration $configuration, array $variables): TemplatesDTO
+    {
+        $templateDTOs = [];
+
+        foreach ($this->templates as $templateName => $template) {
+            // Determine if we should generate this file based on configuration
+            if (!$this->shouldGenerateFile($templateName, $configuration)) {
+                continue;
+            }
+
+            // Get output pattern - prefer custom pattern from config if available
+            $outputPattern = $template['outputPattern'];
+            if (!empty($configuration->pathPatterns) && isset($configuration->pathPatterns[$templateName])) {
+                $outputPattern = $configuration->pathPatterns[$templateName];
+            }
+
+            // Generate output path from pattern
+            $outputPath = $this->generateOutputPath(
+                $outputPattern,
+                $configuration->basePath,
+                $variables
+            );
+
+            // Skip this file if it's in the skipFiles list
+            if (isset($configuration->skipFiles) && in_array($outputPath, $configuration->skipFiles)) {
+                continue;
+            }
+
+            // Create a copy of template variables for this specific template
+            $templateVariables = $variables;
+
+            // Set the dynamic namespace based on the output path
+            $templateVariables['full_namespace'] = $this->getDynamicNamespace(
+                $outputPath,
+                $configuration->basePath,
+                $configuration->namespace
+            );
+
+            // Get the classname from the output path
+            $classname = $this->extractNameFromPath($outputPath, PATHINFO_FILENAME);
+            $templateVariables['classname'] = $classname;
+            $filename = $this->extractNameFromPath($outputPath, PATHINFO_BASENAME);
+            $templateVariables['filename'] = $filename;
+
+            // Build the FQCN by combining namespace and classname
+            $fqcn = $templateVariables['full_namespace'] . '\\' . $classname;
+
+            // Add templates variable to access other templates
+            $templateDTOs[] = new TemplateDTO(
+                $templateName,
+                $template['path'],
+                $templateVariables,
+                $template['original_path'],
+                $outputPath,
+                $templateVariables['full_namespace'],
+                $classname,
+                $fqcn,
+                $filename,
+                dirname($outputPath)
+            );
+        }
+
+        return new TemplatesDTO($templateDTOs);
     }
 }

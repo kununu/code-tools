@@ -9,6 +9,7 @@ use cebe\openapi\exceptions\UnresolvableReferenceException;
 use cebe\openapi\json\InvalidJsonPointerSyntaxException;
 use cebe\openapi\Reader;
 use cebe\openapi\spec\OpenApi;
+use cebe\openapi\spec\Parameter;
 use Kununu\CodeGenerator\Domain\Exception\ParserException;
 use Kununu\CodeGenerator\Domain\Service\OpenApiParserInterface;
 
@@ -114,29 +115,14 @@ final class OpenApiParser implements OpenApiParserInterface
 
                     // Parse parameters
                     if (isset($operation->parameters)) {
+                        /** @var Parameter $parameter */
                         foreach ($operation->parameters as $parameter) {
-                            // Handle Reference vs Parameter objects
-                            $paramName = '';
-                            $paramIn = '';
-                            $paramRequired = false;
-                            $paramDescription = '';
-                            $paramSchema = null;
-
-                            // Check if it's a Reference or Parameter
-                            if (property_exists($parameter, 'name') && property_exists($parameter, 'in')) {
-                                $paramName = $parameter->name;
-                                $paramIn = $parameter->in;
-                                $paramRequired = $parameter->required ?? false;
-                                $paramDescription = $parameter->description ?? '';
-                                $paramSchema = $parameter->schema ?? null;
-                            }
-
                             $operationDetails['parameters'][] = [
-                                'name'        => $paramName,
-                                'in'          => $paramIn,
-                                'required'    => $paramRequired,
-                                'description' => $paramDescription,
-                                'schema'      => $this->extractSchema($paramSchema),
+                                'name'        => $parameter->name,
+                                'in'          => $parameter->in,
+                                'required'    => $parameter->required ?? false,
+                                'description' => $parameter->description ?? '',
+                                'schema'      => $this->extractSchema($parameter->schema ?? null),
                             ];
                         }
                     }

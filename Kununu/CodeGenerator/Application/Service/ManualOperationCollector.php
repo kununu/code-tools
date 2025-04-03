@@ -178,10 +178,10 @@ final readonly class ManualOperationCollector
         $requiredFields = [];
 
         foreach ($propertyNames as $propName) {
-            if ($this->io->confirm("Is '{$propName}' required?", false)) {
+            if ($this->io->confirm(sprintf('Is \'%s\' required?', $propName), false)) {
                 $requiredFields[] = $propName;
             } else {
-                $this->io->writeln(" - <comment>{$propName}</comment> will be nullable");
+                $this->io->writeln(" - <comment>$propName</comment> will be nullable");
             }
         }
 

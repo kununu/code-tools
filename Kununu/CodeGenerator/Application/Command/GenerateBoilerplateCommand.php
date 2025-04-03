@@ -3,6 +3,10 @@ declare(strict_types=1);
 
 namespace Kununu\CodeGenerator\Application\Command;
 
+use cebe\openapi\exceptions\IOException;
+use cebe\openapi\exceptions\TypeErrorException;
+use cebe\openapi\exceptions\UnresolvableReferenceException;
+use cebe\openapi\json\InvalidJsonPointerSyntaxException;
 use Exception;
 use Kununu\CodeGenerator\Application\Service\ConfigurationBuilder;
 use Kununu\CodeGenerator\Application\Service\ConfigurationLoader;
@@ -186,6 +190,9 @@ final class GenerateBoilerplateCommand extends Command
         return $manualMode;
     }
 
+    /**
+     * @throws IOException|TypeErrorException|UnresolvableReferenceException|InvalidJsonPointerSyntaxException
+     */
     private function parseOpenApiSpecification(BoilerplateConfiguration $configuration): void
     {
         if ($configuration->openApiFilePath === null) {
