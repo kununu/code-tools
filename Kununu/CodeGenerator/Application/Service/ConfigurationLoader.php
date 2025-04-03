@@ -6,6 +6,7 @@ namespace Kununu\CodeGenerator\Application\Service;
 
 use Exception;
 use Kununu\CodeGenerator\Domain\Exception\ConfigurationException;
+use Kununu\CodeGenerator\Domain\Service\ConfigurationLoaderInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Yaml\Yaml;
 
@@ -13,7 +14,7 @@ use Symfony\Component\Yaml\Yaml;
  * Handles loading configuration from YAML or JSON files and provides default configurations
  * when files are missing or incomplete.
  */
-final class ConfigurationLoader
+final class ConfigurationLoader implements ConfigurationLoaderInterface
 {
     private Filesystem $filesystem;
 

@@ -7,6 +7,8 @@ namespace Kununu\CodeGenerator\Application\Service;
 use Exception;
 use Kununu\CodeGenerator\Domain\DTO\BoilerplateConfiguration;
 use Kununu\CodeGenerator\Domain\Exception\ConfigurationException;
+use Kununu\CodeGenerator\Domain\Service\ConfigurationLoaderInterface;
+use Kununu\CodeGenerator\Domain\Service\OpenApiParserInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
@@ -17,14 +19,14 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 final class ConfigurationBuilder
 {
     private SymfonyStyle $io;
-    private ConfigurationLoader $configLoader;
-    private OpenApiParser $openApiParser;
+    private ConfigurationLoaderInterface $configLoader;
+    private OpenApiParserInterface $openApiParser;
     private ?BoilerplateConfiguration $configuration = null;
 
     public function __construct(
         SymfonyStyle $io,
-        ConfigurationLoader $configLoader,
-        OpenApiParser $openApiParser,
+        ConfigurationLoaderInterface $configLoader,
+        OpenApiParserInterface $openApiParser,
     ) {
         $this->io = $io;
         $this->configLoader = $configLoader;
@@ -156,7 +158,17 @@ final class ConfigurationBuilder
                 $this->io->writeln(sprintf(' %d. <info>%s</info> - %s', $index + 1, $op['id'], $op['summary']));
             }
 
-            $selection = $this->io->ask('Select operation by number or provide operationId');
+            $selection = $this->io->ask('Select operation by number or provide operationId', null, function($value) {
+                if (is_numeric($value) && (int) $value < 1) {
+                    throw new ConfigurationException('Invalid selection, please provide a valid operation number or ID');
+                }
+
+                if (empty($value)) {
+                    throw new ConfigurationException('Operation cannot be empty, consider trying manual mode with -m option');
+                }
+
+                return $value;
+            });
 
             if (is_numeric($selection) && isset($operations[(int) $selection - 1])) {
                 return $operations[(int) $selection - 1]['id'];

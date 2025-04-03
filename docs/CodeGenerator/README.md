@@ -11,11 +11,14 @@
   - [Custom Templates](#custom-templates)
 - [Manual Data Entry](#manual-data-entry)
 - [File Handling](#file-handling)
+- [Cross-Template References](#cross-template-references)
 - [Examples](#examples)
 - [Tips and Best Practices](#tips-and-best-practices)
 
 ## Overview
-The Code Generator is a tool designed to generate boilerplate code based on OpenAPI specifications or manually provided operation details. It automates the creation of controllers, repositories, commands, queries, and other components following best practices and design patterns.
+The Code Generator is a tool designed to generate boilerplate code based on OpenAPI specifications or manually provided operation details. It automates the creation of controllers, repositories, commands, queries, DTOs, and other components following best practices and design patterns.
+
+The tool now supports enhanced template functionality, cross-template references, and more flexible output path generation, making it even more powerful for quickly scaffolding new API endpoints in your application.
 
 ## Installation
 The Code Generator is included in the `kununu/code-tools` package. To use it, you need to have this package installed in your project:
@@ -38,20 +41,19 @@ The Code Generator supports the following options:
 
 | Option | Short | Description | Default |
 |--------|-------|-------------|---------|
-| `--config` | `-c` | Path to configuration file | `code-generator.yaml` |
-| `--operation-id` | `-o` | Operation ID from OpenAPI specification | - |
-| `--openapi` | `-a` | Path to OpenAPI specification file | - |
+| `--config` | `-c` | Path to configuration file | `.code-generator.yaml` |
+| `--operation-id` | `-i` | Operation ID from OpenAPI specification | - |
+| `--openapi-file` | `-o` | Path to OpenAPI specification file | - |
 | `--manual` | `-m` | Manually provide operation details instead of using OpenAPI | `false` |
 | `--force` | `-f` | Force overwrite of existing files without confirmation | `false` |
 | `--skip-existing` | `-s` | Skip all existing files without confirmation | `false` |
-| `--non-interactive` | `-n` | Run in non-interactive mode | `false` |
-| `--no-preview` | `-p` | Skip preview of files to be generated | `false` |
+| `--non-interactive` | - | Run in non-interactive mode | `false` |
 | `--template-dir` | `-t` | Path to custom template directory | - |
-| `--quiet` | `-q` | Suppress all output | `false` |
+| `--quiet` | `-q` | Suppress all output except errors | `false` |
 | `--no-color` | - | Disable colored output | `false` |
 
 ## Configuration
-The Code Generator can be configured using a YAML configuration file. By default, it looks for `code-generator.yaml` in your project root.
+The Code Generator can be configured using a YAML configuration file. By default, it looks for `.code-generator.yaml` in your project root.
 
 ### Default Configuration
 To create a default configuration file in your project, run:
@@ -60,7 +62,7 @@ To create a default configuration file in your project, run:
 vendor/bin/code-tools publish:config code-generator
 ```
 
-This will copy the default configuration file to your project root as `code-generator.yaml`.
+This will copy the default configuration file to your project root as `.code-generator.yaml`.
 
 ### Custom Configuration
 You can customize the configuration file to suit your needs. The following options are available:
@@ -98,10 +100,11 @@ generators:
   command: true
   repository: true
   tests: true
+  xml-serializer: true
 ```
 
 ### Custom Templates
-The Code Generator now supports using custom templates instead of the built-in ones. You can specify a custom template directory in two ways:
+The Code Generator supports using custom templates instead of the built-in ones. You can specify a custom template directory in two ways:
 
 1. **Via Configuration File**:
    ```yaml
@@ -121,8 +124,6 @@ When using custom templates, the Code Generator will:
 3. Fall back to the built-in template if not found
 4. Show you which templates are being used from which source during generation
 
-This allows you to customize specific templates while still using the default ones for everything else.
-
 #### Template Structure
 Your custom templates should follow the same structure as the built-in templates. The main template directories are:
 
@@ -131,12 +132,9 @@ Your custom templates should follow the same structure as the built-in templates
 - `repository/` - Templates for repository files
 - `request/` - Templates for request-related files
 - `tests/` - Templates for test files
-
-The most commonly customized templates are:
-
-- `controller.php.twig` - Controller template
-- `tests/unit_test.php.twig` - Unit test template
-- `tests/functional_test.php.twig` - Functional test template
+- `shared/` - Templates shared between different types
+- `dto/` - Templates for data transfer objects
+- `misc/` - Miscellaneous templates like configuration files
 
 See the [TEMPLATES.md](TEMPLATES.md) file for more details on how to create and use custom templates.
 
@@ -161,11 +159,24 @@ The Code Generator provides options for handling existing files:
 - **Force Overwrite**: Use `--force` to overwrite all existing files without confirmation
 - **Skip Existing**: Use `--skip-existing` to skip all existing files without confirmation
 
+## Cross-Template References
+A powerful feature of the Code Generator is the ability for templates to reference each other. This is done through the `templates` variable that's available in all templates:
+
+```twig
+{# In a template file #}
+{% if templates.hasTemplate('read-model') %}
+  // Use data from the read model template
+  $readModel = {{ templates.getTemplateByType('read-model').namespace }}\{{ templates.getTemplateByType('read-model').classname }};
+{% endif %}
+```
+
+This allows you to create templates that adapt based on what other files are being generated, creating more cohesive and interconnected code.
+
 ## Examples
 
 ### Generate code from OpenAPI specification
 ```bash
-vendor/bin/code-generator --openapi=api/openapi.yaml --operation-id=getUserProfile
+vendor/bin/code-generator --openapi-file=api/openapi.yaml --operation-id=getUserProfile
 ```
 
 ### Generate code with custom configuration and templates
@@ -175,7 +186,12 @@ vendor/bin/code-generator --config=my-config.yaml --template-dir=my-templates
 
 ### Generate code in non-interactive mode
 ```bash
-vendor/bin/code-generator --non-interactive --openapi=api/openapi.yaml --operation-id=getUserProfile --force
+vendor/bin/code-generator --non-interactive --openapi-file=api/openapi.yaml --operation-id=getUserProfile --force
+```
+
+### Generate code with manual input
+```bash
+vendor/bin/code-generator --manual
 ```
 
 ## Tips and Best Practices
@@ -186,12 +202,25 @@ vendor/bin/code-generator --non-interactive --openapi=api/openapi.yaml --operati
 
 3. **Path Patterns**: Customize path patterns to match your project structure.
 
-4. **Test Templates**: The test templates are designed to be minimal and require implementation. They include `markTestSkipped()` to remind you to implement the tests.
+4. **Entity Name Convention**: The tool automatically extracts an entity name from the operation ID, but you can override this by adding a custom template variable: `entity_name`.
 
-5. **Template Variables**: When creating custom templates, you have access to all the variables from the operation details, including:
+5. **Test Templates**: The generated tests are designed to be minimal starting points. They include `markTestSkipped()` calls that you should replace with actual test implementations.
+
+6. **Template Variables**: When creating custom templates, you have access to all variables from the operation details, including:
    - `operation_id` - The operation ID
    - `method` - The HTTP method
    - `path` - The API path
    - `parameters` - Request parameters
    - `namespace` - The base namespace
+   - `full_namespace` - The complete namespace for the file
+   - `classname` - The generated class name
    - `entity_name` - Extracted entity name from the operation ID
+   - `cqrsType` - Automatically set to "Query" for GET methods or "Command" for others
+   - `templates` - Access to other templates being generated
+
+7. **Cross-Template References**: Use the `templates` variable to create cohesive code across multiple files.
+
+8. **Naming Conventions**: The generator follows naming conventions automatically:
+   - Controller names are derived from the operation ID (e.g., `getUserProfile` → `GetUserProfileController`)
+   - Entity names are extracted from the operation ID (e.g., `getUserProfile` → `User`)
+   - Command/Query names follow the operation (e.g., `getUserProfile` → `GetUserProfileQuery`)

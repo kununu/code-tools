@@ -105,11 +105,11 @@ final class FileGenerationHandler
                     ? 'Yes (will be skipped)'
                     : 'Yes (will be overwritten)';
             }
-            $namespace = $file['namespace'] ?? '-';
-            $rows[] = [$file['path'], $existsStatus, $namespace];
+
+            $rows[] = [$file['path'], $existsStatus];
         }
 
-        $this->io->table(['File', 'Exists', 'Namespace'], $rows);
+        $this->io->table(['File', 'Exists'], $rows);
 
         // Show template source information if custom templates are being used
         if (method_exists($this->codeGenerator, 'getTemplateSource')

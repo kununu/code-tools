@@ -7,6 +7,7 @@ namespace Kununu\CodeGenerator\Application\Service;
 use cebe\openapi\Reader;
 use cebe\openapi\spec\OpenApi;
 use Kununu\CodeGenerator\Domain\Exception\ParserException;
+use Kununu\CodeGenerator\Domain\Service\OpenApiParserInterface;
 
 /**
  * Parser for OpenAPI specifications - supports both 3.0 and 3.1 versions
@@ -21,11 +22,11 @@ use Kununu\CodeGenerator\Domain\Exception\ParserException;
  *
  * Uses devizzent/cebe-php-openapi for the underlying parsing.
  */
-final class OpenApiParser
+final class OpenApiParser implements OpenApiParserInterface
 {
     private ?OpenApi $openApi = null;
 
-    public function parseFile(string $filePath): void
+    public function parseFile(string $filePath): array
     {
         if (!file_exists($filePath)) {
             throw new ParserException(sprintf('OpenAPI file not found at %s', $filePath));
@@ -54,6 +55,13 @@ final class OpenApiParser
                 implode(', ', $errors)
             ));
         }
+
+        // Return some basic information about the parsed spec
+        return [
+            'title'       => $this->openApi->info->title ?? 'Unknown API',
+            'version'     => $this->openApi->info->version ?? 'Unknown Version',
+            'description' => $this->openApi->info->description ?? '',
+        ];
     }
 
     public function listOperations(): array
