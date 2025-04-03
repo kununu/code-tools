@@ -164,6 +164,9 @@ final class GenerateBoilerplateCommand extends Command
         return $this->configBuilder->buildConfiguration($input, $configPath);
     }
 
+    /**
+     * @throws IOException|TypeErrorException|UnresolvableReferenceException|InvalidJsonPointerSyntaxException
+     */
     private function collectOperationDetails(InputInterface $input, BoilerplateConfiguration $configuration): void
     {
         $manualMode = $this->determineManualMode($input, $configuration);
