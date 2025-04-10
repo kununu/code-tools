@@ -3,88 +3,86 @@ declare(strict_types=1);
 
 namespace Kununu\CodeGenerator\Infrastructure\Generator;
 
+use Exception;
 use Kununu\CodeGenerator\Domain\DTO\BoilerplateConfiguration;
 use Kununu\CodeGenerator\Domain\DTO\TemplateDTO;
 use Kununu\CodeGenerator\Domain\DTO\TemplatesDTO;
 use Kununu\CodeGenerator\Domain\Service\CodeGeneratorInterface;
-use Symfony\Component\Filesystem\Filesystem;
+use Kununu\CodeGenerator\Domain\Service\FileSystem\FileSystemHandlerInterface;
+use Kununu\CodeGenerator\Domain\Service\Template\StringTransformerInterface;
+use Kununu\CodeGenerator\Domain\Service\Template\TemplatePathResolverInterface;
+use Kununu\CodeGenerator\Domain\Service\Template\TemplateRegistryInterface;
+use Kununu\CodeGenerator\Domain\Service\Template\TemplateRenderingServiceInterface;
+use Kununu\CodeGenerator\Infrastructure\Template\DefaultTemplateRegistry;
+use Kununu\CodeGenerator\Infrastructure\Template\StringTransformer;
+use Kununu\CodeGenerator\Infrastructure\Template\TemplatePathResolver;
+use Kununu\CodeGenerator\Infrastructure\Template\TwigTemplateRenderer;
 use Twig\Environment;
-use Twig\Error\LoaderError;
-use Twig\Error\RuntimeError;
-use Twig\Error\SyntaxError;
 use Twig\Loader\FilesystemLoader;
-use Twig\TwigFilter;
 
-final class TwigTemplateGenerator implements CodeGeneratorInterface
+final readonly class TwigTemplateGenerator implements CodeGeneratorInterface
 {
-    private Filesystem $filesystem;
-    private Environment $twig;
-    private array $templates = [];
-    private string $defaultTemplateDir;
-    private ?string $customTemplateDir;
+    public function __construct(
+        private FileSystemHandlerInterface $fileSystem,
+        private TemplateRenderingServiceInterface $renderer,
+        private TemplatePathResolverInterface $templatePathResolver,
+        private TemplateRegistryInterface $templateRegistry,
+        private StringTransformerInterface $stringTransformer,
+    ) {
+        $this->registerDefaultTemplates();
+    }
 
-    /**
-     * @throws LoaderError
-     */
-    public function __construct(Filesystem $filesystem, ?string $customTemplateDir = null)
-    {
-        $this->filesystem = $filesystem;
-        $this->defaultTemplateDir = dirname(__DIR__, 3) . '/CodeGenerator/Templates';
-        $this->customTemplateDir = $customTemplateDir;
+    public static function createDefault(
+        FileSystemHandlerInterface $fileSystem,
+        ?string $customTemplateDir = null,
+    ): self {
+        $defaultTemplateDir = dirname(__DIR__, 3) . '/CodeGenerator/Templates';
 
         // Set up Twig with multiple template directories
         $loader = new FilesystemLoader([]);
 
         // Add the default template directory
-        $loader->addPath($this->defaultTemplateDir, 'default');
+        $loader->addPath($defaultTemplateDir, 'default');
 
         // Add the custom template directory if provided
-        if ($this->customTemplateDir !== null && $this->filesystem->exists($this->customTemplateDir)) {
-            $loader->addPath($this->customTemplateDir, 'custom');
+        if ($customTemplateDir !== null && $fileSystem->exists($customTemplateDir)) {
+            $loader->addPath($customTemplateDir, 'custom');
         }
 
-        $this->twig = new Environment($loader, [
+        $twig = new Environment($loader, [
             'cache'            => false,
             'debug'            => true,
             'strict_variables' => true,
             'autoescape'       => false,
         ]);
 
-        // Add custom filters
-        $this->registerTwigFilters();
+        // Create services
+        $templatePathResolver = new TemplatePathResolver(
+            $fileSystem,
+            $customTemplateDir
+        );
 
-        // Register default templates
-        $this->registerDefaultTemplates();
-    }
+        $templateRegistry = new DefaultTemplateRegistry(
+            $templatePathResolver
+        );
 
-    public function registerTemplate(string $templateName, string $templatePath, string $outputPattern): void
-    {
-        $resolvedTemplatePath = $this->getTemplatePath($templatePath);
-        $this->templates[$templateName] = [
-            'path'          => $resolvedTemplatePath,
-            'original_path' => $templatePath,
-            'outputPattern' => $outputPattern,
-        ];
-    }
+        $renderer = new TwigTemplateRenderer($twig);
 
-    public function templateExistsInCustomDir(string $templatePath): bool
-    {
-        if ($this->customTemplateDir === null) {
-            return false;
-        }
+        $stringTransformer = new StringTransformer();
 
-        $customPath = $this->customTemplateDir . '/' . $templatePath;
+        // Register filters
+        $renderer->registerFilters([
+            'properCapitalize' => [$stringTransformer, 'operationIdToClassName'],
+            'snake_to_camel'   => [$stringTransformer, 'snakeToCamelCase'],
+        ]);
 
-        return $this->filesystem->exists($customPath);
-    }
-
-    public function getTemplateSource(string $templatePath): string
-    {
-        if ($this->customTemplateDir === null) {
-            return 'default';
-        }
-
-        return $this->templateExistsInCustomDir($templatePath) ? 'custom' : 'default';
+        return new self(
+            $fileSystem,
+            $renderer,
+            $templatePathResolver,
+            $templateRegistry,
+            $stringTransformer,
+        );
     }
 
     public function generate(BoilerplateConfiguration $configuration): array
@@ -106,7 +104,8 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
 
         // Ensure we have an entity_name variable
         if (!isset($variables['entity_name']) && isset($variables['operation_id'])) {
-            $variables['entity_name'] = $this->extractEntityNameFromOperationId($variables['operation_id']);
+            $variables['entity_name'] = $this->stringTransformer
+                ->extractEntityNameFromOperationId($variables['operation_id']);
         }
 
         // Create TemplateDTO objects for each template
@@ -118,20 +117,20 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
             $templateVariables['templates'] = $templatesDTO;
 
             try {
-                $content = $this->twig->render($templateDTO->template, $templateVariables);
+                $content = $this->renderer->renderTemplate($templateDTO->template, $templateVariables);
 
                 // Create output directory if it doesn't exist
                 if ($templateDTO->outputPath !== null) {
                     $directory = dirname($templateDTO->outputPath);
-                    if (!$this->filesystem->exists($directory)) {
-                        $this->filesystem->mkdir($directory, 0755);
+                    if (!$this->fileSystem->exists($directory)) {
+                        $this->fileSystem->createDirectory($directory);
                     }
 
                     // Write to file
-                    $this->filesystem->dumpFile($templateDTO->outputPath, $content);
+                    $this->fileSystem->writeFile($templateDTO->outputPath, $content);
                     $generatedFiles[] = $templateDTO->outputPath;
                 }
-            } catch (LoaderError|RuntimeError|SyntaxError $e) {
+            } catch (Exception $e) {
                 // If there's an error loading the template, log it and continue
                 error_log(sprintf('Error loading template %s: %s', $templateDTO->template, $e->getMessage()));
             }
@@ -147,7 +146,8 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
 
         // Ensure we have an entity_name variable
         if (!isset($variables['entity_name']) && isset($variables['operation_id'])) {
-            $variables['entity_name'] = $this->extractEntityNameFromOperationId($variables['operation_id']);
+            $variables['entity_name'] = $this->stringTransformer
+                ->extractEntityNameFromOperationId($variables['operation_id']);
         }
 
         $templatesDTO = $this->buildTemplateDTOs($configuration, $variables);
@@ -158,7 +158,7 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
 
             // Check if outputPath is not null before checking if it exists
             if ($templateDTO->outputPath !== null) {
-                $exists = $this->filesystem->exists($templateDTO->outputPath);
+                $exists = $this->fileSystem->exists($templateDTO->outputPath);
             }
 
             $willBeSkipped = $exists && $configuration->skipExisting;
@@ -166,7 +166,7 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
 
             // Make sure template path is not null before getting the source
             if ($templateDTO->path !== null) {
-                $templateSource = $this->getTemplateSource($templateDTO->path);
+                $templateSource = $this->templatePathResolver->getTemplateSource($templateDTO->path);
             }
 
             $filesToGenerate[] = [
@@ -185,436 +185,6 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
         return $filesToGenerate;
     }
 
-    private function registerTwigFilters(): void
-    {
-        // Add a proper camel case filter that preserves existing uppercase letters
-        $this->twig->addFilter(new TwigFilter('properCapitalize', function($string) {
-            return $this->convertOperationIdToClassName($string);
-        }));
-
-        // Add filter to convert snake_case to camelCase
-        $this->twig->addFilter(new TwigFilter('snake_to_camel', function($string) {
-            return $this->convertSnakeToCamelCase($string);
-        }));
-    }
-
-    private function getTemplatePath(string $templatePath): string
-    {
-        // Check if the template exists in the custom directory first
-        if ($this->templateExistsInCustomDir($templatePath)) {
-            return '@custom/' . $templatePath;
-        }
-
-        // Fall back to the default template
-        return '@default/' . $templatePath;
-    }
-
-    // phpcs:disable Kununu.Files.LineLength
-    private function registerDefaultTemplates(): void
-    {
-        // Register all templates - they'll be filtered at generation time based on HTTP method
-        // Shared templates
-        $this->registerTemplate('query-infrastructure-query', 'shared/infrastructure_query.php.twig', '{basePath}/UseCase/{cqrsType}/{operationName}/Infrastructure/Query/{operationName}.php');
-
-        // Controller template
-        $this->registerTemplate('controller', 'controller.php.twig', '{basePath}/Controller/{operationName}Controller.php');
-
-        // Query related templates
-        $this->registerTemplate('query', 'query/query.php.twig', '{basePath}/UseCase/Query/{operationName}/Query.php');
-        $this->registerTemplate('query-handler', 'query/handler.php.twig', '{basePath}/UseCase/Query/{operationName}/QueryHandler.php');
-        $this->registerTemplate('criteria', 'query/criteria.php.twig', '{basePath}/UseCase/Query/{operationName}/Criteria/Criteria.php');
-        $this->registerTemplate('read-model', 'query/read_model.php.twig', '{basePath}/UseCase/Query/{operationName}/ReadModel/{entityName}.php');
-        $this->registerTemplate('query-repository-interface', 'repository/interface.php.twig', '{basePath}/UseCase/Query/{operationName}/RepositoryInterface.php');
-        $this->registerTemplate('query-exception', 'query/exception.php.twig', '{basePath}/UseCase/Query/{operationName}/Exception/{entityName}NotFoundException.php');
-        $this->registerTemplate('query-serializer-xml', 'query/serializer.xml.twig', '{basePath}/UseCase/Query/{operationName}/ReadModel/serializer/serializer.xml');
-        $this->registerTemplate('query-readme', 'query/readme.md.twig', '{basePath}/UseCase/Query/{operationName}/README.md');
-        $this->registerTemplate('jms-serializer-config', 'query/jms_serializer.yaml.twig', '{basePath}/UseCase/Query/{operationName}/Resources/config/jms_serializer.yaml');
-        $this->registerTemplate('services-config', 'misc/services.yaml.twig', '{basePath}/UseCase/{cqrsType}/{operationName}/Resources/config/services.yaml');
-
-        // Command related templates
-        $this->registerTemplate('command', 'command/command.php.twig', '{basePath}/UseCase/Command/{operationName}/Command.php');
-        $this->registerTemplate('command-handler', 'command/handler.php.twig', '{basePath}/UseCase/Command/{operationName}/CommandHandler.php');
-        $this->registerTemplate('request-data', 'request/request_data.php.twig', '{basePath}/Request/DTO/{operationName}RequestData.php');
-        $this->registerTemplate('request-resolver', 'request/resolver.php.twig', '{basePath}/Request/Resolver/{operationName}Resolver.php');
-        $this->registerTemplate('command-dto', 'command/dto.php.twig', '{basePath}/UseCase/Command/{operationName}/DTO/{entityName}.php');
-        $this->registerTemplate('command-repository-interface', 'repository/interface.php.twig', '{basePath}/UseCase/Command/{operationName}/RepositoryInterface.php');
-        $this->registerTemplate('command-readme', 'command/readme.md.twig', '{basePath}/UseCase/Command/{operationName}/README.md');
-
-        // Register repository implementation templates - they'll be filtered based on HTTP method
-        $this->registerTemplate('query-repository', 'repository/implementation.php.twig', '{basePath}/UseCase/Query/{operationName}/Infrastructure/DoctrineRepository.php');
-        $this->registerTemplate('command-repository', 'repository/implementation.php.twig', '{basePath}/UseCase/Command/{operationName}/Infrastructure/DoctrineRepository.php');
-
-        // Register test templates
-        $this->registerTemplate('query-unit-test', 'tests/unit_test.php.twig', '{basePath}/../tests/Unit/UseCase/Query/{operationName}/QueryHandlerTest.php');
-        $this->registerTemplate('command-unit-test', 'tests/unit_test.php.twig', '{basePath}/../tests/Unit/UseCase/Command/{operationName}/CommandHandlerTest.php');
-        $this->registerTemplate('controller-functional-test', 'tests/functional_test.php.twig', '{basePath}/../tests/Functional/Controller/{operationName}ControllerTest.php');
-    }
-    // phpcs:enable
-
-    private function shouldGenerateFile(string $templateName, BoilerplateConfiguration $configuration): bool
-    {
-        $variables = $configuration->getTemplateVariables();
-        $method = $variables['method'] ?? '';
-
-        // Filter templates based on HTTP method
-        $queryTemplates = [
-            'query',
-            'query-handler',
-            'criteria',
-            'read-model',
-            'query-repository-interface',
-            'query-repository',
-            'query-exception',
-            'query-readme',
-            'jms-serializer-config',
-            'query-unit-test',
-        ];
-        $commandTemplates = [
-            'command',
-            'command-handler',
-            'request-data',
-            'request-resolver',
-            'command-dto',
-            'command-repository-interface',
-            'command-repository',
-            'command-readme',
-            'command-unit-test',
-        ];
-
-        if (strtoupper($method) === 'GET' && in_array($templateName, $commandTemplates)) {
-            return false;
-        }
-
-        if (strtoupper($method) !== 'GET' && in_array($templateName, $queryTemplates)) {
-            return false;
-        }
-
-        // Skip criteria template if there are no query parameters
-        if ($templateName === 'criteria'
-            && (empty($variables['parameters'])
-             || empty(array_filter($variables['parameters'], static fn($param) => $param['in'] === 'query')))) {
-            return false;
-        }
-
-        // XML Serializer templates
-        if ($templateName === 'query-serializer-xml' && strtoupper($method) !== 'GET') {
-            return false;
-        }
-
-        // Check generators configuration
-        if (!empty($configuration->generators)) {
-            // Check if use-case generation is disabled
-            if (isset($configuration->generators['use-case'])
-                && $configuration->generators['use-case'] === false
-                && $this->isUseCaseTemplate($templateName)) {
-                return false;
-            }
-
-            // Controller templates
-            if ($templateName === 'controller'
-                && isset($configuration->generators['controller'])
-                && $configuration->generators['controller'] === false) {
-                return false;
-            }
-
-            // DTO templates
-            if (in_array($templateName, ['request-data', 'request-resolver'])
-                && isset($configuration->generators['request-mapper'])
-                && $configuration->generators['request-mapper'] === false) {
-                return false;
-            }
-
-            // CQRS Command/Query templates
-            if (in_array($templateName, ['command', 'command-handler', 'query', 'query-handler'])
-                && isset($configuration->generators['cqrs-command-query'])
-                && $configuration->generators['cqrs-command-query'] === false) {
-                return false;
-            }
-
-            // Read Model templates
-            if (in_array($templateName, ['read-model', 'query-serializer-xml', 'jms-serializer-config'])
-                && isset($configuration->generators['read-model'])
-                && $configuration->generators['read-model'] === false) {
-                return false;
-            }
-
-            if (in_array($templateName,
-                [
-                    'command',
-                    'command-handler',
-                    'command-dto',
-                    'command-repository-interface',
-                    'command-repository',
-                ]
-            )
-                && isset($configuration->generators['command'])
-                && $configuration->generators['command'] === false) {
-                return false;
-            }
-
-            // Repository templates
-            if (in_array($templateName,
-                [
-                    'query-repository-interface',
-                    'query-repository',
-                    'command-repository-interface',
-                    'command-repository',
-                    'query-infrastructure-query',
-                ]
-            )
-                && isset($configuration->generators['repository'])
-                && $configuration->generators['repository'] === false) {
-                return false;
-            }
-
-            // XML or jms Serializer templates
-            if (($templateName === 'query-serializer-xml' || $templateName === 'jms-serializer-config')
-                && isset($configuration->generators['xml-serializer'])
-                && $configuration->generators['xml-serializer'] === false) {
-                return false;
-            }
-
-            // Test templates
-            if (in_array($templateName, ['query-unit-test', 'command-unit-test', 'controller-functional-test'])
-                && isset($configuration->generators['tests'])
-                && $configuration->generators['tests'] === false) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private function isUseCaseTemplate(string $templateName): bool
-    {
-        $useCaseTemplates = [
-            'query',
-            'query-handler',
-            'criteria',
-            'read-model',
-            'query-repository-interface',
-            'query-repository',
-            'query-exception',
-            'query-readme',
-            'jms-serializer-config',
-            'query-unit-test',
-            'command',
-            'command-handler',
-            'command-dto',
-            'command-repository-interface',
-            'command-repository',
-            'command-readme',
-            'command-unit-test',
-            'query-serializer-xml',
-            'query-infrastructure-query',
-            'services-config',
-        ];
-
-        return in_array($templateName, $useCaseTemplates);
-    }
-
-    private function generateOutputPath(string $pattern, string $basePath, array $variables): string
-    {
-        // Replace all placeholders in the pattern
-        $output = $pattern;
-
-        // Always replace basePath
-        $output = str_replace('{basePath}', $basePath, $output);
-
-        // Replace operation name if available
-        if (isset($variables['operation_id'])) {
-            $operationName = $this->convertOperationIdToClassName($variables['operation_id']);
-            $output = str_replace('{operationName}', $operationName, $output);
-        }
-
-        // Replace entity name if available
-        if (isset($variables['entity_name'])) {
-            $entityName = $this->convertOperationIdToClassName($variables['entity_name']);
-            $output = str_replace('{entityName}', $entityName, $output);
-        }
-
-        // Replace method if available
-        if (isset($variables['method'])) {
-            $output = str_replace('{method}', strtolower($variables['method']), $output);
-        }
-
-        // Replace CQRS type if available
-        if (isset($variables['cqrsType'])) {
-            $output = str_replace('{cqrsType}', $variables['cqrsType'], $output);
-        }
-
-        return $output;
-    }
-
-    private function convertOperationIdToClassName(string $operationId): string
-    {
-        if (empty($operationId)) {
-            return '';
-        }
-
-        // Properly capitalize each word in camelCase strings
-        // e.g., "getToneOfVoiceSettings" becomes "GetToneOfVoiceSettings"
-        $parts = preg_split('/(?=[A-Z])/', $operationId, -1, PREG_SPLIT_NO_EMPTY);
-        if (empty($parts)) {
-            return ucfirst($operationId);
-        }
-
-        // Properly capitalize the first part which likely doesn't start with uppercase
-        $parts[0] = ucfirst($parts[0]);
-
-        return implode('', $parts);
-    }
-
-    private function extractEntityNameFromOperationId(string $operationId): string
-    {
-        if (empty($operationId)) {
-            return '';
-        }
-
-        // Remove common prefixes
-        $name = (string) preg_replace('/^(get|create|update|delete|find|list)/', '', $operationId);
-
-        // Remove common suffixes
-        $name = (string) preg_replace('/(List|Collection|Item|By.*)$/', '', $name);
-
-        // Return the first part of the remaining string (likely the entity name)
-        $matches = [];
-        if (preg_match('/^([A-Z][a-z0-9]+)/', ucfirst($name), $matches)) {
-            return $matches[1];
-        }
-
-        return ucfirst($name);
-    }
-
-    private function convertSnakeToCamelCase(string $string): string
-    {
-        if (empty($string)) {
-            return $string;
-        }
-
-        $string = ltrim($string, '_');
-
-        return lcfirst(str_replace('_', '', lcfirst(ucwords($string, '_'))));
-    }
-
-    /**
-     * Extracts a dynamic namespace from the output path
-     *
-     * This method determines the appropriate namespace based on the file path,
-     * taking into account the base path and base namespace while avoiding redundancy.
-     *
-     * For example, if the output path is "src/Controller/Admin/UserController.php"
-     * with base path "src" and base namespace "App", the resulting namespace
-     * would be "App\Controller\Admin".
-     */
-    private function getDynamicNamespace(string $outputPath, string $basePath, string $baseNamespace): string
-    {
-        // Normalize paths to use consistent directory separators
-        $normalizedOutputPath = str_replace('\\', '/', $outputPath);
-        $normalizedBasePath = str_replace('\\', '/', $basePath);
-
-        // Special handling for test files
-        if (str_contains($normalizedOutputPath, 'tests/')) {
-            return $this->getTestFileNamespace($normalizedOutputPath, $baseNamespace);
-        }
-
-        // Remove base path from the output path
-        // phpcs:disable Kununu.Files.LineLength
-        $relativePath = $normalizedBasePath ?
-            preg_replace('#^' . preg_quote($normalizedBasePath . '/', '#') . '#', '', $normalizedOutputPath) :
-            $normalizedOutputPath;
-        // phpcs:enable
-
-        // Get the directory part of the path (remove the file name)
-        $directory = dirname((string) $relativePath);
-
-        // If we're at the root directory (.), use the base namespace
-        if ($directory === '.') {
-            return $baseNamespace;
-        }
-
-        // Convert directory separators to namespace separators
-        $namespaceSegments = explode('/', $directory);
-
-        // Remove any empty segments or segments that would create redundancy
-        $namespaceSegments = array_filter($namespaceSegments, function($segment) {
-            return !empty($segment) && $segment !== '.';
-        });
-
-        // Convert to namespace format
-        $namespaceAddition = implode('\\', $namespaceSegments);
-
-        // Check for common redundancy patterns in namespaces
-        return $this->normalizeNamespace($baseNamespace, $namespaceAddition);
-    }
-
-    private function getTestFileNamespace(string $outputPath, string $baseNamespace): string
-    {
-        // Handle tests directory specially
-        $parts = explode('tests/', $outputPath, 2);
-        if (count($parts) > 1) {
-            $testPath = dirname($parts[1]);
-
-            // Convert to namespace format
-            $testNamespaceSegments = explode('/', $testPath);
-
-            // Remove any empty segments
-            $testNamespaceSegments = array_filter($testNamespaceSegments, function($segment) {
-                return !empty($segment) && $segment !== '.';
-            });
-
-            $testNamespace = implode('\\', $testNamespaceSegments);
-
-            // Check if Tests is already in the namespace to avoid duplication
-            if (!str_starts_with($testNamespace, 'Tests\\') && !str_starts_with($testNamespace, 'Test\\')) {
-                $testNamespace = 'Tests\\' . $testNamespace;
-            }
-
-            return $this->normalizeNamespace($baseNamespace, $testNamespace);
-        }
-
-        return $baseNamespace . '\\Tests';
-    }
-
-    private function normalizeNamespace(string $baseNamespace, string $namespaceAddition): string
-    {
-        if (empty($namespaceAddition)) {
-            return $baseNamespace;
-        }
-
-        // Split into segments for analysis
-        $baseSegments = explode('\\', $baseNamespace);
-        $additionSegments = explode('\\', $namespaceAddition);
-
-        // Check for redundancy at the beginning of the addition
-        $redundantSegments = 0;
-        $baseSegmentsCount = count($baseSegments);
-
-        foreach ($additionSegments as $segment) {
-            // Check if this segment would be redundant with the base namespace
-            $baseIndex = $baseSegmentsCount - $redundantSegments - 1;
-            if ($baseIndex >= 0 && strtolower($baseSegments[$baseIndex]) === strtolower($segment)) {
-                ++$redundantSegments;
-            } else {
-                break;
-            }
-        }
-
-        // Remove redundant segments
-        if ($redundantSegments > 0) {
-            $additionSegments = array_slice($additionSegments, $redundantSegments);
-        }
-
-        // Build the final namespace
-        $finalNamespace = $baseNamespace;
-
-        if (!empty($additionSegments)) {
-            $finalNamespace .= '\\' . implode('\\', $additionSegments);
-        }
-
-        return $finalNamespace;
-    }
-
     private function extractNameFromPath(string $path, int $flag): string
     {
         if (empty($path)) {
@@ -626,13 +196,20 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
         return is_string($result) ? $result : '';
     }
 
-    public function buildTemplateDTOs(BoilerplateConfiguration $configuration, array $variables): TemplatesDTO
+    private function buildTemplateDTOs(BoilerplateConfiguration $configuration, array $variables): TemplatesDTO
     {
         $templateDTOs = [];
+        $configArray = [
+            'generators'   => $configuration->generators,
+            'pathPatterns' => $configuration->pathPatterns,
+            'skipFiles'    => $configuration->skipFiles ?? [],
+        ];
 
-        foreach ($this->templates as $templateName => $template) {
+        $templates = $this->templateRegistry->getAllTemplates();
+
+        foreach ($templates as $templateName => $template) {
             // Determine if we should generate this file based on configuration
-            if (!$this->shouldGenerateFile($templateName, $configuration)) {
+            if (!$this->templateRegistry->shouldGenerateTemplate($templateName, $configArray, $variables)) {
                 continue;
             }
 
@@ -643,7 +220,7 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
             }
 
             // Generate output path from pattern
-            $outputPath = $this->generateOutputPath(
+            $outputPath = $this->stringTransformer->generateOutputPath(
                 $outputPattern,
                 $configuration->basePath,
                 $variables
@@ -658,7 +235,7 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
             $templateVariables = $variables;
 
             // Set the dynamic namespace based on the output path
-            $templateVariables['full_namespace'] = $this->getDynamicNamespace(
+            $templateVariables['full_namespace'] = $this->stringTransformer->getDynamicNamespace(
                 $outputPath,
                 $configuration->basePath,
                 $configuration->namespace
@@ -690,4 +267,46 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
 
         return new TemplatesDTO($templateDTOs);
     }
+
+    // phpcs:disable Kununu.Files.LineLength
+    private function registerDefaultTemplates(): void
+    {
+        // Register all templates - they'll be filtered at generation time based on HTTP method
+        // Shared templates
+        $this->templateRegistry->registerTemplate('query-infrastructure-query', 'shared/infrastructure_query.php.twig', '{basePath}/UseCase/{cqrsType}/{operationName}/Infrastructure/Query/{operationName}.php');
+
+        // Controller template
+        $this->templateRegistry->registerTemplate('controller', 'controller.php.twig', '{basePath}/Controller/{operationName}Controller.php');
+
+        // Query related templates
+        $this->templateRegistry->registerTemplate('query', 'query/query.php.twig', '{basePath}/UseCase/Query/{operationName}/Query.php');
+        $this->templateRegistry->registerTemplate('query-handler', 'query/handler.php.twig', '{basePath}/UseCase/Query/{operationName}/QueryHandler.php');
+        $this->templateRegistry->registerTemplate('criteria', 'query/criteria.php.twig', '{basePath}/UseCase/Query/{operationName}/Criteria/Criteria.php');
+        $this->templateRegistry->registerTemplate('read-model', 'query/read_model.php.twig', '{basePath}/UseCase/Query/{operationName}/ReadModel/{entityName}.php');
+        $this->templateRegistry->registerTemplate('query-repository-interface', 'repository/interface.php.twig', '{basePath}/UseCase/Query/{operationName}/RepositoryInterface.php');
+        $this->templateRegistry->registerTemplate('query-exception', 'query/exception.php.twig', '{basePath}/UseCase/Query/{operationName}/Exception/{entityName}NotFoundException.php');
+        $this->templateRegistry->registerTemplate('query-serializer-xml', 'query/serializer.xml.twig', '{basePath}/UseCase/Query/{operationName}/ReadModel/serializer/serializer.xml');
+        $this->templateRegistry->registerTemplate('query-readme', 'query/readme.md.twig', '{basePath}/UseCase/Query/{operationName}/README.md');
+        $this->templateRegistry->registerTemplate('jms-serializer-config', 'query/jms_serializer.yaml.twig', '{basePath}/UseCase/Query/{operationName}/Resources/config/jms_serializer.yaml');
+        $this->templateRegistry->registerTemplate('services-config', 'misc/services.yaml.twig', '{basePath}/UseCase/{cqrsType}/{operationName}/Resources/config/services.yaml');
+
+        // Command related templates
+        $this->templateRegistry->registerTemplate('command', 'command/command.php.twig', '{basePath}/UseCase/Command/{operationName}/Command.php');
+        $this->templateRegistry->registerTemplate('command-handler', 'command/handler.php.twig', '{basePath}/UseCase/Command/{operationName}/CommandHandler.php');
+        $this->templateRegistry->registerTemplate('request-data', 'request/request_data.php.twig', '{basePath}/Request/DTO/{operationName}RequestData.php');
+        $this->templateRegistry->registerTemplate('request-resolver', 'request/resolver.php.twig', '{basePath}/Request/Resolver/{operationName}Resolver.php');
+        $this->templateRegistry->registerTemplate('command-dto', 'command/dto.php.twig', '{basePath}/UseCase/Command/{operationName}/DTO/{entityName}.php');
+        $this->templateRegistry->registerTemplate('command-repository-interface', 'repository/interface.php.twig', '{basePath}/UseCase/Command/{operationName}/RepositoryInterface.php');
+        $this->templateRegistry->registerTemplate('command-readme', 'command/readme.md.twig', '{basePath}/UseCase/Command/{operationName}/README.md');
+
+        // Register repository implementation templates - they'll be filtered based on HTTP method
+        $this->templateRegistry->registerTemplate('query-repository', 'repository/implementation.php.twig', '{basePath}/UseCase/Query/{operationName}/Infrastructure/DoctrineRepository.php');
+        $this->templateRegistry->registerTemplate('command-repository', 'repository/implementation.php.twig', '{basePath}/UseCase/Command/{operationName}/Infrastructure/DoctrineRepository.php');
+
+        // Register test templates
+        $this->templateRegistry->registerTemplate('query-unit-test', 'tests/unit_test.php.twig', '{basePath}/../tests/Unit/UseCase/Query/{operationName}/QueryHandlerTest.php');
+        $this->templateRegistry->registerTemplate('command-unit-test', 'tests/unit_test.php.twig', '{basePath}/../tests/Unit/UseCase/Command/{operationName}/CommandHandlerTest.php');
+        $this->templateRegistry->registerTemplate('controller-functional-test', 'tests/functional_test.php.twig', '{basePath}/../tests/Functional/Controller/{operationName}ControllerTest.php');
+    }
+    // phpcs:enable Kununu.Files.LineLength
 }

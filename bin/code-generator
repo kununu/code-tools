@@ -26,7 +26,7 @@ if (!$autoloaderFound) {
 use Kununu\CodeGenerator\Application\Command\GenerateBoilerplateCommand;
 use Kununu\CodeGenerator\Application\Service\ConfigurationLoader;
 use Kununu\CodeGenerator\Application\Service\OpenApiParser;
-use Kununu\CodeGenerator\Infrastructure\Generator\TwigTemplateGenerator;
+use Kununu\CodeGenerator\Factory\TwigTemplateGeneratorFactory;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Filesystem\Filesystem;
 
@@ -34,7 +34,7 @@ use Symfony\Component\Filesystem\Filesystem;
 $filesystem = new Filesystem();
 $configLoader = new ConfigurationLoader($filesystem);
 $openApiParser = new OpenApiParser();
-$codeGenerator = new TwigTemplateGenerator($filesystem);
+$codeGenerator = TwigTemplateGeneratorFactory::create($filesystem);
 
 // Create application
 $application = new Application('Code Generator', '1.0.0');

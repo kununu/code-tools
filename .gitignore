@@ -12,3 +12,5 @@ phpunit.xml
 
 .code-generator.yaml
 .cursor-rules.yaml
+.cursor/
+dist/templates

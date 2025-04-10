@@ -110,36 +110,32 @@ final class FileGenerationHandler
 
         $this->io->table(['File', 'Exists'], $rows);
 
-        // Show template source information if custom templates are being used
-        if (method_exists($this->codeGenerator, 'getTemplateSource')
-            && method_exists($this->codeGenerator, 'templateExistsInCustomDir')) {
-            $this->io->section('Template sources:');
+        $this->io->section('Template sources:');
 
-            $templateRows = [];
-            $customTemplatesUsed = false;
+        $templateRows = [];
+        $customTemplatesUsed = false;
 
-            foreach ($filesToGenerate as $file) {
-                if (isset($file['template'])) {
-                    $templatePath = $file['template'];
-                    $source = $file['template_source'] ?? 'default';
+        foreach ($filesToGenerate as $file) {
+            if (isset($file['template'])) {
+                $templatePath = $file['template'];
+                $source = $file['template_source'] ?? 'default';
 
-                    if ($source === 'custom') {
-                        $customTemplatesUsed = true;
-                    }
-
-                    $templateRows[] = [$templatePath, $source];
+                if ($source === 'custom') {
+                    $customTemplatesUsed = true;
                 }
+
+                $templateRows[] = [$templatePath, $source];
             }
+        }
 
-            if (!empty($templateRows)) {
-                $this->io->table(['Template', 'Source'], $templateRows);
-                if ($customTemplatesUsed) {
-                    $this->io->note(
-                        'Custom templates are being used when available, fall back to default templates when necessary.'
-                    );
-                } else {
-                    $this->io->note('Using default templates. No custom templates were found.');
-                }
+        if (!empty($templateRows)) {
+            $this->io->table(['Template', 'Source'], $templateRows);
+            if ($customTemplatesUsed) {
+                $this->io->note(
+                    'Custom templates are being used when available, fall back to default templates when necessary.'
+                );
+            } else {
+                $this->io->note('Using default templates. No custom templates were found.');
             }
         }
     }

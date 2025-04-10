@@ -15,7 +15,7 @@ use Kununu\CodeGenerator\Application\Service\ManualOperationCollector;
 use Kununu\CodeGenerator\Application\Service\OpenApiParser;
 use Kununu\CodeGenerator\Domain\DTO\BoilerplateConfiguration;
 use Kununu\CodeGenerator\Domain\Service\CodeGeneratorInterface;
-use Kununu\CodeGenerator\Infrastructure\Generator\TwigTemplateGenerator;
+use Kununu\CodeGenerator\Factory\TwigTemplateGeneratorFactory;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -143,7 +143,7 @@ final class GenerateBoilerplateCommand extends Command
             // Re-initialize the code generator with the custom template directory if specified
             if ($configuration->templateDir !== null) {
                 $filesystem = new Filesystem();
-                $this->codeGenerator = new TwigTemplateGenerator($filesystem, $configuration->templateDir);
+                $this->codeGenerator = TwigTemplateGeneratorFactory::create($filesystem, $configuration->templateDir);
                 $this->fileGenerationHandler = new FileGenerationHandler($this->io, $this->codeGenerator);
             }
 
