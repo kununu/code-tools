@@ -75,7 +75,7 @@ base_path: 'src'
 namespace: 'App'
 
 # Default OpenAPI specification file path
-default_openapi_path: null
+default_openapi_path: 'path/to/openapi.yaml'
 
 # Force overwrite existing files
 force: false
@@ -87,7 +87,7 @@ skip_existing: false
 templates:
   path: 'dist/templates'
 
-# Custom path patterns for generated files
+# Custom path for generated files
 path_patterns:
   controller: '{basePath}/Controller/{operationName}Controller.php'
   query: '{basePath}/UseCase/Query/{operationName}/Query.php'
@@ -95,12 +95,14 @@ path_patterns:
 
 # Enable/disable specific generators
 generators:
-  controller: true
-  dto: true
-  command: true
-  repository: true
-  tests: true
-  xml-serializer: true
+  controller: true # Generates the Controller file
+  use-case: true # Generates all files under UseCase namespace
+  cqrs-command-query: true # Generates basic CQRS command and query files, such as Command and CommandHandler.
+  read-model: true # Generates read model related files.
+  request-mapper: true # Generates request data mapping files, such as RequestData and RequestResolver.
+  repository: true # Generates repository files, such as RepositoryInterface, its implementation, and the Query used by the repository.
+  xml-serializer: true # Generates XML serializer configuration files.
+  tests: true # Generates test files, such as unit and functional tests.
 ```
 
 ### Custom Templates
@@ -224,3 +226,20 @@ vendor/bin/code-generator --manual
    - Controller names are derived from the operation ID (e.g., `getUserProfile` → `GetUserProfileController`)
    - Entity names are extracted from the operation ID (e.g., `getUserProfile` → `User`)
    - Command/Query names follow the operation (e.g., `getUserProfile` → `GetUserProfileQuery`)
+
+### Enable/Disable Specific Generators
+
+The Code Generator allows you to enable or disable specific code generators through the `generators` section in your configuration file:
+
+| Generator Option | Description | Controls |
+|------------------|-------------|----------|
+| `controller` | Generates API controller files | Controller files |
+| `use-case` | Controls generation of all files under UseCase namespace | All files in UseCase directory structure |
+| `cqrs-command-query` | Controls basic CQRS command and query files | Command, command-handler, query, and query-handler files |
+| `read-model` | Controls read model related files | read-model, query-serializer-xml, and jms-serializer-config files |
+| `request-mapper` | Controls request data mapping files | request-data and request-resolver files |
+| `repository` | Controls repository implementation files | All repository interface and implementation files |
+| `xml-serializer` | Controls XML serializer configuration generation | XML serializer files |
+| `tests` | Controls test file generation | All unit and functional test files |
+
+This gives you fine-grained control over which components are generated, allowing you to adapt the tool to your specific project needs.

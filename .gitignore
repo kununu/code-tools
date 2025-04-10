@@ -4,6 +4,8 @@ composer.lock
 composer.phar
 .phpunit.result.cache
 .phpunit.cache
+phpunit.log
+phpunit.xml
 /tests/.results/
 .DS_Store
 *.local

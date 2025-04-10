@@ -40,9 +40,11 @@ path_patterns:
 
 # Enable/disable specific generators
 generators:
-  controller: true
-  dto: true
-  command: true
-  repository: true
-  xml-serializer: true
-  tests: true
+  controller: true # Generates the Controller file
+  use-case: true # Generates all files under UseCase namespace
+  cqrs-command-query: true # Generates basic CQRS command and query files, such as Command and CommandHandler
+  read-model: true # Generates read model related files
+  request-mapper: true # Generates request data mapping files, such as RequestData and RequestResolver
+  repository: true # Generates repository files, such as RepositoryInterface, its implementation, and the Query
+  xml-serializer: true # Generates XML serializer configuration files
+  tests: true # Generates test files, such as unit and functional tests

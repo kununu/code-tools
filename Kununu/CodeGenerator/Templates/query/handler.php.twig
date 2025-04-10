@@ -1,3 +1,4 @@
+{% set hasRepositoryInterface = templates.hasTemplate('query-repository-interface') %}
 <?php
 declare(strict_types=1);
 
@@ -11,12 +12,15 @@ use Kununu\CQRS\Query\QueryHandler as CQRSQueryHandler;
 
 final readonly class {{ classname }} implements CQRSQueryHandler
 {
+{% if hasRepositoryInterface %}
     public function __construct(private RepositoryInterface $repository)
     {
     }
 
+{% endif %}
     public function handle(Query $query): {% if readModel is defined %}{{ readModel.classname }}{% endif %}
     {
+{% if hasRepositoryInterface %}
 {% if parameters is defined and parameters|length > 0 %}
 {% if parameters|filter(p => p.in == 'path')|length > 0 and parameters|filter(p => p.in == 'query')|length > 0 %}
         return $this->repository->get{{ entity_name }}By{{ parameters|filter(p => p.in == 'path')|first.name|properCapitalize }}WithCriteria($query->{{ parameters|filter(p => p.in == 'path')|first.name }}, $query->criteria);
@@ -27,6 +31,11 @@ final readonly class {{ classname }} implements CQRSQueryHandler
 {% endif %}
 {% else %}
         return $this->repository->get{{ entity_name }}();
+{% endif %}
+{% else %}
+
+        // Todo(generated): Your query logic here
+
 {% endif %}
     }
 } 

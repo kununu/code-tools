@@ -106,8 +106,12 @@ final class {{ classname }} extends AbstractQueryBusController
 final class {{ classname }} extends AbstractCommandBusController
 {
     public function __invoke(
-        #[MapRequestPayload(resolver: {{ operation_id|properCapitalize }}Resolver::class)]
-        {{ operation_id|properCapitalize }}RequestData $requestData,
+{% if resolver is defined %}
+        #[MapRequestPayload(resolver: {{ resolver.classname }}::class)]
+{% endif %}
+{% if request is defined %}
+        {{ request.classname }} $requestData,
+{% endif %}
 {% if parameters is defined and parameters|length > 0 %}
 {% for param in parameters %}
 {% if param.in == 'path' %}
@@ -128,10 +132,14 @@ final class {{ classname }} extends AbstractCommandBusController
 {% endif %}
 {% endfor %}
                         ],
+{% if request is defined %}
                         $requestData->toArray()
+{% endif %}
                     ),
 {% else %}
+{% if request is defined %}
                     $requestData->toArray(),
+{% endif %}
 {% endif %}
                 )
             );

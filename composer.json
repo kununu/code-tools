@@ -46,7 +46,8 @@
         }
     },
     "scripts": {
-        "test-unit": "phpunit",
+        "test": "phpunit --log-events-text phpunit.log --no-coverage --no-logging --no-progress --testsuite Unit",
+        "test-coverage": "XDEBUG_MODE=coverage phpunit --log-events-text phpunit.log --no-progress --testsuite Unit",
         "cs-check": "phpcs --standard=phpcs.xml Kununu/ tests/",
         "cs-fix": "phpcbf --standard=phpcs.xml Kununu/ tests/",
         "stan": "phpstan analyze",

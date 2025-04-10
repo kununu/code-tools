@@ -303,6 +303,13 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
 
         // Check generators configuration
         if (!empty($configuration->generators)) {
+            // Check if use-case generation is disabled
+            if (isset($configuration->generators['use-case'])
+                && $configuration->generators['use-case'] === false
+                && $this->isUseCaseTemplate($templateName)) {
+                return false;
+            }
+
             // Controller templates
             if ($templateName === 'controller'
                 && isset($configuration->generators['controller'])
@@ -312,12 +319,25 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
 
             // DTO templates
             if (in_array($templateName, ['request-data', 'request-resolver'])
-                && isset($configuration->generators['dto'])
-                && $configuration->generators['dto'] === false) {
+                && isset($configuration->generators['request-mapper'])
+                && $configuration->generators['request-mapper'] === false) {
                 return false;
             }
 
-            // Command templates
+            // CQRS Command/Query templates
+            if (in_array($templateName, ['command', 'command-handler', 'query', 'query-handler'])
+                && isset($configuration->generators['cqrs-command-query'])
+                && $configuration->generators['cqrs-command-query'] === false) {
+                return false;
+            }
+
+            // Read Model templates
+            if (in_array($templateName, ['read-model', 'query-serializer-xml', 'jms-serializer-config'])
+                && isset($configuration->generators['read-model'])
+                && $configuration->generators['read-model'] === false) {
+                return false;
+            }
+
             if (in_array($templateName,
                 [
                     'command',
@@ -339,6 +359,7 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
                     'query-repository',
                     'command-repository-interface',
                     'command-repository',
+                    'query-infrastructure-query',
                 ]
             )
                 && isset($configuration->generators['repository'])
@@ -362,6 +383,34 @@ final class TwigTemplateGenerator implements CodeGeneratorInterface
         }
 
         return true;
+    }
+
+    private function isUseCaseTemplate(string $templateName): bool
+    {
+        $useCaseTemplates = [
+            'query',
+            'query-handler',
+            'criteria',
+            'read-model',
+            'query-repository-interface',
+            'query-repository',
+            'query-exception',
+            'query-readme',
+            'jms-serializer-config',
+            'query-unit-test',
+            'command',
+            'command-handler',
+            'command-dto',
+            'command-repository-interface',
+            'command-repository',
+            'command-readme',
+            'command-unit-test',
+            'query-serializer-xml',
+            'query-infrastructure-query',
+            'services-config',
+        ];
+
+        return in_array($templateName, $useCaseTemplates);
     }
 
     private function generateOutputPath(string $pattern, string $basePath, array $variables): string
