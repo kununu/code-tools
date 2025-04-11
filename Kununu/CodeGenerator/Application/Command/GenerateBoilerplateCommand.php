@@ -3,10 +3,6 @@ declare(strict_types=1);
 
 namespace Kununu\CodeGenerator\Application\Command;
 
-use cebe\openapi\exceptions\IOException;
-use cebe\openapi\exceptions\TypeErrorException;
-use cebe\openapi\exceptions\UnresolvableReferenceException;
-use cebe\openapi\json\InvalidJsonPointerSyntaxException;
 use Exception;
 use Kununu\CodeGenerator\Application\Service\ConfigurationBuilder;
 use Kununu\CodeGenerator\Application\Service\FileGenerationHandler;
@@ -160,9 +156,6 @@ final class GenerateBoilerplateCommand extends Command
         return $this->configBuilder->buildConfiguration($input, $configPath);
     }
 
-    /**
-     * @throws IOException|TypeErrorException|UnresolvableReferenceException|InvalidJsonPointerSyntaxException
-     */
     private function collectOperationDetails(InputInterface $input, BoilerplateConfiguration $configuration): void
     {
         $manualMode = $this->determineManualMode($input, $configuration);
