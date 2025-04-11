@@ -9,7 +9,7 @@ use Throwable;
 
 final readonly class {{ classname }} implements CQRSCommandHandler
 {
-{% if templates.hasTemplate('query-repository-interface') %}
+{% if templates.hasTemplate('command-repository-interface') %}
     public function __construct(
         private RepositoryInterface $repository,
         private LoggerInterface $logger,
