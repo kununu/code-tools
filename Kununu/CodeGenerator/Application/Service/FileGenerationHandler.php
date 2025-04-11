@@ -7,6 +7,7 @@ use Exception;
 use Kununu\CodeGenerator\Domain\DTO\BoilerplateConfiguration;
 use Kununu\CodeGenerator\Domain\Exception\FileGenerationException;
 use Kununu\CodeGenerator\Domain\Service\CodeGeneratorInterface;
+use Kununu\CodeGenerator\Domain\Service\FileGenerationHandlerInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
@@ -18,15 +19,12 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  * - Delegating the actual file generation to a code generator
  * - Displaying summaries and information about the generation process
  */
-final class FileGenerationHandler
+final readonly class FileGenerationHandler implements FileGenerationHandlerInterface
 {
-    private SymfonyStyle $io;
-    private CodeGeneratorInterface $codeGenerator;
-
-    public function __construct(SymfonyStyle $io, CodeGeneratorInterface $codeGenerator)
-    {
-        $this->io = $io;
-        $this->codeGenerator = $codeGenerator;
+    public function __construct(
+        private SymfonyStyle $io,
+        private CodeGeneratorInterface $codeGenerator,
+    ) {
     }
 
     public function processFilesToGenerate(BoilerplateConfiguration $configuration, bool $skipPreview): array

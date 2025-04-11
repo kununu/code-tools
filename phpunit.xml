@@ -32,6 +32,9 @@
         <include>
             <directory>Kununu</directory>
         </include>
+        <exclude>
+            <file>Kununu/CodeGenerator/Factory/TwigTemplateGeneratorFactory.php</file>
+        </exclude>
     </source>
 
 </phpunit>

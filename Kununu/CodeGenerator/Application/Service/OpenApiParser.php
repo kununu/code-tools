@@ -198,30 +198,12 @@ final class OpenApiParser implements OpenApiParserInterface
             $result['properties'] = [];
 
             foreach ($schema->properties as $name => $property) {
-                $propertyType = $property->type ?? null;
+                $result['properties'][$name] = $this->extractSchema($property);
 
-                // Handle array of types in OpenAPI 3.1
-                if (is_array($propertyType) && !empty($propertyType)) {
-                    $propertyType = $propertyType[0];
-                }
-
-                $result['properties'][$name] = [
-                    'type'        => $propertyType,
-                    'format'      => $property->format ?? null,
-                    'description' => $property->description ?? null,
-                ];
-
-                // Handle OpenAPI 3.1 nullable property
+                // Handle nullable properties in OpenAPI 3.0 and 3.1
                 if (isset($property->nullable) && $property->nullable === true) {
                     $result['properties'][$name]['nullable'] = true;
                 }
-
-                if (isset($property->items)) {
-                    $result['properties'][$name]['items'] = $this->extractSchema($property->items);
-                }
-
-                // Handle composition schemas for properties
-                $this->extractCompositionSchema($result['properties'][$name], $property);
             }
         }
 
@@ -229,12 +211,28 @@ final class OpenApiParser implements OpenApiParserInterface
             $result['items'] = $this->extractSchema($schema->items);
         }
 
-        if (isset($schema->required)) {
+        if (isset($schema->required) && is_array($schema->required)) {
             $result['required'] = $schema->required;
         }
 
-        if (isset($schema->example)) {
-            $result['example'] = $schema->example;
+        if (isset($schema->enum)) {
+            $result['enum'] = $schema->enum;
+        }
+
+        if (isset($schema->format)) {
+            $result['format'] = $schema->format;
+        }
+
+        if (isset($schema->description)) {
+            $result['description'] = $schema->description;
+        }
+
+        if (isset($schema->default)) {
+            $result['default'] = $schema->default;
+        }
+
+        if (isset($schema->nullable) && $schema->nullable === true) {
+            $result['nullable'] = true;
         }
 
         return $result;
@@ -242,12 +240,27 @@ final class OpenApiParser implements OpenApiParserInterface
 
     private function extractCompositionSchema(array &$target, mixed $schema): void
     {
-        foreach (['oneOf', 'anyOf', 'allOf'] as $composition) {
-            if (isset($schema->$composition)) {
-                $target[$composition] = [];
-                foreach ($schema->$composition as $subSchema) {
-                    $target[$composition][] = $this->extractSchema($subSchema);
-                }
+        // Handle oneOf
+        if (isset($schema->oneOf) && is_array($schema->oneOf)) {
+            $target['oneOf'] = [];
+            foreach ($schema->oneOf as $item) {
+                $target['oneOf'][] = $this->extractSchema($item);
+            }
+        }
+
+        // Handle anyOf
+        if (isset($schema->anyOf) && is_array($schema->anyOf)) {
+            $target['anyOf'] = [];
+            foreach ($schema->anyOf as $item) {
+                $target['anyOf'][] = $this->extractSchema($item);
+            }
+        }
+
+        // Handle allOf
+        if (isset($schema->allOf) && is_array($schema->allOf)) {
+            $target['allOf'] = [];
+            foreach ($schema->allOf as $item) {
+                $target['allOf'][] = $this->extractSchema($item);
             }
         }
     }

@@ -278,6 +278,29 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidationError'
+    patch:
+      operationId: patchProfileContract
+      summary: Create a new contract for a profile
+      tags:
+        - Contracts
+      parameters:
+        - $ref: '#/components/parameters/profileUuid'
+        - $ref: '#/components/parameters/kunUserUuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContractPayload'
+      responses:
+        '201':
+          description: Contract created successfully
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
 
   /contracts/{contractUuid}:
     get:

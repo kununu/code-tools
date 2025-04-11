@@ -16,7 +16,7 @@ final class {{ classname }} extends AbstractValidatedDTO implements ToArray
 {% for propertyName, property in request_body.content['application/json'].schema.properties %}
 {% if property.type == 'string' %}
     #[Assert\Type('string')]
-{% if request_body.content['application/json'].schema.required and propertyName in request_body.content['application/json'].schema.required %}
+{% if request_body.content['application/json'].schema.required is defined and propertyName in request_body.content['application/json'].schema.required %}
     #[Assert\NotBlank]
 {% endif %}
 {% elseif property.type == 'integer' %}

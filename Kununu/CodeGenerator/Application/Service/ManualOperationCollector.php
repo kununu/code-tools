@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Kununu\CodeGenerator\Application\Service;
 
 use Kununu\CodeGenerator\Domain\Exception\ConfigurationException;
+use Kununu\CodeGenerator\Domain\Service\ManualOperationCollectorInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
@@ -19,13 +20,10 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  *
  * The gathered information mimics the structure obtained from parsing OpenAPI specifications.
  */
-final readonly class ManualOperationCollector
+final readonly class ManualOperationCollector implements ManualOperationCollectorInterface
 {
-    private SymfonyStyle $io;
-
-    public function __construct(SymfonyStyle $io)
+    public function __construct(private SymfonyStyle $io)
     {
-        $this->io = $io;
     }
 
     /**

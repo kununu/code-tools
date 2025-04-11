@@ -9,12 +9,15 @@ use cebe\openapi\exceptions\UnresolvableReferenceException;
 use cebe\openapi\json\InvalidJsonPointerSyntaxException;
 use Exception;
 use Kununu\CodeGenerator\Application\Service\ConfigurationBuilder;
-use Kununu\CodeGenerator\Application\Service\ConfigurationLoader;
 use Kununu\CodeGenerator\Application\Service\FileGenerationHandler;
 use Kununu\CodeGenerator\Application\Service\ManualOperationCollector;
-use Kununu\CodeGenerator\Application\Service\OpenApiParser;
 use Kununu\CodeGenerator\Domain\DTO\BoilerplateConfiguration;
 use Kununu\CodeGenerator\Domain\Service\CodeGeneratorInterface;
+use Kununu\CodeGenerator\Domain\Service\ConfigurationBuilderInterface;
+use Kununu\CodeGenerator\Domain\Service\ConfigurationLoaderInterface;
+use Kununu\CodeGenerator\Domain\Service\FileGenerationHandlerInterface;
+use Kununu\CodeGenerator\Domain\Service\ManualOperationCollectorInterface;
+use Kununu\CodeGenerator\Domain\Service\OpenApiParserInterface;
 use Kununu\CodeGenerator\Factory\TwigTemplateGeneratorFactory;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -26,28 +29,21 @@ use Symfony\Component\Filesystem\Filesystem;
 
 #[AsCommand(
     name: 'app:generate:boilerplate',
-    description: 'Generate boilerplate code based on OpenAPI specification',
+    description: 'Generate boilerplate code',
 )]
 final class GenerateBoilerplateCommand extends Command
 {
     private SymfonyStyle $io;
-    private ConfigurationLoader $configLoader;
-    private OpenApiParser $openApiParser;
-    private CodeGeneratorInterface $codeGenerator;
-    private ConfigurationBuilder $configBuilder;
-    private FileGenerationHandler $fileGenerationHandler;
-    private ManualOperationCollector $manualOperationCollector;
+    private ConfigurationBuilderInterface $configBuilder;
+    private FileGenerationHandlerInterface $fileGenerationHandler;
+    private ManualOperationCollectorInterface $manualOperationCollector;
 
     public function __construct(
-        ConfigurationLoader $configLoader,
-        OpenApiParser $openApiParser,
-        CodeGeneratorInterface $codeGenerator,
+        private readonly ConfigurationLoaderInterface $configLoader,
+        private readonly OpenApiParserInterface $openApiParser,
+        private CodeGeneratorInterface $codeGenerator,
     ) {
         parent::__construct();
-
-        $this->configLoader = $configLoader;
-        $this->openApiParser = $openApiParser;
-        $this->codeGenerator = $codeGenerator;
     }
 
     protected function configure(): void

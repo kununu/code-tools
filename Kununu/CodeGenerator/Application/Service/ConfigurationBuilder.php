@@ -6,6 +6,7 @@ namespace Kununu\CodeGenerator\Application\Service;
 use Exception;
 use Kununu\CodeGenerator\Domain\DTO\BoilerplateConfiguration;
 use Kununu\CodeGenerator\Domain\Exception\ConfigurationException;
+use Kununu\CodeGenerator\Domain\Service\ConfigurationBuilderInterface;
 use Kununu\CodeGenerator\Domain\Service\ConfigurationLoaderInterface;
 use Kununu\CodeGenerator\Domain\Service\OpenApiParserInterface;
 use Symfony\Component\Console\Input\InputInterface;
@@ -15,21 +16,15 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  * Responsible for collecting configuration from various sources (files, command line, user input)
  * and constructing a complete BoilerplateConfiguration object.
  */
-final class ConfigurationBuilder
+final class ConfigurationBuilder implements ConfigurationBuilderInterface
 {
-    private SymfonyStyle $io;
-    private ConfigurationLoaderInterface $configLoader;
-    private OpenApiParserInterface $openApiParser;
     private BoilerplateConfiguration $configuration;
 
     public function __construct(
-        SymfonyStyle $io,
-        ConfigurationLoaderInterface $configLoader,
-        OpenApiParserInterface $openApiParser,
+        private readonly SymfonyStyle $io,
+        private readonly ConfigurationLoaderInterface $configLoader,
+        private readonly OpenApiParserInterface $openApiParser,
     ) {
-        $this->io = $io;
-        $this->configLoader = $configLoader;
-        $this->openApiParser = $openApiParser;
     }
 
     public function buildConfiguration(InputInterface $input, string $configPath): BoilerplateConfiguration

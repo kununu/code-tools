@@ -13,13 +13,10 @@ use Symfony\Component\Yaml\Yaml;
  * Handles loading configuration from YAML or JSON files and provides default configurations
  * when files are missing or incomplete.
  */
-final class ConfigurationLoader implements ConfigurationLoaderInterface
+final readonly class ConfigurationLoader implements ConfigurationLoaderInterface
 {
-    private Filesystem $filesystem;
-
-    public function __construct(Filesystem $filesystem)
+    public function __construct(private Filesystem $filesystem)
     {
-        $this->filesystem = $filesystem;
     }
 
     public function loadConfig(string $configPath): array
@@ -138,6 +135,7 @@ final class ConfigurationLoader implements ConfigurationLoaderInterface
             ],
         ];
     }
+
     // phpcs:enable
 
     private function mergeWithDefaults(array $config): array
