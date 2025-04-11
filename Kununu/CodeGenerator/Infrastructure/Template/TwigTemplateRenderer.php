@@ -11,9 +11,9 @@ use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 use Twig\TwigFilter;
 
-final class TwigTemplateRenderer implements TemplateRenderingServiceInterface
+final readonly class TwigTemplateRenderer implements TemplateRenderingServiceInterface
 {
-    public function __construct(private readonly Environment $twig)
+    public function __construct(private Environment $twig)
     {
     }
 

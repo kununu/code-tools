@@ -18,6 +18,7 @@ use Kununu\CodeGenerator\Infrastructure\Template\StringTransformer;
 use Kununu\CodeGenerator\Infrastructure\Template\TemplatePathResolver;
 use Kununu\CodeGenerator\Infrastructure\Template\TwigTemplateRenderer;
 use Twig\Environment;
+use Twig\Error\LoaderError;
 use Twig\Loader\FilesystemLoader;
 
 final readonly class TwigTemplateGenerator implements CodeGeneratorInterface
@@ -32,6 +33,7 @@ final readonly class TwigTemplateGenerator implements CodeGeneratorInterface
         $this->registerDefaultTemplates();
     }
 
+    /**n @throws LoaderError */
     public static function createDefault(
         FileSystemHandlerInterface $fileSystem,
         ?string $customTemplateDir = null,

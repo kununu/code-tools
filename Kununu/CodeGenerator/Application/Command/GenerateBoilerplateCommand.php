@@ -189,9 +189,6 @@ final class GenerateBoilerplateCommand extends Command
         return $manualMode;
     }
 
-    /**
-     * @throws IOException|TypeErrorException|UnresolvableReferenceException|InvalidJsonPointerSyntaxException
-     */
     private function parseOpenApiSpecification(BoilerplateConfiguration $configuration): void
     {
         if ($configuration->openApiFilePath === null) {

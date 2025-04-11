@@ -6,9 +6,11 @@ namespace Kununu\CodeGenerator\Factory;
 use Kununu\CodeGenerator\Infrastructure\FileSystem\SymfonyFileSystemHandler;
 use Kununu\CodeGenerator\Infrastructure\Generator\TwigTemplateGenerator;
 use Symfony\Component\Filesystem\Filesystem;
+use Twig\Error\LoaderError;
 
 final class TwigTemplateGeneratorFactory
 {
+    /** @throws LoaderError */
     public static function create(
         ?Filesystem $filesystem = null,
         ?string $customTemplateDir = null,
