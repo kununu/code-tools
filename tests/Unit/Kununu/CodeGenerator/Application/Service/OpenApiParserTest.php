@@ -214,6 +214,132 @@ YAML;
         $this->assertArrayHasKey('responses', $operation);
     }
 
+    public function testExtractSchemaHandlesNestedObjects(): void
+    {
+        $filePath = $this->fixturesDir . '/test_nested_schema.json';
+        $this->createNestedSchemaOpenApiSpec($filePath);
+
+        $this->parser->parseFile($filePath);
+        $operation = $this->parser->getOperationById('createNestedUser');
+
+        // Verify the nested schema structure is correctly extracted
+        $this->assertArrayHasKey('requestBody', $operation);
+        $this->assertArrayHasKey('content', $operation['requestBody']);
+        $this->assertArrayHasKey('application/json', $operation['requestBody']['content']);
+
+        $schema = $operation['requestBody']['content']['application/json']['schema'];
+        $this->assertArrayHasKey('properties', $schema);
+
+        // Verify the address property is a nested object
+        $this->assertArrayHasKey('address', $schema['properties']);
+        $this->assertEquals('object', $schema['properties']['address']['type']);
+        $this->assertArrayHasKey('properties', $schema['properties']['address']);
+
+        // Verify nested properties
+        $addressProps = $schema['properties']['address']['properties'];
+        $this->assertArrayHasKey('street', $addressProps);
+        $this->assertArrayHasKey('city', $addressProps);
+    }
+
+    public function testExtractSchemaHandlesArrayTypes(): void
+    {
+        $filePath = $this->fixturesDir . '/test_array_schema.json';
+        $this->createArraySchemaOpenApiSpec($filePath);
+
+        $this->parser->parseFile($filePath);
+        $operation = $this->parser->getOperationById('getUsersWithRoles');
+
+        // Verify the array schema structure is correctly extracted
+        $this->assertArrayHasKey('responses', $operation);
+        $this->assertArrayHasKey('200', $operation['responses']);
+        $this->assertArrayHasKey('content', $operation['responses']['200']);
+        $this->assertArrayHasKey('application/json', $operation['responses']['200']['content']);
+
+        $schema = $operation['responses']['200']['content']['application/json']['schema'];
+        $this->assertEquals('array', $schema['type']);
+        $this->assertArrayHasKey('items', $schema);
+
+        // Verify array items schema
+        $itemsSchema = $schema['items'];
+        $this->assertEquals('object', $itemsSchema['type']);
+        $this->assertArrayHasKey('properties', $itemsSchema);
+        $this->assertArrayHasKey('roles', $itemsSchema['properties']);
+
+        // Verify the roles property is also an array
+        $rolesSchema = $itemsSchema['properties']['roles'];
+        $this->assertEquals('array', $rolesSchema['type']);
+    }
+
+    public function testExtractSchemaHandlesCompositionSchemas(): void
+    {
+        $filePath = $this->fixturesDir . '/test_composition_schema.json';
+        $this->createCompositionSchemaOpenApiSpec($filePath);
+
+        $this->parser->parseFile($filePath);
+        $operation = $this->parser->getOperationById('getPersonOrOrganization');
+
+        // Verify the oneOf composition schema is correctly extracted
+        $this->assertArrayHasKey('responses', $operation);
+        $this->assertArrayHasKey('200', $operation['responses']);
+        $this->assertArrayHasKey('content', $operation['responses']['200']);
+        $this->assertArrayHasKey('application/json', $operation['responses']['200']['content']);
+
+        $schema = $operation['responses']['200']['content']['application/json']['schema'];
+        $this->assertArrayHasKey('oneOf', $schema);
+        $this->assertCount(2, $schema['oneOf']);
+
+        // Verify the first option (person)
+        $personSchema = $schema['oneOf'][0];
+        $this->assertEquals('object', $personSchema['type']);
+        $this->assertArrayHasKey('properties', $personSchema);
+        $this->assertArrayHasKey('firstName', $personSchema['properties']);
+
+        // Verify the second option (organization)
+        $orgSchema = $schema['oneOf'][1];
+        $this->assertEquals('object', $orgSchema['type']);
+        $this->assertArrayHasKey('properties', $orgSchema);
+        $this->assertArrayHasKey('companyName', $orgSchema['properties']);
+    }
+
+    public function testExtractSchemaHandlesNullableProperties(): void
+    {
+        $filePath = $this->fixturesDir . '/test_nullable_schema.json';
+        $this->createNullableSchemaOpenApiSpec($filePath);
+
+        $this->parser->parseFile($filePath);
+        $operation = $this->parser->getOperationById('createUserWithOptionalFields');
+
+        // Verify nullable properties are correctly extracted
+        $this->assertArrayHasKey('requestBody', $operation);
+        $schema = $operation['requestBody']['content']['application/json']['schema'];
+
+        // Required property should not be nullable
+        $this->assertArrayHasKey('name', $schema['properties']);
+        $this->assertArrayNotHasKey('nullable', $schema['properties']['name']);
+
+        // Optional property should be nullable
+        $this->assertArrayHasKey('address', $schema['properties']);
+        $this->assertArrayHasKey('nullable', $schema['properties']['address']);
+        $this->assertTrue($schema['properties']['address']['nullable']);
+    }
+
+    public function testExtractSchemaHandlesEnumValues(): void
+    {
+        $filePath = $this->fixturesDir . '/test_enum_schema.json';
+        $this->createEnumSchemaOpenApiSpec($filePath);
+
+        $this->parser->parseFile($filePath);
+        $operation = $this->parser->getOperationById('createUserWithRole');
+
+        // Verify enum values are correctly extracted
+        $this->assertArrayHasKey('requestBody', $operation);
+        $schema = $operation['requestBody']['content']['application/json']['schema'];
+
+        $this->assertArrayHasKey('role', $schema['properties']);
+        $this->assertArrayHasKey('enum', $schema['properties']['role']);
+        $this->assertEquals(['admin', 'user', 'guest'], $schema['properties']['role']['enum']);
+    }
+
     private function createValidOpenApiSpec(string $filePath): void
     {
         $spec = [
@@ -296,6 +422,245 @@ YAML;
                                             'email' => ['type' => 'string'],
                                         ],
                                         'required' => ['name', 'email'],
+                                    ],
+                                ],
+                            ],
+                        ],
+                        'responses' => [
+                            '201' => [
+                                'description' => 'Created',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        file_put_contents($filePath, json_encode($spec, JSON_PRETTY_PRINT));
+    }
+
+    private function createNestedSchemaOpenApiSpec(string $filePath): void
+    {
+        $spec = [
+            'openapi' => '3.0.0',
+            'info'    => [
+                'title'   => 'Test API',
+                'version' => '1.0.0',
+            ],
+            'paths' => [
+                '/users' => [
+                    'post' => [
+                        'operationId' => 'createNestedUser',
+                        'requestBody' => [
+                            'content' => [
+                                'application/json' => [
+                                    'schema' => [
+                                        'type'       => 'object',
+                                        'properties' => [
+                                            'name'    => ['type' => 'string'],
+                                            'email'   => ['type' => 'string'],
+                                            'address' => [
+                                                'type'       => 'object',
+                                                'properties' => [
+                                                    'street'  => ['type' => 'string'],
+                                                    'city'    => ['type' => 'string'],
+                                                    'zipCode' => ['type' => 'string'],
+                                                ],
+                                            ],
+                                        ],
+                                        'required' => ['name', 'email'],
+                                    ],
+                                ],
+                            ],
+                        ],
+                        'responses' => [
+                            '201' => [
+                                'description' => 'Created',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        file_put_contents($filePath, json_encode($spec, JSON_PRETTY_PRINT));
+    }
+
+    private function createArraySchemaOpenApiSpec(string $filePath): void
+    {
+        $spec = [
+            'openapi' => '3.0.0',
+            'info'    => [
+                'title'   => 'Test API',
+                'version' => '1.0.0',
+            ],
+            'paths' => [
+                '/users/roles' => [
+                    'get' => [
+                        'operationId' => 'getUsersWithRoles',
+                        'responses'   => [
+                            '200' => [
+                                'description' => 'OK',
+                                'content'     => [
+                                    'application/json' => [
+                                        'schema' => [
+                                            'type'  => 'array',
+                                            'items' => [
+                                                'type'       => 'object',
+                                                'properties' => [
+                                                    'id'    => ['type' => 'integer'],
+                                                    'name'  => ['type' => 'string'],
+                                                    'roles' => [
+                                                        'type'  => 'array',
+                                                        'items' => [
+                                                            'type' => 'string',
+                                                        ],
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        file_put_contents($filePath, json_encode($spec, JSON_PRETTY_PRINT));
+    }
+
+    private function createCompositionSchemaOpenApiSpec(string $filePath): void
+    {
+        $spec = [
+            'openapi' => '3.0.0',
+            'info'    => [
+                'title'   => 'Test API',
+                'version' => '1.0.0',
+            ],
+            'paths' => [
+                '/entities/{id}' => [
+                    'get' => [
+                        'operationId' => 'getPersonOrOrganization',
+                        'parameters'  => [
+                            [
+                                'name'     => 'id',
+                                'in'       => 'path',
+                                'required' => true,
+                                'schema'   => ['type' => 'string'],
+                            ],
+                        ],
+                        'responses' => [
+                            '200' => [
+                                'description' => 'OK',
+                                'content'     => [
+                                    'application/json' => [
+                                        'schema' => [
+                                            'oneOf' => [
+                                                [
+                                                    'type'       => 'object',
+                                                    'properties' => [
+                                                        'id'        => ['type' => 'string'],
+                                                        'firstName' => ['type' => 'string'],
+                                                        'lastName'  => ['type' => 'string'],
+                                                    ],
+                                                ],
+                                                [
+                                                    'type'       => 'object',
+                                                    'properties' => [
+                                                        'id'          => ['type' => 'string'],
+                                                        'companyName' => ['type' => 'string'],
+                                                        'industry'    => ['type' => 'string'],
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        file_put_contents($filePath, json_encode($spec, JSON_PRETTY_PRINT));
+    }
+
+    private function createNullableSchemaOpenApiSpec(string $filePath): void
+    {
+        $spec = [
+            'openapi' => '3.0.0',
+            'info'    => [
+                'title'   => 'Test API',
+                'version' => '1.0.0',
+            ],
+            'paths' => [
+                '/users' => [
+                    'post' => [
+                        'operationId' => 'createUserWithOptionalFields',
+                        'requestBody' => [
+                            'content' => [
+                                'application/json' => [
+                                    'schema' => [
+                                        'type'       => 'object',
+                                        'properties' => [
+                                            'name'    => ['type' => 'string'],
+                                            'email'   => ['type' => 'string'],
+                                            'address' => [
+                                                'type'     => 'string',
+                                                'nullable' => true,
+                                            ],
+                                            'phone' => [
+                                                'type'     => 'string',
+                                                'nullable' => true,
+                                            ],
+                                        ],
+                                        'required' => ['name', 'email'],
+                                    ],
+                                ],
+                            ],
+                        ],
+                        'responses' => [
+                            '201' => [
+                                'description' => 'Created',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        file_put_contents($filePath, json_encode($spec, JSON_PRETTY_PRINT));
+    }
+
+    private function createEnumSchemaOpenApiSpec(string $filePath): void
+    {
+        $spec = [
+            'openapi' => '3.0.0',
+            'info'    => [
+                'title'   => 'Test API',
+                'version' => '1.0.0',
+            ],
+            'paths' => [
+                '/users' => [
+                    'post' => [
+                        'operationId' => 'createUserWithRole',
+                        'requestBody' => [
+                            'content' => [
+                                'application/json' => [
+                                    'schema' => [
+                                        'type'       => 'object',
+                                        'properties' => [
+                                            'name'  => ['type' => 'string'],
+                                            'email' => ['type' => 'string'],
+                                            'role'  => [
+                                                'type' => 'string',
+                                                'enum' => ['admin', 'user', 'guest'],
+                                            ],
+                                        ],
+                                        'required' => ['name', 'email', 'role'],
                                     ],
                                 ],
                             ],

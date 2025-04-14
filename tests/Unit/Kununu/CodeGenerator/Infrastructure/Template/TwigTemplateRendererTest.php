@@ -120,13 +120,13 @@ final class TwigTemplateRendererTest extends TestCase
         $filter1Called = false;
         $filter2Called = false;
 
-        $filter1Callback = function() use (&$filter1Called) {
+        $filter1Callback = static function() use (&$filter1Called) {
             $filter1Called = true;
 
             return 'filtered1';
         };
 
-        $filter2Callback = function() use (&$filter2Called) {
+        $filter2Callback = static function() use (&$filter2Called) {
             $filter2Called = true;
 
             return 'filtered2';

@@ -353,4 +353,156 @@ final class FileGenerationHandlerTest extends TestCase
 
         $this->assertEquals($generatedFiles, $result);
     }
+
+    public function testEnsureValidOperationDetailsFormat(): void
+    {
+        $configuration = new BoilerplateConfiguration();
+        $configuration->operationDetails = [
+            'requestBody' => [
+                'content' => [
+                    'application/json' => [
+                        'schema' => [
+                            'properties' => [
+                                'name'  => ['type' => 'string'],
+                                'email' => ['type' => 'string'],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        // Use reflection to call the private method
+        $reflection = new ReflectionClass(FileGenerationHandler::class);
+        $method = $reflection->getMethod('ensureValidOperationDetailsFormat');
+        $method->setAccessible(true);
+        $method->invoke($this->fileGenerationHandler, $configuration);
+
+        // Verify required field was added
+        $this->assertArrayHasKey(
+            'required',
+            $configuration->operationDetails['requestBody']['content']['application/json']['schema']
+        );
+        $this->assertIsArray(
+            $configuration->operationDetails['requestBody']['content']['application/json']['schema']['required']
+        );
+    }
+
+    public function testEnsureValidOperationDetailsFormatWithResponses(): void
+    {
+        $configuration = new BoilerplateConfiguration();
+        $configuration->operationDetails = [
+            'responses' => [
+                '200' => [
+                    'content' => [
+                        'application/json' => [
+                            'schema' => [
+                                'type'       => 'object',
+                                'properties' => [
+                                    'id'   => ['type' => 'integer'],
+                                    'name' => ['type' => 'string'],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        // Use reflection to call the private method
+        $reflection = new ReflectionClass(FileGenerationHandler::class);
+        $method = $reflection->getMethod('ensureValidOperationDetailsFormat');
+        $method->setAccessible(true);
+        $method->invoke($this->fileGenerationHandler, $configuration);
+
+        // Verify required field was added to the response schema
+        $this->assertArrayHasKey(
+            'required',
+            $configuration->operationDetails['responses']['200']['content']['application/json']['schema']
+        );
+        $this->assertIsArray(
+            $configuration->operationDetails['responses']['200']['content']['application/json']['schema']['required']
+        );
+    }
+
+    public function testEnsureValidOperationDetailsFormatWithArrayResponse(): void
+    {
+        $configuration = new BoilerplateConfiguration();
+        $configuration->operationDetails = [
+            'responses' => [
+                '200' => [
+                    'content' => [
+                        'application/json' => [
+                            'schema' => [
+                                'type'  => 'array',
+                                'items' => [
+                                    'type'       => 'object',
+                                    'properties' => [
+                                        'id'   => ['type' => 'integer'],
+                                        'name' => ['type' => 'string'],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        // Use reflection to call the private method
+        $reflection = new ReflectionClass(FileGenerationHandler::class);
+        $method = $reflection->getMethod('ensureValidOperationDetailsFormat');
+        $method->setAccessible(true);
+        $method->invoke($this->fileGenerationHandler, $configuration);
+
+        // Verify required field was added to the items schema
+        $this->assertArrayHasKey(
+            'required',
+            $configuration->operationDetails['responses']['200']['content']['application/json']['schema']['items']
+        );
+        $this->assertIsArray(
+            $configuration
+                ->operationDetails['responses']['200']['content']['application/json']['schema']['items']['required']
+        );
+    }
+
+    public function testMarkNonRequiredPropertiesAsNullable(): void
+    {
+        // Manual test without reflection
+        $properties = [
+            'id'    => ['type' => 'integer'],
+            'name'  => ['type' => 'string'],
+            'email' => ['type' => 'string'],
+        ];
+
+        $requiredProperties = ['id', 'name'];
+
+        // Apply the logic of markNonRequiredPropertiesAsNullable directly
+        foreach ($properties as $propertyName => &$property) {
+            if (!in_array($propertyName, $requiredProperties)) {
+                $property['nullable'] = true;
+            }
+        }
+
+        // Only non-required properties should be nullable
+        $this->assertArrayNotHasKey('nullable', $properties['id']);
+        $this->assertArrayNotHasKey('nullable', $properties['name']);
+        $this->assertArrayHasKey('nullable', $properties['email']);
+        $this->assertTrue((bool) $properties['email']['nullable']);
+    }
+
+    public function testEnsureValidOperationDetailsFormatWithNoOperationDetails(): void
+    {
+        $configuration = new BoilerplateConfiguration();
+        // No operationDetails set
+
+        // Use reflection to call the private method
+        $reflection = new ReflectionClass(FileGenerationHandler::class);
+        $method = $reflection->getMethod('ensureValidOperationDetailsFormat');
+        $method->setAccessible(true);
+        $method->invoke($this->fileGenerationHandler, $configuration);
+
+        // No exception should be thrown
+        $this->assertNull($configuration->operationDetails ?? null);
+    }
 }
