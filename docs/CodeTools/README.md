@@ -18,6 +18,22 @@ vendor/bin/code-tools publish:config <tool-name>
   ```
 </details>
 
+<details>
+  <summary>Publish config for rector</summary>
+
+  ```bash
+  vendor/bin/code-tools publish:config rector
+  ```
+</details>
+
+<details>
+  <summary>Publish config for code-generator</summary>
+
+  ```bash
+  vendor/bin/code-tools publish:config code-generator
+  ```
+</details>
+
 ### All tools
 - To copy the configuration files of all tools to your project, run the following command:
 ```bash
@@ -29,3 +45,17 @@ vendor/bin/code-tools publish:config
 ```bash
 vendor/bin/code-tools --help
 ```
+
+## Available Tools
+
+### PHP_CodeSniffer
+- A tool to detect violations of a defined coding standard.
+- [Documentation](/docs/CodeSniffer/README.md)
+
+### Rector
+- A tool for automated refactoring of PHP code.
+- [Documentation](/docs/Rector/README.md)
+
+### Code Generator
+- A tool to generate boilerplate code based on OpenAPI specifications.
+- [Documentation](/docs/CodeGenerator/README.md)

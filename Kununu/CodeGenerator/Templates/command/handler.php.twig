@@ -1,0 +1,36 @@
+<?php
+declare(strict_types=1);
+
+namespace {{ full_namespace }};
+
+use Kununu\CQRS\Command\CommandHandler as CQRSCommandHandler;
+use Psr\Log\LoggerInterface;
+use Throwable;
+
+final readonly class {{ classname }} implements CQRSCommandHandler
+{
+{% if templates.hasTemplate('command-repository-interface') %}
+    public function __construct(
+        private RepositoryInterface $repository,
+        private LoggerInterface $logger,
+    )
+    {
+    }
+{% else %}
+    public function __construct(private RepositoryInterface $repository)
+    {
+    }
+{% endif %}
+
+    /** @throws Throwable */
+    public function handle(Command $command): void
+    {
+        try {
+            // Todo(generated): Your command logic here
+        } catch (Throwable $e) {
+            $this->logger->error($e->getMessage(), ['exception' => $e]);
+
+            throw $e;
+        }
+    }
+} 

@@ -3,14 +3,14 @@
 # Function to display help instructions
 show_help() {
     echo "Usage: vendor/bin/code-tools publish:config [tool-name]"
-    echo "Valid tool names: code-sniffer or rector"
+    echo "Valid tool names: code-sniffer, rector, or code-generator"
     echo "If no tool name is passed, then all the available config files for each tool will be copied."
     echo "Options:"
     echo "  --help    Show help message."
 }
 
 # Array of config files
-CONFIG_FILES=("dist/phpcs.xml.dist" "dist/rector.php.dist")
+CONFIG_FILES=("dist/phpcs.xml.dist" "dist/rector.php.dist" "dist/.code-generator.yaml.dist")
 
 # Check if help is requested
 if [ "$1" == "--help" ]; then
@@ -52,8 +52,10 @@ if [ "$#" -eq 2 ]; then
         copy_config_file "dist/phpcs.xml.dist"
     elif [ "$2" == "rector" ]; then
         copy_config_file "dist/rector.php.dist"
+    elif [ "$2" == "code-generator" ]; then
+        copy_config_file "dist/.code-generator.yaml.dist"
     else
-        echo "Invalid config file name. Valid config file name: code-sniffer or rector"
+        echo "Invalid config file name. Valid config file name: code-sniffer, rector, or code-generator"
         exit 1
     fi
 else

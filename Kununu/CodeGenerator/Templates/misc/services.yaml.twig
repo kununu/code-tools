@@ -1,0 +1,18 @@
+{% if templates.hasTemplate('query-handler') %}
+{% set handler = templates.getTemplateByType('query-handler') %}
+{% endif %}
+{% if templates.hasTemplate('command-handler') %}
+{% set handler = templates.getTemplateByType('command-handler') %}
+{% endif %}
+{% if method == 'GET' %}
+imports:
+  - { resource: jms_serializer.yaml }
+
+{% endif %}
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+
+  {{ handler.templateVariables.full_namespace }}\:
+    resource: '../../../../..{{ handler.templateVariables.full_namespace|replace({(handler.templateVariables.namespace): '', '\\': '/'}) }}/*'

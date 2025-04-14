@@ -1,0 +1,46 @@
+{% if templates.hasTemplate('query') %}
+{% set commandOrQuery = templates.getTemplateByType('query') %}
+{% endif %}
+{% if templates.hasTemplate('command') %}
+{% set commandOrQuery = templates.getTemplateByType('command') %}
+{% endif %}
+{% if templates.hasTemplate('query-handler') %}
+{% set handler = templates.getTemplateByType('query-handler') %}
+{% endif %}
+{% if templates.hasTemplate('command-handler') %}
+{% set handler = templates.getTemplateByType('command-handler') %}
+{% endif %}
+<?php
+declare(strict_types=1);
+
+namespace {{ full_namespace }};
+
+{% if commandOrQuery is defined %}
+use {{ commandOrQuery.fqcn }};
+{% endif %}
+{% if handler is defined %}
+use {{ handler.fqcn }};
+{% endif %}
+use PHPUnit\Framework\TestCase;
+
+final class {{ classname }} extends TestCase
+{
+{% if commandOrQuery is defined %}
+    private {{ commandOrQuery.classname }} ${{ commandOrQuery.classname|lower }};
+{% endif %}
+{% if handler is defined %}
+    private {{ handler.classname }} ${{ handler.classname|lower }};
+{% endif %}
+
+    public function test{% if method == 'GET' %}Query{% else %}Command{% endif %}Handler(): void
+    {
+        $this->markTestSkipped('This test has not been implemented yet.');
+        $this->{% if method == 'GET' %}queryHandler{% else %}commandHandler{% endif %}->handle($this->{% if method == 'GET' %}query{% else %}command{% endif %});
+    }
+
+    protected function setUp(): void
+    {
+        $this->{{ commandOrQuery.classname|lower }} = new {{ commandOrQuery.classname }}();
+        $this->{{ handler.classname|lower }} = new {{ handler.classname }}();
+    }
+}

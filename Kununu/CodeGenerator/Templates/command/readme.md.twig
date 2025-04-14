@@ -1,0 +1,15 @@
+# {{ operation_id|properCapitalize }}
+
+{{ description|default('This command ' ~ (method == 'POST' ? 'creates' : (method == 'PUT' ? 'updates' : (method == 'DELETE' ? 'deletes' : 'processes'))) ~ ' ' ~ entity_name ~ ' data.') }}
+
+{% if parameters is defined and parameters|length > 0 %}
+## Path Parameters
+{% for param in parameters %}
+{% if param.in == 'path' %}
+- **{{ param.name }}** ({{ param.schema.type }})
+  - {{ param.description|default('The ' ~ param.name ~ ' of the ' ~ entity_name) }}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+[Back to Index](../../README.md)

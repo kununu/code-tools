@@ -10,11 +10,17 @@
         }
     ],
     "require": {
-        "php": ">=8.1",
+        "php": ">=8.3",
         "rector/rector": "^2.0",
-        "squizlabs/php_codesniffer": "^3.10"
+        "squizlabs/php_codesniffer": "^3.10",
+        "symfony/console": "^6.4",
+        "symfony/filesystem": "^6.4",
+        "symfony/yaml": "^6.4",
+        "twig/twig": "^3.7",
+        "devizzent/cebe-php-openapi": "^1.0"
     },
     "require-dev": {
+        "jetbrains/phpstorm-attributes": "^1.2",
         "kununu/scripts": "^5.1",
         "phpunit/phpunit": "^11.5"
     },
@@ -29,7 +35,8 @@
         }
     },
     "bin": [
-        "bin/code-tools"
+        "bin/code-tools",
+        "bin/code-generator"
     ],
     "config": {
         "sort-packages": true,
@@ -39,7 +46,8 @@
         }
     },
     "scripts": {
-        "test-unit": "phpunit",
+        "test": "phpunit --log-events-text phpunit.log --no-coverage --no-logging --no-progress --testsuite Unit",
+        "test-coverage": "XDEBUG_MODE=coverage phpunit --log-events-text phpunit.log --no-progress --testsuite Unit",
         "cs-check": "phpcs --standard=phpcs.xml Kununu/ tests/",
         "cs-fix": "phpcbf --standard=phpcs.xml Kununu/ tests/",
         "stan": "phpstan analyze",

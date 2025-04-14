@@ -1,0 +1,9 @@
+{% if templates.hasTemplate('read-model') %}
+{% set readModel = templates.getTemplateByType('read-model') %}
+{% endif %}
+<?xml version="1.0" encoding="UTF-8" ?>
+<serializer>
+    <class name="{% if readModel is defined %}{{ readModel.fqcn }}{% endif %}" exclusion-policy="all">
+        <virtual-property method="getArrayCopy" type="array" serialized-name="{% if readModel is defined %}{{ readModel.classname|lower }}{% endif %}"/>
+    </class>
+</serializer>
