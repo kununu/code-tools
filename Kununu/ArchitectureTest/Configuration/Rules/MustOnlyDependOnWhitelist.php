@@ -3,8 +3,7 @@ declare(strict_types=1);
 
 namespace Kununu\ArchitectureTest\Configuration\Rules;
 
-use Kununu\ArchitectureTest\Configuration\InterfaceClassSelector;
-use Kununu\ArchitectureTest\Configuration\Selectable;
+use Kununu\ArchitectureTest\Configuration\Selector\Selectable;
 use Kununu\ArchitectureTest\Configuration\Selectors;
 use PHPat\Selector\Selector;
 use PHPat\Test\PHPat;

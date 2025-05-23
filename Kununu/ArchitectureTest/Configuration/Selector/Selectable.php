@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Kununu\ArchitectureTest\Configuration;
+namespace Kununu\ArchitectureTest\Configuration\Selector;
 
 use PHPat\Selector\SelectorInterface;
 

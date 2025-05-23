@@ -8,18 +8,15 @@ use Kununu\ArchitectureTest\Configuration\Rules\Rule;
 use Kununu\ArchitectureTest\Configuration\SubLayer;
 use InvalidArgumentException;
 use PHPat\Test\Builder\Rule as PHPatRule;
-use Symfony\Component\Yaml\Yaml;
 
-final class ConfigurableArchitectureTest
+final class ArchitectureTest
 {
-    private const string ARCHITECTURE_DEFINITION_FILE = '/arch_definition.yaml';
-
     /**
      * @return iterable<PHPatRule>
      */
     public function testArchitecture(): iterable
     {
-        $archDefinition = self::getArchitectureDefinition();
+        $archDefinition = DirectoryFinder::getArchitectureDefinition();
         $layers = $this->validateArchitectureDefinition($archDefinition);
         /** @var Layer $layer */
         foreach ($layers as $layer) {
@@ -47,28 +44,4 @@ final class ConfigurableArchitectureTest
         return $layers;
     }
 
-    public static function getProjectDirectory(): string
-    {
-        $directory = dirname(__DIR__);
-
-        return explode('/services', $directory)[0] . '/services';
-    }
-
-    public static function getArchitectureDefinitionFile(): string
-    {
-        return self::getProjectDirectory() . self::ARCHITECTURE_DEFINITION_FILE;
-    }
-
-    private static function getArchitectureDefinition(): array
-    {
-        $filePath = self::getArchitectureDefinitionFile();
-
-        if (!file_exists($filePath)) {
-            throw new InvalidArgumentException(
-                'ArchitectureTest definition file not found, please create it at ' . $filePath
-            );
-        }
-
-        return Yaml::parseFile($filePath);
-    }
 }

@@ -8,15 +8,15 @@ use PhpParser\Node\Stmt\Namespace_;
 use PHPStan\Analyser\Scope;
 use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
-use Symfony\Component\Yaml\Yaml;
 
 final class FollowsFolderStructureRule implements Rule
 {
     public function __construct(
         private array $architectureLayers = [],
         private array $deprecatedLayers = [],
+
     ) {
-        $archDefinition = Yaml::parseFile(ConfigurableArchitectureTest::getArchitectureDefinitionFile());
+        $archDefinition = DirectoryFinder::getArchitectureDefinition();
 
         foreach ($archDefinition['architecture'] as $layer) {
             $this->architectureLayers[] = $layer['layer'];
@@ -35,7 +35,7 @@ final class FollowsFolderStructureRule implements Rule
     public function processNode(Node $node, Scope $scope): array
     {
         $directories = array_merge($this->architectureLayers, $this->deprecatedLayers);
-        $basePath = __DIR__ . '/../../src';
+        $basePath = DirectoryFinder::getProjectDirectory() . '/src';
 
         $actualDirectories = array_filter(glob($basePath . '/*'), 'is_dir');
         $actualNames = array_map('basename', $actualDirectories);

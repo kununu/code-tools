@@ -8,6 +8,7 @@ use Kununu\ArchitectureTest\Configuration\Rules\MustExtend;
 use Kununu\ArchitectureTest\Configuration\Rules\MustImplement;
 use Kununu\ArchitectureTest\Configuration\Rules\MustOnlyDependOnWhitelist;
 use Kununu\ArchitectureTest\Configuration\Rules\MustOnlyHaveOnePublicMethodNamed;
+use Kununu\ArchitectureTest\Configuration\Selector\Selectable;
 use Symfony\Component\Validator\Constraints as Assert;
 
 final readonly class SubLayer

@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Kununu\ArchitectureTest\Configuration\Rules;
 
-use Kununu\ArchitectureTest\Configuration\Selectable;
+use Kununu\ArchitectureTest\Configuration\Selector\Selectable;
 use PHPat\Test\PHPat;
 
 final readonly class MustOnlyHaveOnePublicMethodNamed implements Rule
