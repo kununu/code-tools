@@ -18,7 +18,6 @@ if (!is_dir($outputDir)) {
 }
 
 $yamlFile = DirectoryFinder::getArchitectureDefinitionFile();
-$architectureDefinition = Yaml::parseFile($yamlFile);
 
 $mmdContent = "C4Context\n";
 function addLayerToMmd(array $layers, &$content): void
