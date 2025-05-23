@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# run php script
+# script location: ./Kununu/ArchitectureTest/DocGenerator.php
+php -f vendor/kununu/code-tools/Kununu/ArchitectureTest/DocGenerator.php -- "$@"
+    for file in "${CONFIG_FILES[@]}"; do
+        copy_config_file "$file"
+    done
+fi
