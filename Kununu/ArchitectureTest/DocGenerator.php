@@ -75,10 +75,12 @@ foreach ($architectureDefinition['architecture'] as $layerData) {
                             continue;
                         }
                         if (in_array($outerLayerOfDependency, array_keys($layersTrack), true)) {
-                            $innerDependenciesTrack[$j][$subLayer->selector->getName()] = $name;
+                            $innerDependenciesTrack[$j][$subLayer->selector->getName()] = $dependency->getName();
                             continue;
                         }
                         $dependenciesTrack[$name] = $k;
+                        $trackedRelations[$j][] = $k;
+                        $k++;
                         continue;
                     }
                     if (!array_key_exists($name, $dependenciesTrack)) {
@@ -97,6 +99,7 @@ foreach ($architectureDefinition['architecture'] as $layerData) {
     $content .= "}\n\n"; // End the main layer block
 }
 
+$depricatedComponentIds = [];
 if (array_key_exists('deprecated', $architectureDefinition)) {
     foreach ($architectureDefinition['deprecated'] as $layerData) {
         $layer = Layer::fromArray($layerData);
@@ -107,6 +110,7 @@ if (array_key_exists('deprecated', $architectureDefinition)) {
                 $nameSpaces = explode('\\', $name);
                 $className = $nameSpaces[count($nameSpaces) - 1];
                 $content .= "    Component(\"e$number\", \"Deprecated $className\", \"$name\")\n";
+                $depricatedComponentIds[] = $number;
             } else {
                 if (str_starts_with($name, 'App')) {
                     continue;
@@ -147,8 +151,9 @@ foreach ($innerDependenciesTrack as $componentNumber => $connections) {
     foreach($connections as $sourceComponent => $dependency) {
         $nameSpaces = explode('\\', $dependency);
         foreach ($componentsTrack as $component => $externalNumber) {
-            if (count($nameSpaces) < 3) {
-                if ($component === $dependency) {
+            if (count($nameSpaces) < 3 || count_chars($nameSpaces[2]) < 2) {
+                $componentOuterLayer = 'App\\' . explode('\\', $component)[1];
+                if ($componentOuterLayer === $dependency) {
                     $trackedInnerRelations[$componentNumber][] = $externalNumber;
                 }
                 continue;
@@ -165,12 +170,15 @@ foreach ($innerDependenciesTrack as $componentNumber => $connections) {
 
 foreach($trackedRelations as $number => $externalNumbers) {
     foreach(array_unique($externalNumbers) as $externalNumber) {
-        if (!in_array($externalNumber, $externalComponentsTrack, true)) {
+        if (!in_array($externalNumber, $externalComponentsTrack, true) &&
+            !in_array($externalNumber, $depricatedComponentIds, true)) {
             var_dump("Missing external Component nr $externalNumber");
             continue;
         }
         $relations .= "Rel(c$number, e$externalNumber, \"Can depend on\", \"DI\")\n";
-        $relations .= "UpdateRelStyle(c$number, e$externalNumber, \$textColor=\"red\", \$offsetY=\"-40\")\n";
+        if (in_array($externalNumber, $depricatedComponentIds, true)) {
+            $relations .= "UpdateRelStyle(c$number, e$externalNumber, \$textColor=\"red\", \$offsetY=\"-40\")\n";
+        }
     }
 }
 
