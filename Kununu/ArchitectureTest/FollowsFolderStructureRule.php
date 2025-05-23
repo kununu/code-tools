@@ -16,7 +16,7 @@ final class FollowsFolderStructureRule implements Rule
         private array $architectureLayers = [],
         private array $deprecatedLayers = [],
     ) {
-        $archDefinition = Yaml::parseFile(__DIR__ . '/../../arch_definition.yaml');
+        $archDefinition = Yaml::parseFile(ConfigurableArchitectureTest::getArchitectureDefinitionFile());
 
         foreach ($archDefinition['architecture'] as $layer) {
             $this->architectureLayers[] = $layer['layer'];
