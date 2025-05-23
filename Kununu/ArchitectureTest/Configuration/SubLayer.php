@@ -1,0 +1,58 @@
+<?php
+declare(strict_types=1);
+
+namespace Kununu\ArchitectureTest\Configuration;
+
+use Kununu\ArchitectureTest\Configuration\Rules\MustBeFinal;
+use Kununu\ArchitectureTest\Configuration\Rules\MustExtend;
+use Kununu\ArchitectureTest\Configuration\Rules\MustImplement;
+use Kununu\ArchitectureTest\Configuration\Rules\MustOnlyDependOnWhitelist;
+use Kununu\ArchitectureTest\Configuration\Rules\MustOnlyHaveOnePublicMethodNamed;
+use Symfony\Component\Validator\Constraints as Assert;
+
+final readonly class SubLayer
+{
+    public const string KEY = 'sub-layers';
+    public const string NAME_KEY = 'name';
+    public function __construct(
+        public string $name,
+        public Selectable $selector,
+        public array $rules = []
+    ) {
+    }
+
+    public static function fromArray(array $subLayer)
+    {
+        $rules = [];
+        $selector = Selectors::findSelector($subLayer);
+        foreach ($subLayer as $key => $item) {
+            if (in_array($key, Selectors::getValidTypes(), true)) {
+                continue;
+            }
+            match ($key) {
+                self::NAME_KEY => $name = $item,
+                MustBeFinal::KEY => $item !== true ?:
+                    $rules[] = MustBeFinal::fromArray($selector),
+                MustExtend::KEY =>
+                    $rules[] = MustExtend::fromArray($selector, $item),
+                MustImplement::KEY =>
+                    $rules[] = MustImplement::fromArray($selector, $item),
+                MustOnlyDependOnWhitelist::KEY =>
+                    $rules[] = MustOnlyDependOnWhitelist::fromArray($selector, $item),
+                MustOnlyHaveOnePublicMethodNamed::KEY =>
+                    $rules[] = MustOnlyHaveOnePublicMethodNamed::fromArray($selector, $item),
+                default => throw new \Exception("Unknown key: $key"),
+            };
+        }
+
+        if (!isset($name) || empty($name)) {
+            throw new \InvalidArgumentException('Missing name for sub layer');
+        }
+
+        return new self(
+            name: $name,
+            selector: $selector,
+            rules: $rules,
+        );
+    }
+}
