@@ -31,7 +31,7 @@ services:
       tags:
         - phpstan.rules.rule
 
-    - class: Kununu\ArchitectureTest\ConfigurableArchitectureTest
+    - class: Kununu\ArchitectureTest\ArchitectureTest
       tags:
         - phpat.test
 ```

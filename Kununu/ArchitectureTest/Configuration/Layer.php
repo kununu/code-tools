@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Kununu\ArchitectureTest\Configuration;
 
+use Kununu\ArchitectureTest\Configuration\Selector\Selectable;
 use Symfony\Component\Validator\Constraints as Assert;
 
 final readonly class Layer

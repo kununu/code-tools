@@ -3,6 +3,11 @@ declare(strict_types=1);
 
 namespace Kununu\ArchitectureTest\Configuration;
 
+use Kununu\ArchitectureTest\Configuration\Selector\ClassSelector;
+use Kununu\ArchitectureTest\Configuration\Selector\InterfaceClassSelector;
+use Kununu\ArchitectureTest\Configuration\Selector\NamespaceSelector;
+use Kununu\ArchitectureTest\Configuration\Selector\Selectable;
+
 enum Selectors: string
 {
     case ClassSelector = ClassSelector::KEY;
