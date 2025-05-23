@@ -31,7 +31,8 @@
     },
     "bin": [
         "bin/code-tools",
-        "bin/php-in-k8s"
+        "bin/php-in-k8s",
+        "bin/generate-arch-mmd"
     ],
     "config": {
         "sort-packages": true,
