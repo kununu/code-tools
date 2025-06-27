@@ -1,0 +1,60 @@
+#!/bin/bash
+set -euo pipefail
+
+# Documentation: https://new-work.atlassian.net/wiki/x/M4EjV
+
+# Enable debug logging if DEBUG=true
+DEBUG="${DEBUG:-false}"
+
+log_debug() {
+  if [[ "$DEBUG" == "true" ]]; then
+    echo "[DEBUG] $*" >> /tmp/command.log
+  fi
+}
+
+if [[ -z "${PROJECT_DIR:-}" ]]; then
+  PROJECT_DIR="${PWD}"
+fi
+
+if [[ -z "${K8S_APP_NAME:-}" ]]; then
+  PROJECT_NAME=$(basename "$PROJECT_DIR")
+  K8S_APP_NAME="${PROJECT_NAME}-php"
+fi
+
+log_debug "Script called with arguments: $*"
+
+POD_NAME=$(kubectl -n local get pods -l app="$K8S_APP_NAME" --no-headers -o custom-columns=":metadata.name")
+log_debug "Selected pod: $POD_NAME"
+
+HOST_BASE=$PROJECT_DIR
+CONTAINER_BASE="/var/www/html"
+CONTAINER_TMP="/tmp"
+
+MODIFIED_ARGS=()
+
+for ARG in "$@"; do
+  if [[ "$ARG" == */ide-phpinfo.php && -f "$ARG" ]]; then
+    FILENAME=$(basename "$ARG")
+    DEST_PATH="$CONTAINER_TMP/$FILENAME"
+
+    log_debug "Copying PHPStorm's PHP Interpreter verification file $ARG to pod at $DEST_PATH"
+    kubectl -n local cp "$ARG" "$POD_NAME:$DEST_PATH"
+
+    MODIFIED_ARGS+=("$DEST_PATH")
+
+  elif [[ "$ARG" == "$HOST_BASE"* ]]; then
+    REL_PATH="${ARG#"$HOST_BASE"}"
+    CONTAINER_PATH="$CONTAINER_BASE$REL_PATH"
+
+    log_debug "Remapped host path $ARG to container path $CONTAINER_PATH"
+    MODIFIED_ARGS+=("$CONTAINER_PATH")
+
+  else
+    MODIFIED_ARGS+=("$ARG")
+  fi
+done
+
+log_debug "Final command: kubectl -n local -c main exec -i $POD_NAME -- secrets_env.sh php ${MODIFIED_ARGS[*]}"
+
+# Run the PHP command and replace container paths with host paths in the output
+kubectl -n local -c main exec -i "$POD_NAME" -- secrets_env.sh php "${MODIFIED_ARGS[@]}" | sed "s|$CONTAINER_BASE|$HOST_BASE|g"
