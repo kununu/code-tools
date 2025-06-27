@@ -3,12 +3,12 @@ set -euo pipefail
 
 # Documentation: https://new-work.atlassian.net/wiki/x/M4EjV
 
-# Enable debug logging if DEBUG=true
-DEBUG="${DEBUG:-false}"
+# Enable debug logging if DEBUG_PHP_IN_K8S=true
+DEBUG_PHP_IN_K8S="${DEBUG_PHP_IN_K8S:-false}"
 
 log_debug() {
-  if [[ "$DEBUG" == "true" ]]; then
-    echo "[DEBUG] $*" >> /tmp/command.log
+  if [[ "$DEBUG_PHP_IN_K8S" == "true" ]]; then
+    echo "[DEBUG] $*" >> /tmp/php-in-k8s.log
   fi
 }
 
@@ -23,8 +23,10 @@ if [[ -z "${PROJECT_DIR:-}" ]]; then
   fi
 fi
 
+# Fallback resolution of K8S_APP_NAME
 if [[ -z "${K8S_APP_NAME:-}" ]]; then
   PROJECT_NAME=$(basename "$PROJECT_DIR")
+  log_debug "Using PROJECT_DIR as a fallback for K8S_APP_NAME value extraction: $PROJECT_DIR"
   K8S_APP_NAME="${PROJECT_NAME}-php"
 fi
 
