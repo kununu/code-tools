@@ -12,8 +12,15 @@ log_debug() {
   fi
 }
 
+# Fallback resolution of PROJECT_DIR
 if [[ -z "${PROJECT_DIR:-}" ]]; then
-  PROJECT_DIR="${PWD}"
+  if [[ -n "${COMPOSER_RUNTIME_BIN_DIR:-}" ]]; then
+    log_debug "Using COMPOSER_RUNTIME_BIN_DIR as a fallback for PROJECT_DIR value extraction: ${COMPOSER_RUNTIME_BIN_DIR}"
+    PROJECT_DIR="${COMPOSER_RUNTIME_BIN_DIR%/services/vendor/bin}"
+  else
+    log_debug "Using PWD as a fallback for PROJECT_DIR: ${PWD}"
+    PROJECT_DIR="$PWD"
+  fi
 fi
 
 if [[ -z "${K8S_APP_NAME:-}" ]]; then
