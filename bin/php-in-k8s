@@ -3,6 +3,11 @@ set -euo pipefail
 
 # Documentation: https://new-work.atlassian.net/wiki/x/M4EjV
 
+if [[ "$#" -eq 0 ]]; then
+  echo "At least one argument for php runtime must be set" >&2
+  exit 1
+fi
+
 # Enable debug logging if DEBUG_PHP_IN_K8S=true
 DEBUG_PHP_IN_K8S="${DEBUG_PHP_IN_K8S:-false}"
 
