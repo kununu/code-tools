@@ -29,7 +29,8 @@
         }
     },
     "bin": [
-        "bin/code-tools"
+        "bin/code-tools",
+        "bin/php-in-k8s"
     ],
     "config": {
         "sort-packages": true,

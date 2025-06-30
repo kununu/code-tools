@@ -20,6 +20,9 @@
 ### `bin/code-tools`
 - Though each tool can be used "out-of-the-box", this is a helper script that allows you to copy configuration files of each, or all, tools to your project so you can customize them.
 
+### `bin/php-in-k8s`
+- This is a helper script that allows you to run PHP commands inside a local Kubernetes pod without having to connect to it via a terminal manually.
+
 ## Install
 
 ### Add custom private repositories to composer.json
@@ -49,3 +52,4 @@ composer require --dev kununu/code-tools --no-plugins
 - [PHP_CodeSniffer](docs/CodeSniffer/README.md) instructions.
 - [Rector](docs/Rector/README.md) instructions.
 - [bin/code-tools](docs/CodeTools/README.md) instructions.
+- [bin/php-in-k8s](docs/PhpInK8s/README.md) instructions.
