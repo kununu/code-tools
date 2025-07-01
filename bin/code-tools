@@ -4,12 +4,18 @@ set -euo pipefail
 
 # Constants
 readonly CONFIG_DIR="vendor/kununu/code-tools"
-readonly CONFIG_FILES=("dist/php-cs-fixer.php.dist" "dist/phpcs.xml.dist" "dist/rector.php.dist")
+readonly CONFIG_FILES=(
+    "dist/php-cs-fixer.php.dist"
+    "dist/phpcs.xml.dist"
+    "dist/rector.php.dist"
+)
+readonly HOOK_FILE="vendor/kununu/code-tools/Kununu/CodingStandards/Hooks/git-pre-commit"
+readonly HOOK_DEST=".git/hooks/pre-commit"
 
 # Function to display help instructions
 show_help() {
     cat <<EOF
-Usage: vendor/bin/code-tools publish:config [tool-name]
+Usage: vendor/bin/code-tools publish:config [tool-name] [--include-hook]
 
 Valid tool names:
   coding-standards   => copies dist/php-cs-fixer.php.dist
@@ -19,6 +25,7 @@ Valid tool names:
 If no tool name is passed, all config files will be copied.
 
 Options:
+  --include-hook     Also copy the git pre-commit hook to .git/hooks/pre-commit.
   --help             Show this help message.
 EOF
 }
@@ -29,52 +36,88 @@ copy_config_file() {
     local dest_file="${1#dist/}"
     dest_file="${dest_file%.dist}"
 
-    if [[ -f "$dest_file" ]]; then
-        echo "⚠️  Config file '$dest_file' already exists in your project."
-    elif [[ -f "$source_file" ]]; then
+    if [ -f "$dest_file" ]; then
+        echo "⚠️  Config file '$dest_file' already exists at project level."
+    elif [ -f "$source_file" ]; then
         cp "$source_file" "$dest_file"
-        echo "✅  '$dest_file' copied. You can customize it now."
+        echo "✅ Config file '$dest_file' copied to project level."
     else
-        echo "❌  Source config file '$source_file' does not exist."
+        echo "❌ Config file '$source_file' does not exist."
     fi
 }
 
-# Show help if requested
-if [[ "${1:-}" == "--help" ]]; then
+# Function to install the git pre-commit hook
+install_git_hook() {
+    local source_file="$CONFIG_DIR/$HOOK_FILE"
+    local dest_file="$HOOK_DEST"
+
+    if [ ! -d ".git/hooks" ]; then
+        echo "❌ Error: .git/hooks directory does not exist. Is this a git repository?"
+        exit 1
+    fi
+
+    if [ -f "$dest_file" ]; then
+        echo "⚠️  A pre-commit hook already exists at $dest_file."
+    elif [ -f "$source_file" ]; then
+        cp "$source_file" "$dest_file"
+        chmod +x "$dest_file"
+        echo "✅ Git pre-commit hook installed to $dest_file."
+    else
+        echo "❌ Git hook file '$source_file' does not exist."
+    fi
+}
+
+# Parse arguments
+include_hook="false"
+
+if [ "${1:-}" == "--help" ]; then
     show_help
     exit 0
 fi
 
-# Validate arguments
-if [[ $# -lt 1 || $# -gt 2 ]]; then
+if [ "$#" -lt 1 ] || [ "$#" -gt 3 ]; then
     show_help
     exit 1
 fi
 
-if [[ "$1" != "publish:config" ]]; then
-    echo "❌  Invalid command. Use: publish:config"
+if [ "$1" != "publish:config" ]; then
+    echo "❌ Invalid command. Valid command: publish:config"
     exit 1
 fi
 
-# Handle specific tool name or all
-if [[ $# -eq 2 ]]; then
-    case "$2" in
-        coding-standards)
-            copy_config_file "dist/php-cs-fixer.php.dist"
-            ;;
-        code-sniffer)
-            copy_config_file "dist/phpcs.xml.dist"
-            ;;
-        rector)
-            copy_config_file "dist/rector.php.dist"
-            ;;
-        *)
-            echo "❌  Invalid tool name: '$2'. Valid names: coding-standards, code-sniffer, rector."
-            exit 1
-            ;;
-    esac
-else
-    for config_file in "${CONFIG_FILES[@]}"; do
-        copy_config_file "$config_file"
-    done
+tool_name=""
+for arg in "$@"; do
+    if [ "$arg" == "--include-hook" ]; then
+        include_hook="true"
+    elif [ "$arg" != "publish:config" ]; then
+        tool_name="$arg"
+    fi
+done
+
+# Handle config file copying
+case "$tool_name" in
+    "")
+        for config_file in "${CONFIG_FILES[@]}"; do
+            copy_config_file "$config_file"
+        done
+        ;;
+    coding-standards)
+        copy_config_file "dist/php-cs-fixer.php.dist"
+        ;;
+    code-sniffer)
+        copy_config_file "dist/phpcs.xml.dist"
+        ;;
+    rector)
+        copy_config_file "dist/rector.php.dist"
+        ;;
+    *)
+        echo "❌ Invalid tool name: '$tool_name'"
+        show_help
+        exit 1
+        ;;
+esac
+
+# Optionally install git hook
+if [ "$include_hook" == "true" ]; then
+    install_git_hook
 fi
