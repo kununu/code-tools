@@ -6,7 +6,15 @@ set -euo pipefail
 PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || echo "$PWD")"
 
 # Constants
-readonly CONFIG_DIR="$PROJECT_ROOT/services/vendor/kununu/code-tools"
+if [ -d "$PROJECT_ROOT/services/vendor/kununu/code-tools" ]; then
+  readonly CONFIG_DIR="$PROJECT_ROOT/services/vendor/kununu/code-tools"
+elif [ -d "$PROJECT_ROOT/vendor/kununu/code-tools" ]; then
+  readonly CONFIG_DIR="$PROJECT_ROOT/vendor/kununu/code-tools"
+else
+  echo "❌ Could not find 'vendor/kununu/code-tools'."
+  exit 1
+fi
+
 readonly CONFIG_FILES=(
     "dist/php-cs-fixer.php.dist"
     "dist/phpcs.xml.dist"
