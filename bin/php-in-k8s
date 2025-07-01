@@ -1,0 +1,74 @@
+#!/bin/bash
+set -euo pipefail
+
+# Documentation: https://new-work.atlassian.net/wiki/x/M4EjV
+
+if [[ "$#" -eq 0 ]]; then
+  echo "At least one argument for php runtime must be set" >&2
+  exit 1
+fi
+
+# Enable debug logging if DEBUG_PHP_IN_K8S=true
+DEBUG_PHP_IN_K8S="${DEBUG_PHP_IN_K8S:-false}"
+
+log_debug() {
+  if [[ "$DEBUG_PHP_IN_K8S" == "true" ]]; then
+    echo "[DEBUG] $*" >> /tmp/php-in-k8s.log
+  fi
+}
+
+# Fallback resolution of PROJECT_DIR
+if [[ -z "${PROJECT_DIR:-}" ]]; then
+  if [[ -n "${COMPOSER_RUNTIME_BIN_DIR:-}" ]]; then
+    log_debug "Using COMPOSER_RUNTIME_BIN_DIR as a fallback for PROJECT_DIR value extraction: ${COMPOSER_RUNTIME_BIN_DIR}"
+    PROJECT_DIR="${COMPOSER_RUNTIME_BIN_DIR%/services/vendor/bin}"
+  else
+    log_debug "Using PWD as a fallback for PROJECT_DIR: ${PWD}"
+    PROJECT_DIR="$PWD"
+  fi
+fi
+
+# Fallback resolution of K8S_APP_NAME
+if [[ -z "${K8S_APP_NAME:-}" ]]; then
+  PROJECT_NAME=$(basename "$PROJECT_DIR")
+  log_debug "Using PROJECT_DIR as a fallback for K8S_APP_NAME value extraction: $PROJECT_DIR"
+  K8S_APP_NAME="${PROJECT_NAME}-php"
+fi
+
+log_debug "Script called with arguments: $*"
+
+POD_NAME=$(kubectl -n local get pods -l app="$K8S_APP_NAME" --no-headers -o custom-columns=":metadata.name")
+log_debug "Selected pod: $POD_NAME"
+
+HOST_BASE=$PROJECT_DIR
+CONTAINER_BASE="/var/www/html"
+CONTAINER_TMP="/tmp"
+
+MODIFIED_ARGS=()
+
+for ARG in "$@"; do
+  if [[ "$ARG" == */ide-phpinfo.php && -f "$ARG" ]]; then
+    FILENAME=$(basename "$ARG")
+    DEST_PATH="$CONTAINER_TMP/$FILENAME"
+
+    log_debug "Copying PHPStorm's PHP Interpreter verification file $ARG to pod at $DEST_PATH"
+    kubectl -n local cp "$ARG" "$POD_NAME:$DEST_PATH"
+
+    MODIFIED_ARGS+=("$DEST_PATH")
+
+  elif [[ "$ARG" == "$HOST_BASE"* ]]; then
+    REL_PATH="${ARG#"$HOST_BASE"}"
+    CONTAINER_PATH="$CONTAINER_BASE$REL_PATH"
+
+    log_debug "Remapped host path $ARG to container path $CONTAINER_PATH"
+    MODIFIED_ARGS+=("$CONTAINER_PATH")
+
+  else
+    MODIFIED_ARGS+=("$ARG")
+  fi
+done
+
+log_debug "Final command: kubectl -n local -c main exec -i $POD_NAME -- secrets_env.sh php ${MODIFIED_ARGS[*]}"
+
+# Run the PHP command and replace container paths with host paths in the output
+kubectl -n local -c main exec -i "$POD_NAME" -- secrets_env.sh php "${MODIFIED_ARGS[@]}" | sed "s|$CONTAINER_BASE|$HOST_BASE|g"
