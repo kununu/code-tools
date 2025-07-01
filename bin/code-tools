@@ -8,8 +8,10 @@ PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || echo "$PWD")"
 # Constants
 if [ -d "$PROJECT_ROOT/services/vendor/kununu/code-tools" ]; then
   readonly CONFIG_DIR="$PROJECT_ROOT/services/vendor/kununu/code-tools"
+  readonly VENDOR_DIR="$PROJECT_ROOT/services/vendor"
 elif [ -d "$PROJECT_ROOT/vendor/kununu/code-tools" ]; then
   readonly CONFIG_DIR="$PROJECT_ROOT/vendor/kununu/code-tools"
+  readonly VENDOR_DIR="$PROJECT_ROOT/vendor"
 else
   echo "❌ Could not find 'vendor/kununu/code-tools'."
   exit 1
@@ -20,7 +22,7 @@ readonly CONFIG_FILES=(
     "dist/phpcs.xml.dist"
     "dist/rector.php.dist"
 )
-readonly HOOK_FILE="Kununu/CodingStandards/Hooks/git-pre-commit"
+readonly HOOK_FILE="Kununu/CS-Fixer/Hooks/git-pre-commit"
 readonly HOOK_DEST="$PROJECT_ROOT/.git/hooks/pre-commit"
 
 # Function to display help instructions
@@ -36,7 +38,7 @@ Valid tool names:
 If no tool name is passed, all config files will be copied.
 
 Options:
-  --include-hook     Also copy the git pre-commit hook to .git/hooks/pre-commit.
+  --include-hook     Also copy the git pre-commit hook and symlink php-cs-fixer to .git/kununu/.
   --help             Show this help message.
 EOF
 }
@@ -77,6 +79,25 @@ install_git_hook() {
     else
         echo "❌ Git hook file '$source_file' does not exist."
     fi
+}
+
+# Function to create symlinks inside .git/kununu/
+create_symlink_in_git() {
+    local origin="$1"
+    local link_name="$2"
+
+    local kununu_dir="$PROJECT_ROOT/.git/kununu"
+    mkdir -p "$kununu_dir"
+
+    local link_path="$kununu_dir/$link_name"
+
+    if [ -L "$link_path" ] || [ -e "$link_path" ]; then
+        echo "⚠️  Removing existing link or file: $link_path"
+        rm -rf "$link_path"
+    fi
+
+    ln -s "$origin" "$link_path"
+    echo "✅ Symlink created: $link_path -> $origin"
 }
 
 # Parse arguments
@@ -129,7 +150,14 @@ case "$tool_name" in
         ;;
 esac
 
-# Optionally install git hook
+# Optionally install git hook and symlinks
 if [ "$include_hook" == "true" ]; then
     install_git_hook
+
+    # Create symlinks in .git/kununu/
+    php_cs_fixer_config="$VENDOR_DIR/kununu/code-tools/dist/php-cs-fixer.php.dist"
+    php_cs_fixer_bin="$VENDOR_DIR/bin/php-cs-fixer"
+
+    create_symlink_in_git "$php_cs_fixer_config" ".php-cs-fixer.php"
+    create_symlink_in_git "$php_cs_fixer_bin" "php-cs-fixer"
 fi
