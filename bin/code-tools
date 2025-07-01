@@ -2,15 +2,18 @@
 
 set -euo pipefail
 
+# Resolve project root
+PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || echo "$PWD")"
+
 # Constants
-readonly CONFIG_DIR="vendor/kununu/code-tools"
+readonly CONFIG_DIR="$PROJECT_ROOT/services/vendor/kununu/code-tools"
 readonly CONFIG_FILES=(
     "dist/php-cs-fixer.php.dist"
     "dist/phpcs.xml.dist"
     "dist/rector.php.dist"
 )
-readonly HOOK_FILE="vendor/kununu/code-tools/Kununu/CodingStandards/Hooks/git-pre-commit"
-readonly HOOK_DEST=".git/hooks/pre-commit"
+readonly HOOK_FILE="Kununu/CodingStandards/Hooks/git-pre-commit"
+readonly HOOK_DEST="$PROJECT_ROOT/.git/hooks/pre-commit"
 
 # Function to display help instructions
 show_help() {
@@ -35,11 +38,12 @@ copy_config_file() {
     local source_file="$CONFIG_DIR/$1"
     local dest_file="${1#dist/}"
     dest_file="${dest_file%.dist}"
+    local dest_path="$PROJECT_ROOT/$dest_file"
 
-    if [ -f "$dest_file" ]; then
+    if [ -f "$dest_path" ]; then
         echo "⚠️  Config file '$dest_file' already exists at project level."
     elif [ -f "$source_file" ]; then
-        cp "$source_file" "$dest_file"
+        cp "$source_file" "$dest_path"
         echo "✅ Config file '$dest_file' copied to project level."
     else
         echo "❌ Config file '$source_file' does not exist."
@@ -51,7 +55,7 @@ install_git_hook() {
     local source_file="$CONFIG_DIR/$HOOK_FILE"
     local dest_file="$HOOK_DEST"
 
-    if [ ! -d ".git/hooks" ]; then
+    if [ ! -d "$PROJECT_ROOT/.git/hooks" ]; then
         echo "❌ Error: .git/hooks directory does not exist. Is this a git repository?"
         exit 1
     fi
