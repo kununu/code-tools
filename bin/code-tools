@@ -28,18 +28,16 @@ readonly HOOK_DEST="$PROJECT_ROOT/.git/hooks/pre-commit"
 # Function to display help instructions
 show_help() {
     cat <<EOF
-Usage: vendor/bin/code-tools publish:config [tool-name] [--include-hook]
+Usage: vendor/bin/code-tools publish:config [tool-name]
 
 Valid tool names:
-  coding-standards   => copies dist/php-cs-fixer.php.dist
-  code-sniffer       => copies dist/phpcs.xml.dist
-  rector             => copies dist/rector.php.dist
-
-If no tool name is passed, all config files will be copied.
+  cs-fixer-pre-commit => copies the pre-commit hook to .git/hooks/pre-commit and creates symlinks in .git/kununu/
+  cs-fixer            => copies dist/php-cs-fixer.php.dist
+  code-sniffer        => copies dist/phpcs.xml.dist
+  rector              => copies dist/rector.php.dist
 
 Options:
-  --include-hook     Also copy the git pre-commit hook and symlink php-cs-fixer to .git/kununu/.
-  --help             Show this help message.
+  --help              Show this help message.
 EOF
 }
 
@@ -81,13 +79,16 @@ install_git_hook() {
     fi
 }
 
-# Function to create symlinks inside .git/kununu/
+# Function to create symlink inside .git/kununu/
 create_symlink_in_git() {
     local origin="$1"
     local link_name="$2"
 
     local kununu_dir="$PROJECT_ROOT/.git/kununu"
-    mkdir -p "$kununu_dir"
+    if [ ! -d "$kununu_dir" ]; then
+        mkdir -p "$kununu_dir"
+        echo "✅ Created directory $kununu_dir"
+    fi
 
     local link_path="$kununu_dir/$link_name"
 
@@ -96,19 +97,23 @@ create_symlink_in_git() {
         rm -rf "$link_path"
     fi
 
-    ln -s "$origin" "$link_path"
-    echo "✅ Symlink created: $link_path -> $origin"
+    # Calculate relative path from kununu_dir to origin
+    local relative_origin
+    relative_origin=$(realpath --relative-to="$kununu_dir" "$origin")
+
+    ln -s "$relative_origin" "$link_path"
+    echo "✅ Symlink created: $link_path -> $relative_origin"
 }
 
+
 # Parse arguments
-include_hook="false"
 
 if [ "${1:-}" == "--help" ]; then
     show_help
     exit 0
 fi
 
-if [ "$#" -lt 1 ] || [ "$#" -gt 3 ]; then
+if [ "$#" -ne 2 ]; then
     show_help
     exit 1
 fi
@@ -118,23 +123,20 @@ if [ "$1" != "publish:config" ]; then
     exit 1
 fi
 
-tool_name=""
-for arg in "$@"; do
-    if [ "$arg" == "--include-hook" ]; then
-        include_hook="true"
-    elif [ "$arg" != "publish:config" ]; then
-        tool_name="$arg"
-    fi
-done
+tool_name="$2"
 
-# Handle config file copying
 case "$tool_name" in
-    "")
-        for config_file in "${CONFIG_FILES[@]}"; do
-            copy_config_file "$config_file"
-        done
+    cs-fixer-pre-commit)
+        install_git_hook
+
+        # Create symlinks as in your PHP version
+        php_cs_fixer_bin="$VENDOR_DIR/bin/php-cs-fixer"
+        php_cs_fixer_config="$VENDOR_DIR/kununu/code-tools/php-cs-fixer.php"
+
+        create_symlink_in_git "$php_cs_fixer_bin" "php-cs-fixer"
+        create_symlink_in_git "$php_cs_fixer_config" ".php-cs-fixer.php"
         ;;
-    coding-standards)
+    cs-fixer)
         copy_config_file "dist/php-cs-fixer.php.dist"
         ;;
     code-sniffer)
@@ -149,15 +151,3 @@ case "$tool_name" in
         exit 1
         ;;
 esac
-
-# Optionally install git hook and symlinks
-if [ "$include_hook" == "true" ]; then
-    install_git_hook
-
-    # Create symlinks in .git/kununu/
-    php_cs_fixer_config="$VENDOR_DIR/kununu/code-tools/dist/php-cs-fixer.php.dist"
-    php_cs_fixer_bin="$VENDOR_DIR/bin/php-cs-fixer"
-
-    create_symlink_in_git "$php_cs_fixer_config" ".php-cs-fixer.php"
-    create_symlink_in_git "$php_cs_fixer_bin" "php-cs-fixer"
-fi

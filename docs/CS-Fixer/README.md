@@ -18,6 +18,11 @@ vendor/bin/php-cs-fixer check --config=vendor/kununu/code-tools/php-cs-fixer.php
 vendor/bin/php-cs-fixer fix --config=vendor/kununu/code-tools/php-cs-fixer.php src/ tests/
 ```
 
+### Add the pre-commit hook to your project
+```console
+vendor/kununu/code-tools/bin/code-tools publish:config cs-fixer-pre-commit
+```
+
 #### Optionally you can add it to your project's composer.json
 ```json
 {
