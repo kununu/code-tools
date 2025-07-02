@@ -65,7 +65,12 @@ final class CsFixerGitHookCommand extends BaseCommand
 
     private function getGitRootPath(): ?string
     {
-        $this->ensureSafeGitDirectory(getcwd());
+        $cwd = getcwd();
+        if ($cwd === false) {
+            throw new RuntimeException('Could not determine current working directory.');
+        }
+
+        $this->ensureSafeGitDirectory($cwd);
 
         exec('git rev-parse --show-toplevel 2>/dev/null', $output, $returnVar);
 
