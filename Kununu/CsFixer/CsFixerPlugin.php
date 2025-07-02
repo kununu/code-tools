@@ -12,6 +12,7 @@ use Composer\Plugin\PluginInterface;
 use Composer\Script\ScriptEvents;
 use Kununu\CsFixer\Command\CsFixerGitHookCommand;
 use Kununu\CsFixer\Provider\CsFixerCommandProvider;
+use RuntimeException;
 use Symfony\Component\Console\Exception\ExceptionInterface;
 use Symfony\Component\Console\Input\StringInput;
 use Symfony\Component\Console\Output\StreamOutput;
@@ -57,6 +58,11 @@ final class CsFixerPlugin implements PluginInterface, EventSubscriberInterface, 
         $command->setComposer($this->composer);
         $command->setIO($this->io);
 
-        $command->run(new StringInput(''), new StreamOutput(fopen('php://stdout', 'w')));
+        $stdout = fopen('php://stdout', 'w');
+        if ($stdout === false) {
+            throw new RuntimeException('Unable to open stdout stream.');
+        }
+
+        $command->run(new StringInput(''), new StreamOutput($stdout));
     }
 }
