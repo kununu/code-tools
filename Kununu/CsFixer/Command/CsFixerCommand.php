@@ -6,11 +6,16 @@ namespace Kununu\CsFixer\Command;
 use Composer\Command\BaseCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Process\Process;
+use Throwable;
 
 final class CsFixerCommand extends BaseCommand
 {
+    public const FAILURE = 1;
+    public const SUCCESS = 0;
     private const ARGUMENT_FILES = 'files';
 
     protected function configure(): void
@@ -23,6 +28,18 @@ final class CsFixerCommand extends BaseCommand
                 self::ARGUMENT_FILES,
                 InputArgument::IS_ARRAY,
                 'Files or directories to fix'
+            )
+            ->addOption(
+                'config',
+                'c',
+                InputOption::VALUE_OPTIONAL,
+                'Path to a PHP CS Fixer config file'
+            )
+            ->addOption(
+                'extra-args',
+                null,
+                InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
+                'Additional arguments to pass to PHP CS Fixer'
             );
     }
 
@@ -31,53 +48,83 @@ final class CsFixerCommand extends BaseCommand
         $io = new SymfonyStyle($input, $output);
 
         $files = $input->getArgument(self::ARGUMENT_FILES);
+
         if (empty($files)) {
             $io->error('No files or directories were provided.');
-
-            return 1;
-        }
-
-        $vendorDir = $this->requireComposer()->getConfig()->get('vendor-dir');
-        if (!is_dir($vendorDir)) {
-            $io->error(sprintf('Vendor directory not found at "%s".', $vendorDir));
-
-            return 1;
-        }
-
-        $configPath = realpath(__DIR__ . '/../../../php-cs-fixer.php');
-        if ($configPath === false || !is_file($configPath)) {
-            $io->error('PHP CS Fixer config file not found at expected path.');
-
-            return 1;
-        }
-
-        // Escape each file argument to be safe in shell command
-        $escapedFiles = array_map('escapeshellarg', $files);
-
-        $command = sprintf(
-            '%s/bin/php-cs-fixer fix --config=%s %s',
-            escapeshellarg($vendorDir),
-            escapeshellarg($configPath),
-            implode(' ', $escapedFiles)
-        );
-
-        $io->section('Running PHP CS Fixer...');
-        exec($command, $outputExec, $exitCode);
-
-        if ($exitCode !== 0) {
-            $io->error('Errors occurred while running PHP CS Fixer.');
-            $io->writeln($outputExec);
-
             return self::FAILURE;
         }
 
-        if (!empty($outputExec)) {
-            $io->success('PHP CS Fixer completed with the following output:');
-            $io->writeln($outputExec);
-        } else {
-            $io->success('No files were affected.');
+        $vendorDir = $this->getVendorDir();
+        if ($vendorDir === null) {
+            $io->error('Could not resolve the vendor directory.');
+            return self::FAILURE;
         }
 
-        return 0;
+        $phpCsFixerBinary = $vendorDir . '/bin/php-cs-fixer';
+
+        if (!is_file($phpCsFixerBinary) || !is_executable($phpCsFixerBinary)) {
+            $io->error(sprintf(
+                'PHP CS Fixer binary not found or not executable at "%s".',
+                $phpCsFixerBinary
+            ));
+            return self::FAILURE;
+        }
+
+        $configSource = $input->getOption('config') ?: __DIR__ . '/../../../php-cs-fixer.php';
+        $configPath = realpath($configSource);
+
+        if ($configPath === false || !is_file($configPath)) {
+            $io->error(sprintf('Config file "%s" not found.', $configSource));
+            return self::FAILURE;
+        }
+
+        $io->note(sprintf('Using config file: %s', $configPath));
+
+        $fixerArgs = $input->getOption('extra-args') ?: [];
+
+        if (!empty($fixerArgs)) {
+            $io->note(sprintf(
+                'Passing additional fixer arguments: %s',
+                implode(' ', $fixerArgs)
+            ));
+        }
+
+        $process = new Process(
+            array_merge(
+                [$phpCsFixerBinary, 'fix', '--config=' . $configPath],
+                $fixerArgs,
+                $files
+            )
+        );
+
+        $process->setTimeout(null);
+
+        $io->section('Running PHP CS Fixer...');
+
+        $process->run(static fn($type, $buffer) => $io->write($buffer));
+
+        if (!$process->isSuccessful()) {
+            $io->error('PHP CS Fixer encountered errors.');
+            return self::FAILURE;
+        }
+
+        $io->success('PHP CS Fixer completed successfully.');
+
+        return self::SUCCESS;
+    }
+
+    private function getVendorDir(): ?string
+    {
+        try {
+            $vendorDir = $this->requireComposer()->getConfig()->get('vendor-dir');
+
+            if (is_dir($vendorDir)) {
+                return realpath($vendorDir) ?: $vendorDir;
+            }
+        } catch (Throwable) {}
+
+        $fallback = realpath(__DIR__ . '/../../../../../');
+
+        return is_dir($fallback) ? $fallback : null;
     }
 }

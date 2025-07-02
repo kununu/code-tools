@@ -8,117 +8,164 @@ use RuntimeException;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Process\Process;
+use Throwable;
 
 final class CsFixerGitHookCommand extends BaseCommand
 {
+    public const SUCCESS = 0;
+    public const FAILURE = 1;
+
     protected function configure(): void
     {
         $this
             ->setName('kununu:cs-fixer-git-hook')
             ->setAliases(['cs-fixer-git-hook'])
-            ->setDescription('Installs PHP CS Fixer Git Pre-Commit Hook.');
+            ->setDescription('Installs PHP CS Fixer as a Git pre-commit hook.');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
+        $io->title('Installing PHP CS Fixer Git Pre‑Commit Hook');
 
-        $io->title('Applying PHP CS Fixer Git Pre-Commit Hook');
+        try {
+            $rootPath = $this->getGitRootPath();
+            $gitPath = $rootPath . '/.git';
 
-        $rootPath = $this->getGitRootPath();
-        if (null === $rootPath) {
-            $io->error('GIT is not available or the repository root could not be determined.');
-            return 1;
+            if (!is_dir($gitPath)) {
+                throw new RuntimeException(sprintf(
+                    '.git directory not found at "%s".',
+                    $gitPath
+                ));
+            }
+
+            $this->installHook($gitPath);
+            $this->linkConfigAndBinary($gitPath);
+
+            $io->success('PHP CS Fixer Git pre‑commit hook installed successfully.');
+
+            return self::SUCCESS;
+        } catch (Throwable $e) {
+            $io->error('Installation failed: ' . $e->getMessage());
+
+            return self::FAILURE;
         }
-
-        $gitPath = sprintf('%s/.git', $rootPath);
-        if (!is_dir($gitPath)) {
-            $io->error(sprintf('GIT folder not found at "%s"', $gitPath));
-
-            return 1;
-        }
-
-        $this->addGitHook($gitPath, sprintf('%s/../Hooks/git-pre-commit', __DIR__));
-
-        // Add php-cs-fixer config to .git folder.
-        $vendorDir = is_dir(sprintf('%s/services/vendor', $rootPath))
-            ? '../../services/vendor'
-            : '../../vendor';
-
-        $this->addLinkToGitFolder(
-            $gitPath,
-            sprintf('%s/kununu/code-tools/php-cs-fixer.php', $vendorDir),
-            '.php-cs-fixer.php'
-        );
-
-        // Add php-cs-fixer binary to .git folder.
-        $this->addLinkToGitFolder(
-            $gitPath,
-            sprintf('%s/bin/php-cs-fixer', $vendorDir),
-            'php-cs-fixer'
-        );
-
-        $io->success('PHP CS Fixer Git Pre-Commit Hook successfully applied.');
-
-        return 0;
     }
 
-    private function getGitRootPath(): ?string
+    private function getGitRootPath(): string
     {
         $cwd = getcwd();
         if ($cwd === false) {
             throw new RuntimeException('Could not determine current working directory.');
         }
 
-        $this->ensureSafeGitDirectory($cwd);
+        // Mark the directory as safe
+        $process = new Process(['git', 'config', '--global', '--add', 'safe.directory', $cwd]);
+        $process->run();
 
-        exec('git rev-parse --show-toplevel 2>/dev/null', $output, $returnVar);
+        $process = new Process(['git', 'rev-parse', '--show-toplevel']);
+        $process->run();
 
-        return (0 === $returnVar && isset($output[0])) ? $output[0] : null;
+        if (!$process->isSuccessful()) {
+            throw new RuntimeException('Not a Git repository or Git not available.');
+        }
+
+        return trim($process->getOutput());
     }
 
-    private function ensureSafeGitDirectory(string $path): void
+    private function installHook(string $gitPath): void
     {
-        // Add path to safe.directory (ignore errors)
-        exec(sprintf('git config --global --add safe.directory %s 2>&1', escapeshellarg($path)));
-    }
+        $hooksDir = $gitPath . '/hooks';
+        $sourceHook = __DIR__ . '/../Hooks/git-pre-commit';
+        $destHook = $hooksDir . '/pre-commit';
 
-    private function addGitHook(string $gitPath, string $sourceFile): void
-    {
-        $hooksDir = sprintf('%s/hooks', $gitPath);
         if (!is_dir($hooksDir) && !mkdir($hooksDir, 0777, true) && !is_dir($hooksDir)) {
-            throw new RuntimeException(sprintf('Could not create hooks directory: "%s"', $hooksDir));
+            throw new RuntimeException(sprintf(
+                'Could not create hooks directory: "%s".',
+                $hooksDir
+            ));
         }
 
-        $hookPath = sprintf('%s/pre-commit', $hooksDir);
-        if (file_exists($hookPath) && !unlink($hookPath)) {
-            throw new RuntimeException(sprintf('Could not remove existing hook at: "%s"', $hookPath));
+        if (file_exists($destHook) && !unlink($destHook)) {
+            throw new RuntimeException(sprintf(
+                'Could not remove existing hook at "%s".',
+                $destHook
+            ));
         }
 
-        if (!copy($sourceFile, $hookPath)) {
-            throw new RuntimeException(sprintf('Failed to copy hook file from "%s" to "%s"', $sourceFile, $hookPath));
+        if (!copy($sourceHook, $destHook)) {
+            throw new RuntimeException(sprintf(
+                'Failed to copy hook from "%s" to "%s".',
+                $sourceHook,
+                $destHook
+            ));
         }
 
-        if (!chmod($hookPath, 0755)) {
-            throw new RuntimeException(sprintf('Failed to set executable permissions on hook: "%s"', $hookPath));
+        if (!chmod($destHook, 0755)) {
+            throw new RuntimeException(sprintf(
+                'Failed to make hook executable at "%s".',
+                $destHook
+            ));
         }
     }
 
-    private function addLinkToGitFolder(string $gitPath, string $target, string $linkName): void
+    private function linkConfigAndBinary(string $gitPath): void
     {
-        $kununuDir = sprintf('%s/kununu', $gitPath);
-        if (!is_dir($kununuDir) && !mkdir($kununuDir, 0777, true) && !is_dir($kununuDir)) {
-            throw new RuntimeException(sprintf('Could not create kununu folder: "%s"', $kununuDir));
+        $vendorDir = $this->resolveVendorDir($gitPath);
+
+        $this->ensureSymlink(
+            $vendorDir . '/kununu/code-tools/php-cs-fixer.php',
+            $gitPath . '/kununu/.php-cs-fixer.php'
+        );
+
+        $this->ensureSymlink(
+            $vendorDir . '/bin/php-cs-fixer',
+            $gitPath . '/kununu/php-cs-fixer'
+        );
+    }
+
+    private function resolveVendorDir(string $rootGitPath): string
+    {
+        $projectRoot = dirname($rootGitPath);
+        $primary = $projectRoot . '/vendor';
+        $alt = $projectRoot . '/services/vendor';
+
+        if (is_dir($alt)) {
+            return realpath($alt) ?: $alt;
         }
 
-        $linkPath = sprintf('%s/%s', $kununuDir, $linkName);
+        if (is_dir($primary)) {
+            return realpath($primary) ?: $primary;
+        }
+
+        throw new RuntimeException('Could not find vendor directory in project root.');
+    }
+
+    private function ensureSymlink(string $target, string $linkPath): void
+    {
+        $linkDir = dirname($linkPath);
+
+        if (!is_dir($linkDir) && !mkdir($linkDir, 0777, true) && !is_dir($linkDir)) {
+            throw new RuntimeException(sprintf(
+                'Could not create directory for symlink: "%s".',
+                $linkDir
+            ));
+        }
 
         if (is_link($linkPath) && !unlink($linkPath)) {
-            throw new RuntimeException(sprintf('Could not remove existing symlink: "%s"', $linkPath));
+            throw new RuntimeException(sprintf(
+                'Could not remove existing symlink: "%s".',
+                $linkPath
+            ));
         }
 
         if (!symlink($target, $linkPath)) {
-            throw new RuntimeException(sprintf('Failed to create symlink from "%s" to "%s"', $linkPath, $target));
+            throw new RuntimeException(sprintf(
+                'Failed to create symlink from "%s" to "%s".',
+                $linkPath,
+                $target
+            ));
         }
     }
 }
