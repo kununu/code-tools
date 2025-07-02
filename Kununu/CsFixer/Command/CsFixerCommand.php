@@ -46,7 +46,7 @@ final class CsFixerCommand extends BaseCommand
 
         $configPath = realpath(__DIR__ . '/../../../php-cs-fixer.php');
         if ($configPath === false || !is_file($configPath)) {
-            $io->error(sprintf('PHP CS Fixer config file not found at expected path.'));
+            $io->error('PHP CS Fixer config file not found at expected path.');
 
             return 1;
         }
