@@ -34,34 +34,37 @@ final class CsFixerCommand extends BaseCommand
         if (empty($files)) {
             $io->error('No files or directories were provided.');
 
-            return self::FAILURE;
+            return 1;
         }
 
         $vendorDir = $this->requireComposer()->getConfig()->get('vendor-dir');
         if (!is_dir($vendorDir)) {
-            $io->error(sprintf('Vendor directory not found at "%s"', $vendorDir));
+            $io->error(sprintf('Vendor directory not found at "%s".', $vendorDir));
 
-            return self::FAILURE;
+            return 1;
         }
 
-        $configPath = sprintf('%s/../Scripts/php_cs', __DIR__);
-        if (!file_exists($configPath)) {
-            $io->error(sprintf('PHP CS Fixer config file not found at "%s"', $configPath));
+        $configPath = realpath(__DIR__ . '/../../../php-cs-fixer.php');
+        if ($configPath === false || !is_file($configPath)) {
+            $io->error(sprintf('PHP CS Fixer config file not found at expected path.'));
 
-            return self::FAILURE;
+            return 1;
         }
+
+        // Escape each file argument to be safe in shell command
+        $escapedFiles = array_map('escapeshellarg', $files);
 
         $command = sprintf(
             '%s/bin/php-cs-fixer fix --config=%s %s',
-            $vendorDir,
-            $configPath,
-            implode(' ', $files)
+            escapeshellarg($vendorDir),
+            escapeshellarg($configPath),
+            implode(' ', $escapedFiles)
         );
 
         $io->section('Running PHP CS Fixer...');
         exec($command, $outputExec, $exitCode);
 
-        if (0 !== $exitCode) {
+        if ($exitCode !== 0) {
             $io->error('Errors occurred while running PHP CS Fixer.');
             $io->writeln($outputExec);
 
@@ -75,6 +78,6 @@ final class CsFixerCommand extends BaseCommand
             $io->success('No files were affected.');
         }
 
-        return self::SUCCESS;
+        return 0;
     }
 }

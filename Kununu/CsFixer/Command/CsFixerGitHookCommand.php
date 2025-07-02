@@ -28,15 +28,14 @@ final class CsFixerGitHookCommand extends BaseCommand
         $rootPath = $this->getGitRootPath();
         if (null === $rootPath) {
             $io->error('GIT is not available or the repository root could not be determined.');
-
-            return self::FAILURE;
+            return 1;
         }
 
         $gitPath = sprintf('%s/.git', $rootPath);
         if (!is_dir($gitPath)) {
             $io->error(sprintf('GIT folder not found at "%s"', $gitPath));
 
-            return self::FAILURE;
+            return 1;
         }
 
         $this->addGitHook($gitPath, sprintf('%s/../Hooks/git-pre-commit', __DIR__));
@@ -59,16 +58,24 @@ final class CsFixerGitHookCommand extends BaseCommand
             'php-cs-fixer'
         );
 
-        $io->success('Git Hook successfully applied.');
+        $io->success('PHP CS Fixer Git Pre-Commit Hook successfully applied.');
 
-        return self::SUCCESS;
+        return 0;
     }
 
     private function getGitRootPath(): ?string
     {
+        $this->ensureSafeGitDirectory(getcwd());
+
         exec('git rev-parse --show-toplevel 2>/dev/null', $output, $returnVar);
 
         return (0 === $returnVar && isset($output[0])) ? $output[0] : null;
+    }
+
+    private function ensureSafeGitDirectory(string $path): void
+    {
+        // Add path to safe.directory (ignore errors)
+        exec(sprintf('git config --global --add safe.directory %s 2>&1', escapeshellarg($path)));
     }
 
     private function addGitHook(string $gitPath, string $sourceFile): void
@@ -96,7 +103,7 @@ final class CsFixerGitHookCommand extends BaseCommand
     {
         $kununuDir = sprintf('%s/kununu', $gitPath);
         if (!is_dir($kununuDir) && !mkdir($kununuDir, 0777, true) && !is_dir($kununuDir)) {
-            throw new RuntimeException(sprintf('Could not create Kununu folder: "%s"', $kununuDir));
+            throw new RuntimeException(sprintf('Could not create kununu folder: "%s"', $kununuDir));
         }
 
         $linkPath = sprintf('%s/%s', $kununuDir, $linkName);
