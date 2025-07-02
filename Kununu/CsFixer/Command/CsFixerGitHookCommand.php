@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Kununu\CsFixer\Command;
 
 use Composer\Command\BaseCommand;
+use RuntimeException;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -74,20 +75,20 @@ final class CsFixerGitHookCommand extends BaseCommand
     {
         $hooksDir = sprintf('%s/hooks', $gitPath);
         if (!is_dir($hooksDir) && !mkdir($hooksDir, 0777, true) && !is_dir($hooksDir)) {
-            throw new \RuntimeException(sprintf('Could not create hooks directory: "%s"', $hooksDir));
+            throw new RuntimeException(sprintf('Could not create hooks directory: "%s"', $hooksDir));
         }
 
         $hookPath = sprintf('%s/pre-commit', $hooksDir);
         if (file_exists($hookPath) && !unlink($hookPath)) {
-            throw new \RuntimeException(sprintf('Could not remove existing hook at: "%s"', $hookPath));
+            throw new RuntimeException(sprintf('Could not remove existing hook at: "%s"', $hookPath));
         }
 
         if (!copy($sourceFile, $hookPath)) {
-            throw new \RuntimeException(sprintf('Failed to copy hook file from "%s" to "%s"', $sourceFile, $hookPath));
+            throw new RuntimeException(sprintf('Failed to copy hook file from "%s" to "%s"', $sourceFile, $hookPath));
         }
 
         if (!chmod($hookPath, 0755)) {
-            throw new \RuntimeException(sprintf('Failed to set executable permissions on hook: "%s"', $hookPath));
+            throw new RuntimeException(sprintf('Failed to set executable permissions on hook: "%s"', $hookPath));
         }
     }
 
@@ -95,17 +96,17 @@ final class CsFixerGitHookCommand extends BaseCommand
     {
         $kununuDir = sprintf('%s/kununu', $gitPath);
         if (!is_dir($kununuDir) && !mkdir($kununuDir, 0777, true) && !is_dir($kununuDir)) {
-            throw new \RuntimeException(sprintf('Could not create Kununu folder: "%s"', $kununuDir));
+            throw new RuntimeException(sprintf('Could not create Kununu folder: "%s"', $kununuDir));
         }
 
         $linkPath = sprintf('%s/%s', $kununuDir, $linkName);
 
         if (is_link($linkPath) && !unlink($linkPath)) {
-            throw new \RuntimeException(sprintf('Could not remove existing symlink: "%s"', $linkPath));
+            throw new RuntimeException(sprintf('Could not remove existing symlink: "%s"', $linkPath));
         }
 
         if (!symlink($target, $linkPath)) {
-            throw new \RuntimeException(sprintf('Failed to create symlink from "%s" to "%s"', $linkPath, $target));
+            throw new RuntimeException(sprintf('Failed to create symlink from "%s" to "%s"', $linkPath, $target));
         }
     }
 }

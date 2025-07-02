@@ -12,6 +12,7 @@ use Composer\Plugin\PluginInterface;
 use Composer\Script\ScriptEvents;
 use Kununu\CsFixer\Command\CsFixerGitHookCommand;
 use Kununu\CsFixer\Provider\CsFixerCommandProvider;
+use Symfony\Component\Console\Exception\ExceptionInterface;
 use Symfony\Component\Console\Input\StringInput;
 use Symfony\Component\Console\Output\StreamOutput;
 
@@ -49,6 +50,7 @@ final class CsFixerPlugin implements PluginInterface, EventSubscriberInterface, 
         ];
     }
 
+    /** @throws ExceptionInterface */
     public function addCsFixerGitHooks(): void
     {
         $command = new CsFixerGitHookCommand();
