@@ -16,7 +16,10 @@ final class CsFixerCommand extends BaseCommand
 {
     public const FAILURE = 1;
     public const SUCCESS = 0;
+
     private const ARGUMENT_FILES = 'files';
+    private const OPTION_CONFIG = 'config';
+    private const OPTION_EXTRA_ARGS = 'extra-args';
 
     protected function configure(): void
     {
@@ -30,13 +33,13 @@ final class CsFixerCommand extends BaseCommand
                 'Files or directories to fix'
             )
             ->addOption(
-                'config',
+                self::OPTION_CONFIG,
                 'c',
                 InputOption::VALUE_OPTIONAL,
                 'Path to a PHP CS Fixer config file'
             )
             ->addOption(
-                'extra-args',
+                self::OPTION_EXTRA_ARGS,
                 null,
                 InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
                 'Additional arguments to pass to PHP CS Fixer'
@@ -70,7 +73,7 @@ final class CsFixerCommand extends BaseCommand
             return self::FAILURE;
         }
 
-        $configSource = $input->getOption('config') ?: __DIR__ . '/../../../php-cs-fixer.php';
+        $configSource = $input->getOption(self::OPTION_CONFIG) ?: __DIR__ . '/../../../php-cs-fixer.php';
         $configPath = realpath($configSource);
 
         if ($configPath === false || !is_file($configPath)) {
@@ -80,7 +83,7 @@ final class CsFixerCommand extends BaseCommand
 
         $io->note(sprintf('Using config file: %s', $configPath));
 
-        $fixerArgs = $input->getOption('extra-args') ?: [];
+        $fixerArgs = $input->getOption(self::OPTION_EXTRA_ARGS) ?: [];
 
         if (!empty($fixerArgs)) {
             $io->note(sprintf(
