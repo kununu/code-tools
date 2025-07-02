@@ -22,8 +22,6 @@ readonly CONFIG_FILES=(
     "dist/phpcs.xml.dist"
     "dist/rector.php.dist"
 )
-readonly HOOK_FILE="Kununu/CS-Fixer/Hooks/git-pre-commit"
-readonly HOOK_DEST="$PROJECT_ROOT/.git/hooks/pre-commit"
 
 # Function to display help instructions
 show_help() {
@@ -31,13 +29,12 @@ show_help() {
 Usage: vendor/bin/code-tools publish:config [tool-name]
 
 Valid tool names:
-  cs-fixer-pre-commit => copies the pre-commit hook to .git/hooks/pre-commit and creates symlinks in .git/kununu/
-  cs-fixer            => copies dist/php-cs-fixer.php.dist
-  code-sniffer        => copies dist/phpcs.xml.dist
-  rector              => copies dist/rector.php.dist
+  cs-fixer     => copies dist/php-cs-fixer.php.dist
+  code-sniffer => copies dist/phpcs.xml.dist
+  rector       => copies dist/rector.php.dist
 
 Options:
-  --help              Show this help message.
+  --help       Show this help message.
 EOF
 }
 
@@ -58,56 +55,7 @@ copy_config_file() {
     fi
 }
 
-# Function to install the git pre-commit hook
-install_git_hook() {
-    local source_file="$CONFIG_DIR/$HOOK_FILE"
-    local dest_file="$HOOK_DEST"
-
-    if [ ! -d "$PROJECT_ROOT/.git/hooks" ]; then
-        echo "❌ Error: .git/hooks directory does not exist. Is this a git repository?"
-        exit 1
-    fi
-
-    if [ -f "$dest_file" ]; then
-        echo "⚠️  A pre-commit hook already exists at $dest_file."
-    elif [ -f "$source_file" ]; then
-        cp "$source_file" "$dest_file"
-        chmod +x "$dest_file"
-        echo "✅ Git pre-commit hook installed to $dest_file."
-    else
-        echo "❌ Git hook file '$source_file' does not exist."
-    fi
-}
-
-# Function to create symlink inside .git/kununu/
-create_symlink_in_git() {
-    local origin="$1"
-    local link_name="$2"
-
-    local kununu_dir="$PROJECT_ROOT/.git/kununu"
-    if [ ! -d "$kununu_dir" ]; then
-        mkdir -p "$kununu_dir"
-        echo "✅ Created directory $kununu_dir"
-    fi
-
-    local link_path="$kununu_dir/$link_name"
-
-    if [ -L "$link_path" ] || [ -e "$link_path" ]; then
-        echo "⚠️  Removing existing link or file: $link_path"
-        rm -rf "$link_path"
-    fi
-
-    # Calculate relative path from kununu_dir to origin
-    local relative_origin
-    relative_origin=$(realpath --relative-to="$kununu_dir" "$origin")
-
-    ln -s "$relative_origin" "$link_path"
-    echo "✅ Symlink created: $link_path -> $relative_origin"
-}
-
-
 # Parse arguments
-
 if [ "${1:-}" == "--help" ]; then
     show_help
     exit 0
@@ -126,16 +74,6 @@ fi
 tool_name="$2"
 
 case "$tool_name" in
-    cs-fixer-pre-commit)
-        install_git_hook
-
-        # Create symlinks as in your PHP version
-        php_cs_fixer_bin="$VENDOR_DIR/bin/php-cs-fixer"
-        php_cs_fixer_config="$VENDOR_DIR/kununu/code-tools/php-cs-fixer.php"
-
-        create_symlink_in_git "$php_cs_fixer_bin" "php-cs-fixer"
-        create_symlink_in_git "$php_cs_fixer_config" ".php-cs-fixer.php"
-        ;;
     cs-fixer)
         copy_config_file "dist/php-cs-fixer.php.dist"
         ;;

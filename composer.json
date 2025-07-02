@@ -1,7 +1,7 @@
 {
     "name": "kununu/code-tools",
     "description": "Code Tools",
-    "type": "library",
+    "type": "composer-plugin",
     "license": "MIT",
     "authors": [
         {
@@ -11,6 +11,7 @@
     ],
     "require": {
         "php": ">=8.1",
+        "composer-plugin-api": "^2.0",
         "composer/composer": "^2.8",
         "friendsofphp/php-cs-fixer": "^3.75",
         "rector/rector": "^2.0",
@@ -36,6 +37,9 @@
     "config": {
         "sort-packages": true,
         "process-timeout": 900
+    },
+    "extra": {
+        "class": "Kununu\\CsFixer\\CsFixerPlugin"
     },
     "scripts": {
         "test-unit": "phpunit",
