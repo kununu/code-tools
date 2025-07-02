@@ -1,34 +1,22 @@
-# `PHP-CS-Fixer` usage
+# PHP CS Fixer
 
-## Table of Contents
-- [Out of the box usage](#out-of-the-box-usage)
+## Commands
+### `kununu:cs-fixer`
+- Runs PHP CS Fixer on the specified directories or files using the default config.
+  - Example: 
+    - `composer kununu:cs-fixer src/ tests/`
+- Runs PHP CS Fixer with a **custom config** file.
+  - Example: 
+    - `composer kununu:cs-fixer --config=/var/www/html/services/vendor/kununu/code-tools/php-cs-fixer.php src/ tests/`
 
+### `kununu:cs-fixer-git-hook`
+- Installs the Kununu pre-commit Git hook for coding standards enforcement
+  - Run:
+    - `composer kununu:cs-fixer-git-hook`
 
-## Out of the box usage
-- It will check the PHP Coding Standards issues for the `src` and `tests` directories.
-- The `--config=vendor/kununu/code-tools/php-cs-fixer.php` flag is used to specify the config to be used.
+## Pre-commit hook
+Since this project is a _composer-plugin_, the composer `kununu:cs-fixer-git-hook` command is automatically applied during install or update.
 
-### Analyze and detect violations
-```console
-vendor/bin/php-cs-fixer check --config=vendor/kununu/code-tools/php-cs-fixer.php src/ tests/
-```
-
-### Automatically fix violations
-```console
-vendor/bin/php-cs-fixer fix --config=vendor/kununu/code-tools/php-cs-fixer.php src/ tests/
-```
-
-### Add the pre-commit hook to your project
-```console
-vendor/kununu/code-tools/bin/code-tools publish:config cs-fixer-pre-commit
-```
-
-#### Optionally you can add it to your project's composer.json
-```json
-{
-    "scripts": {
-        "cs-fixer-check": "php-cs-fixer check --config=vendor/kununu/code-tools/php-cs-fixer.php src/ tests/",
-        "cs-fixer-fix": "php-cs-fixer fix --config=vendor/kununu/code-tools/php-cs-fixer.php src/ tests/"
-    }
-}
-```
+## Rules and Configuration
+- PHP CS Fixer configuration rules can be found [here](https://cs.symfony.com/doc/rules/index.html).
+- Kununu coding standards rules are located [here](../../php-cs-fixer.php).
