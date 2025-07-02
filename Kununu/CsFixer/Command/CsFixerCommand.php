@@ -121,13 +121,17 @@ final class CsFixerCommand extends BaseCommand
         try {
             $vendorDir = $this->requireComposer()->getConfig()->get('vendor-dir');
 
-            if (is_dir($vendorDir)) {
-                return realpath($vendorDir) ?: $vendorDir;
+            if (is_string($vendorDir) && is_dir($vendorDir)) {
+                $realPath = realpath($vendorDir);
+                return $realPath !== false ? $realPath : $vendorDir;
             }
         } catch (Throwable) {}
 
         $fallback = realpath(__DIR__ . '/../../../../../');
+        if ($fallback !== false && is_dir($fallback)) {
+            return $fallback;
+        }
 
-        return is_dir($fallback) ? $fallback : null;
+        return null;
     }
 }
