@@ -8,10 +8,10 @@ PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || echo "$PWD")"
 # Constants
 if [ -d "$PROJECT_ROOT/services/vendor/kununu/code-tools" ]; then
   readonly CONFIG_DIR="$PROJECT_ROOT/services/vendor/kununu/code-tools"
-  readonly VENDOR_DIR="$PROJECT_ROOT/services/vendor"
 elif [ -d "$PROJECT_ROOT/vendor/kununu/code-tools" ]; then
   readonly CONFIG_DIR="$PROJECT_ROOT/vendor/kununu/code-tools"
-  readonly VENDOR_DIR="$PROJECT_ROOT/vendor"
+elif [ -d "$PROJECT_ROOT" ]; then
+  readonly CONFIG_DIR="$PROJECT_ROOT"
 else
   echo "❌ Could not find 'vendor/kununu/code-tools'."
   exit 1
@@ -21,6 +21,7 @@ readonly CONFIG_FILES=(
     "dist/php-cs-fixer.php.dist"
     "dist/phpcs.xml.dist"
     "dist/rector.php.dist"
+    "dist/.editorconfig.dist"
 )
 
 # Function to display help instructions
@@ -32,9 +33,7 @@ Valid tool names:
   cs-fixer     => copies dist/php-cs-fixer.php.dist
   code-sniffer => copies dist/phpcs.xml.dist
   rector       => copies dist/rector.php.dist
-
-Options:
-  --help       Show this help message.
+  editorconfig => copies dist/.editorconfig.dist
 EOF
 }
 
@@ -82,6 +81,9 @@ case "$tool_name" in
         ;;
     rector)
         copy_config_file "dist/rector.php.dist"
+        ;;
+    editorconfig)
+        copy_config_file "dist/.editorconfig.dist"
         ;;
     *)
         echo "❌ Invalid tool name: '$tool_name'"
