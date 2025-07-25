@@ -45,6 +45,7 @@ CONTAINER_BASE="/var/www/html"
 CONTAINER_TMP="/tmp"
 
 MODIFIED_ARGS=()
+PHPSTORM_FILE_PATHS=()
 
 for ARG in "$@"; do
   if [[ "$ARG" == */ide-phpinfo.php && -f "$ARG" ]]; then
@@ -65,6 +66,12 @@ for ARG in "$@"; do
 
   else
     MODIFIED_ARGS+=("$ARG")
+
+    # Detect PHPStorm IDE file destination path
+    if [[ "$ARG" == *PhpStorm* ]]; then
+      PHPSTORM_FILE_PATHS+=("$ARG")
+      log_debug "Detected PHPStorm file: $ARG"
+    fi
   fi
 done
 
@@ -72,3 +79,10 @@ log_debug "Final command: kubectl -n local -c main exec -i $POD_NAME -- secrets_
 
 # Run the PHP command and replace container paths with host paths in the output
 kubectl -n local -c main exec -i "$POD_NAME" -- secrets_env.sh php "${MODIFIED_ARGS[@]}" | sed "s|$CONTAINER_BASE|$HOST_BASE|g"
+
+if [[ ${#PHPSTORM_FILE_PATHS[@]:-0} -gt 0 ]]; then
+  for file_path in "${PHPSTORM_FILE_PATHS[@]}"; do
+    log_debug "Copying file generated for PHPStorm back from pod: $POD_NAME:$file_path -> $file_path"
+    kubectl -n local -c main cp "$POD_NAME:$file_path" "$file_path"
+  done
+fi
