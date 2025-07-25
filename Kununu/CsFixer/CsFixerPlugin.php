@@ -10,6 +10,7 @@ use Composer\Plugin\Capability\CommandProvider;
 use Composer\Plugin\Capable;
 use Composer\Plugin\PluginInterface;
 use Composer\Script\ScriptEvents;
+use Kununu\CsFixer\Command\CsFixerConfigCommand;
 use Kununu\CsFixer\Command\CsFixerGitHookCommand;
 use Kununu\CsFixer\Provider\CsFixerCommandProvider;
 use RuntimeException;
@@ -25,8 +26,14 @@ final class CsFixerPlugin implements PluginInterface, EventSubscriberInterface, 
     public static function getSubscribedEvents(): array
     {
         return [
-            ScriptEvents::POST_INSTALL_CMD => 'addCsFixerGitHooks',
-            ScriptEvents::POST_UPDATE_CMD  => 'addCsFixerGitHooks',
+            ScriptEvents::POST_INSTALL_CMD => [
+                'addCsFixerConfig',
+                'addCsFixerGitHooks',
+            ],
+            ScriptEvents::POST_UPDATE_CMD  => [
+                'addCsFixerConfig',
+                'addCsFixerGitHooks',
+            ],
         ];
     }
 
@@ -49,6 +56,21 @@ final class CsFixerPlugin implements PluginInterface, EventSubscriberInterface, 
         return [
             CommandProvider::class => CsFixerCommandProvider::class,
         ];
+    }
+
+    /** @throws ExceptionInterface */
+    public function addCsFixerConfig(): void
+    {
+        $command = new CsFixerConfigCommand();
+        $command->setComposer($this->composer);
+        $command->setIO($this->io);
+
+        $stdout = fopen('php://stdout', 'w');
+        if ($stdout === false) {
+            throw new RuntimeException('Unable to open stdout stream.');
+        }
+
+        $command->run(new StringInput(''), new StreamOutput($stdout));
     }
 
     /** @throws ExceptionInterface */

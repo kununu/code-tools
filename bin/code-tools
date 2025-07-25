@@ -5,13 +5,13 @@ set -euo pipefail
 # Resolve project root
 PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || echo "$PWD")"
 
-# Constants
+# Detect config directory and base path (folder above vendor)
 if [ -d "$PROJECT_ROOT/services/vendor/kununu/code-tools" ]; then
   readonly CONFIG_DIR="$PROJECT_ROOT/services/vendor/kununu/code-tools"
+  readonly BASE_PATH="$PROJECT_ROOT/services"
 elif [ -d "$PROJECT_ROOT/vendor/kununu/code-tools" ]; then
   readonly CONFIG_DIR="$PROJECT_ROOT/vendor/kununu/code-tools"
-elif [ -d "$PROJECT_ROOT" ]; then
-  readonly CONFIG_DIR="$PROJECT_ROOT"
+  readonly BASE_PATH="$PROJECT_ROOT"
 else
   echo "❌ Could not find 'vendor/kununu/code-tools'."
   exit 1
@@ -24,7 +24,6 @@ readonly CONFIG_FILES=(
     "dist/.editorconfig.dist"
 )
 
-# Function to display help instructions
 show_help() {
     cat <<EOF
 Usage: vendor/bin/code-tools publish:config [tool-name]
@@ -37,24 +36,23 @@ Valid tool names:
 EOF
 }
 
-# Function to copy a config file
 copy_config_file() {
     local source_file="$CONFIG_DIR/$1"
     local dest_file="${1#dist/}"
     dest_file="${dest_file%.dist}"
-    local dest_path="$PROJECT_ROOT/$dest_file"
+    local dest_path="$BASE_PATH/$dest_file"
 
     if [ -f "$dest_path" ]; then
-        echo "⚠️  Config file '$dest_file' already exists at project level."
+        echo "⚠️  Config file '$dest_file' already exists at base path."
     elif [ -f "$source_file" ]; then
+        mkdir -p "$(dirname "$dest_path")"
         cp "$source_file" "$dest_path"
-        echo "✅ Config file '$dest_file' copied to project level."
+        echo "✅ Config file '$dest_file' copied to base path."
     else
         echo "❌ Config file '$source_file' does not exist."
     fi
 }
 
-# Parse arguments
 if [ "${1:-}" == "--help" ]; then
     show_help
     exit 0
