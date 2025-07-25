@@ -114,12 +114,12 @@ final class CsFixerGitHookCommand extends BaseCommand
     {
         $vendorDir = $this->resolveVendorDir($gitPath);
 
-        $this->ensureSymlink(
+        $this->ensureSymlinkRelative(
             $vendorDir . '/kununu/code-tools/php-cs-fixer.php',
             $gitPath . '/kununu/.php-cs-fixer.php'
         );
 
-        $this->ensureSymlink(
+        $this->ensureSymlinkRelative(
             $vendorDir . '/bin/php-cs-fixer',
             $gitPath . '/kununu/php-cs-fixer'
         );
@@ -142,7 +142,7 @@ final class CsFixerGitHookCommand extends BaseCommand
         throw new RuntimeException('Could not find vendor directory in project root.');
     }
 
-    private function ensureSymlink(string $target, string $linkPath): void
+    private function ensureSymlinkRelative(string $target, string $linkPath): void
     {
         $linkDir = dirname($linkPath);
 
@@ -153,19 +153,31 @@ final class CsFixerGitHookCommand extends BaseCommand
             ));
         }
 
-        if (is_link($linkPath) && !unlink($linkPath)) {
-            throw new RuntimeException(sprintf(
-                'Could not remove existing symlink: "%s".',
-                $linkPath
-            ));
+        if (is_link($linkPath) || file_exists($linkPath)) {
+            unlink($linkPath);
         }
 
-        if (!symlink($target, $linkPath)) {
+        $relativeTarget = $this->makeRelativePath($linkDir, $target);
+
+        if (!symlink($relativeTarget, $linkPath)) {
             throw new RuntimeException(sprintf(
                 'Failed to create symlink from "%s" to "%s".',
                 $linkPath,
-                $target
+                $relativeTarget
             ));
         }
+    }
+
+    private function makeRelativePath(string $from, string $to): string
+    {
+        $from = explode(DIRECTORY_SEPARATOR, realpath($from));
+        $to = explode(DIRECTORY_SEPARATOR, realpath($to));
+
+        while (count($from) && count($to) && ($from[0] === $to[0])) {
+            array_shift($from);
+            array_shift($to);
+        }
+
+        return str_repeat('../', count($from)) . implode('/', $to);
     }
 }
