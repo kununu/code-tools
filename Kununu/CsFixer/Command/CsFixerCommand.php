@@ -54,12 +54,14 @@ final class CsFixerCommand extends BaseCommand
 
         if (empty($files)) {
             $io->error('No files or directories were provided.');
+
             return self::FAILURE;
         }
 
         $vendorDir = $this->getVendorDir();
         if ($vendorDir === null) {
             $io->error('Could not resolve the vendor directory.');
+
             return self::FAILURE;
         }
 
@@ -70,6 +72,7 @@ final class CsFixerCommand extends BaseCommand
                 'PHP CS Fixer binary not found or not executable at "%s".',
                 $phpCsFixerBinary
             ));
+
             return self::FAILURE;
         }
 
@@ -78,6 +81,7 @@ final class CsFixerCommand extends BaseCommand
 
         if ($configPath === false || !is_file($configPath)) {
             $io->error(sprintf('Config file "%s" not found.', $configSource));
+
             return self::FAILURE;
         }
 
@@ -108,6 +112,7 @@ final class CsFixerCommand extends BaseCommand
 
         if (!$process->isSuccessful()) {
             $io->error('PHP CS Fixer encountered errors.');
+
             return self::FAILURE;
         }
 
@@ -123,9 +128,11 @@ final class CsFixerCommand extends BaseCommand
 
             if (is_string($vendorDir) && is_dir($vendorDir)) {
                 $realPath = realpath($vendorDir);
+
                 return $realPath !== false ? $realPath : $vendorDir;
             }
-        } catch (Throwable) {}
+        } catch (Throwable) {
+        }
 
         $fallback = realpath(__DIR__ . '/../../../../../');
         if ($fallback !== false && is_dir($fallback)) {

@@ -12,7 +12,7 @@ class Fixme
     public function signatureArgumentsShouldBeMultiLine(
         string $firstArgument,
         string $secondArgument,
-        string $thirdArgument
+        string $thirdArgument,
     ): void {
     }
 }
