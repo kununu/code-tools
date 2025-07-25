@@ -3,10 +3,10 @@
 ## Commands
 ### `kununu:cs-fixer`
 - Runs PHP CS Fixer on the specified directories or files using the default config.
-  - Example: 
+  - Example:
     - `composer kununu:cs-fixer src/ tests/`
 - Runs PHP CS Fixer with a **custom config** file.
-  - Example: 
+  - Example:
     - `composer kununu:cs-fixer --config=/var/www/html/services/vendor/kununu/code-tools/php-cs-fixer.php src/ tests/`
 
 ### `kununu:cs-fixer-git-hook`

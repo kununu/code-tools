@@ -4,10 +4,17 @@
 
 # code-tools
 
-- This repository contains code tools you can use in your project.  
+- This repository contains code tools you can use in your project.
 - It is a collection of tools and scripts that help us to maintain our codebase.
 
 ## Tools
+### `.editorconfig`
+- EditorConfig helps maintain consistent coding styles for multiple developers working on the same project across various editors and IDEs. The EditorConfig project consists of a file format for defining coding styles and a collection of text editor plugins that enable editors to read the file format and adhere to defined styles. EditorConfig files are easily readable and they work nicely with version control systems.
+- Learn more about `.editorconfig` at official page [here](https://editorconfig.org/).
+
+### `PHP-CS-Fixer`
+- This project uses **PHP-CS-Fixer** to automatically format and fix PHP code according to defined coding standards. It helps maintain clean, consistent, and readable code across the codebase.
+
 ### `PHP_CodeSniffer`
 - PHP_CodeSniffer is a set of two PHP scripts; the main `phpcs` script that tokenizes PHP, JavaScript and CSS files to detect violations of a defined coding standard, and a second `phpcbf` script to automatically correct coding standard violations. PHP_CodeSniffer is an essential development tool that ensures your code remains clean and consistent.
 - Though the usage of this tool is not mandatory, it is highly recommended to use it to ensure the quality of the codebase.
@@ -49,6 +56,8 @@ composer require --dev kununu/code-tools --no-plugins
 - The `--no-plugins` is used to avoid the composer plugins to be executed and prevent generating unwanted configuration files, specially in projects with `symfony/flex` installed.
 
 ## Usage
+- [.editorconfig](docs/EditorConfig/README.md) instructions.
+- [PHP-CS-Fixer](docs/CsFixer/README.md) instructions.
 - [PHP_CodeSniffer](docs/CodeSniffer/README.md) instructions.
 - [Rector](docs/Rector/README.md) instructions.
 - [bin/code-tools](docs/CodeTools/README.md) instructions.
