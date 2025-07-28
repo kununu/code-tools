@@ -6,7 +6,7 @@ namespace Kununu;
 class Fixme
 {
     public function signatureArgumentsShouldBeSingleLine(
-        string $foo,
+        string $foo
     ): void {
     }
 

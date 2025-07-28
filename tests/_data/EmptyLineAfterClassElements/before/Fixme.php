@@ -12,7 +12,6 @@ class Fixme
     private const string SECOND = 'second';
     protected string $propertyOne;
     private readonly int $propertyTwo;
-
     public function __invoke(string $token): void
     {
         try {
