@@ -6,24 +6,21 @@ namespace Kununu\ArchitectureSniffer;
 use InvalidArgumentException;
 use JsonException;
 use Kununu\ArchitectureSniffer\Configuration\Layer;
-use Kununu\ArchitectureSniffer\Configuration\Rules\Rule;
-use Kununu\ArchitectureSniffer\Configuration\SubLayer;
 use PHPat\Test\Builder\Rule as PHPatRule;
 
 final class ArchitectureSniffer
 {
     /**
+     * @throws JsonException
+     *
      * @return iterable<PHPatRule>
      */
     public function testArchitecture(): iterable
     {
         $archDefinition = DirectoryFinder::getArchitectureDefinition();
         $layers = $this->validateArchitectureDefinition($archDefinition);
-        /** @var Layer $layer */
         foreach ($layers as $layer) {
-            /** @var SubLayer $subLayer */
             foreach ($layer->subLayers as $subLayer) {
-                /** @var Rule $rule */
                 foreach ($subLayer->rules as $rule) {
                     yield $rule->getPHPatRule();
                 }
