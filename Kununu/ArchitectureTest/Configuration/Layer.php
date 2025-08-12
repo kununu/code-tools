@@ -3,8 +3,10 @@ declare(strict_types=1);
 
 namespace Kununu\ArchitectureTest\Configuration;
 
+use Exception;
+use InvalidArgumentException;
+use JsonException;
 use Kununu\ArchitectureTest\Configuration\Selector\Selectable;
-use Symfony\Component\Validator\Constraints as Assert;
 
 final readonly class Layer
 {
@@ -17,12 +19,16 @@ final readonly class Layer
     ) {
     }
 
+    /**
+     * @throws JsonException
+     * @throws Exception
+     */
     public static function fromArray(array $data): self
     {
         $selector = Selectors::findSelector($data);
 
         if (empty($data[self::KEY])) {
-            throw new \InvalidArgumentException('Layer name is missing.');
+            throw new InvalidArgumentException('Layer name is missing.');
         }
 
         return new self(
@@ -30,7 +36,7 @@ final readonly class Layer
             selector: $selector,
             subLayers: array_key_exists(SubLayer::KEY, $data) ?
                 array_map(
-                    fn (array $subLayer) => SubLayer::fromArray($subLayer),
+                    static fn(array $subLayer) => SubLayer::fromArray($subLayer),
                     $data[SubLayer::KEY],
                 ) : [],
         );

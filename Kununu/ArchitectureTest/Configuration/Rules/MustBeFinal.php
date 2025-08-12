@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Kununu\ArchitectureTest\Configuration\Rules;
 
+use InvalidArgumentException;
 use Kununu\ArchitectureTest\Configuration\Selector\InterfaceClassSelector;
 use Kununu\ArchitectureTest\Configuration\Selector\Selectable;
 use PHPat\Selector\Selector;
@@ -14,14 +15,14 @@ final readonly class MustBeFinal implements Rule
     public const string KEY = 'final';
 
     public function __construct(
-        public ?Selectable $selector
+        public ?Selectable $selector,
     ) {
     }
 
     public static function fromArray(Selectable $selector): self
     {
         if ($selector instanceof InterfaceClassSelector) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'The class must not be an interface.'
             );
         }

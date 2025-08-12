@@ -8,13 +8,13 @@ use PhpParser\Node\Stmt\Namespace_;
 use PHPStan\Analyser\Scope;
 use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
+use PHPStan\ShouldNotHappenException;
 
 final class FollowsFolderStructureRule implements Rule
 {
     public function __construct(
         private array $architectureLayers = [],
         private array $deprecatedLayers = [],
-
     ) {
         $archDefinition = DirectoryFinder::getArchitectureDefinition();
 
@@ -32,6 +32,9 @@ final class FollowsFolderStructureRule implements Rule
         return Namespace_::class;
     }
 
+    /**
+     * @throws ShouldNotHappenException
+     */
     public function processNode(Node $node, Scope $scope): array
     {
         $directories = array_merge($this->architectureLayers, $this->deprecatedLayers);

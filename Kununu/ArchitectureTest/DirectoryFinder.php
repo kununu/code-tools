@@ -3,7 +3,8 @@ declare(strict_types=1);
 
 namespace Kununu\ArchitectureTest;
 
-use Symfony\Component\Yaml\Yaml;
+use InvalidArgumentException;
+use RectorPrefix202507\Symfony\Component\Yaml\Yaml;
 
 final readonly class DirectoryFinder
 {

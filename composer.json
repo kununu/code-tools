@@ -10,13 +10,14 @@
         }
     ],
     "require": {
-        "php": ">=8.1",
+        "php": ">=8.3",
+        "phpat/phpat": "^0.11.4",
+        "phpstan/phpstan": "^2.1",
         "composer-plugin-api": "^2.0",
         "composer/composer": "^2.8",
         "friendsofphp/php-cs-fixer": "^3.75",
         "rector/rector": "^2.0",
-        "squizlabs/php_codesniffer": "^3.10",
-        "phpat/phpat": "^0.11.4"
+        "squizlabs/php_codesniffer": "^3.10"
     },
     "require-dev": {
         "kununu/scripts": "^5.1",
