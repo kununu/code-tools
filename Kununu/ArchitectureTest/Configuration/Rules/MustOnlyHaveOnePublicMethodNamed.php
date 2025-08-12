@@ -9,6 +9,7 @@ use PHPat\Test\PHPat;
 final readonly class MustOnlyHaveOnePublicMethodNamed implements Rule
 {
     public const string KEY = 'only-one-public-method-named';
+
     public function __construct(
         public Selectable $selector,
         public string $functionName,
