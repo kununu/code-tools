@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Kununu\ArchitectureTest\Configuration\Rules;
 
+use InvalidArgumentException;
+use JsonException;
 use Kununu\ArchitectureTest\Configuration\Selector\InterfaceClassSelector;
 use Kununu\ArchitectureTest\Configuration\Selector\Selectable;
 use Kununu\ArchitectureTest\Configuration\Selectors;
@@ -20,13 +22,16 @@ final readonly class MustImplement implements Rule
     ) {
     }
 
+    /**
+     * @throws JsonException
+     */
     public static function fromArray(Selectable $selector, array $data): self
     {
         $interfaces = [];
         foreach ($data as $interface) {
             $interfaceSelector = Selectors::findSelector($interface);
             if (!$interfaceSelector instanceof InterfaceClassSelector) {
-                throw new \InvalidArgumentException(
+                throw new InvalidArgumentException(
                     "The {$interfaceSelector->getName()} must be declared as interface."
                 );
             }
@@ -39,7 +44,7 @@ final readonly class MustImplement implements Rule
     public function getPHPatRule(): \PHPat\Test\Builder\Rule
     {
         $interfacesString = implode(', ', array_map(
-            static fn (Selectable $interface): string => $interface->getName(),
+            static fn(Selectable $interface): string => $interface->getName(),
             $this->interfaces
         ));
 
@@ -51,7 +56,7 @@ final readonly class MustImplement implements Rule
             ->shouldImplement()
             ->classes(
                 ...array_map(
-                    static fn (Selectable $interface): SelectorInterface => $interface->getPHPatSelector(),
+                    static fn(Selectable $interface): SelectorInterface => $interface->getPHPatSelector(),
                     $this->interfaces
                 )
             )

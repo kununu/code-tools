@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Kununu\ArchitectureTest\Configuration\Rules;
 
+use JsonException;
 use Kununu\ArchitectureTest\Configuration\Selector\Selectable;
 use Kununu\ArchitectureTest\Configuration\Selectors;
 use PHPat\Selector\Selector;
@@ -14,10 +15,13 @@ final readonly class MustOnlyDependOnWhitelist implements Rule
 
     public function __construct(
         public Selectable $selector,
-        public array      $dependencyWhitelist,
+        public array $dependencyWhitelist,
     ) {
     }
 
+    /**
+     * @throws JsonException
+     */
     public static function fromArray(Selectable $selector, array $data): self
     {
         $dependencies = [];
@@ -32,12 +36,12 @@ final readonly class MustOnlyDependOnWhitelist implements Rule
     public function getPHPatRule(): \PHPat\Test\Builder\Rule
     {
         $dependentsString = implode(', ', array_map(
-            static fn (Selectable $dependency): string => $dependency->getName(),
+            static fn(Selectable $dependency): string => $dependency->getName(),
             $this->dependencyWhitelist
         ));
 
         $selectors = array_map(
-            static fn (Selectable $dependency) => $dependency->getPHPatSelector(),
+            static fn(Selectable $dependency) => $dependency->getPHPatSelector(),
             $this->dependencyWhitelist
         );
         $selectors[] = Selector::classname('/^\\\\*[^\\\\]+$/', true);
