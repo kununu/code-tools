@@ -5,6 +5,7 @@ namespace Kununu\ArchitectureTest\Configuration;
 
 use Exception;
 use InvalidArgumentException;
+use JsonException;
 use Kununu\ArchitectureTest\Configuration\Rules\MustBeFinal;
 use Kununu\ArchitectureTest\Configuration\Rules\MustExtend;
 use Kununu\ArchitectureTest\Configuration\Rules\MustImplement;
@@ -24,7 +25,11 @@ final readonly class SubLayer
     ) {
     }
 
-    public static function fromArray(array $subLayer)
+    /**
+     * @throws JsonException
+     * @throws Exception
+     */
+    public static function fromArray(array $subLayer): SubLayer
     {
         $rules = [];
         $selector = Selectors::findSelector($subLayer);
@@ -44,7 +49,7 @@ final readonly class SubLayer
             };
         }
 
-        if (!isset($name) || empty($name)) {
+        if (empty($name)) {
             throw new InvalidArgumentException('Missing name for sub layer');
         }
 
