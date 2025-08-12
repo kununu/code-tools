@@ -1,15 +1,15 @@
 <?php
 declare(strict_types=1);
 
-namespace Kununu\ArchitectureTest;
+namespace Kununu\ArchitectureSniffer;
 
-use Kununu\ArchitectureTest\Configuration\Layer;
-use Kununu\ArchitectureTest\Configuration\Rules\Rule;
-use Kununu\ArchitectureTest\Configuration\SubLayer;
+use Kununu\ArchitectureSniffer\Configuration\Layer;
+use Kununu\ArchitectureSniffer\Configuration\Rules\Rule;
+use Kununu\ArchitectureSniffer\Configuration\SubLayer;
 use InvalidArgumentException;
 use PHPat\Test\Builder\Rule as PHPatRule;
 
-final class ArchitectureTest
+final class ArchitectureSniffer
 {
     /**
      * @return iterable<PHPatRule>
@@ -30,6 +30,9 @@ final class ArchitectureTest
         }
     }
 
+    /**
+     * @throws \JsonException
+     */
     private function validateArchitectureDefinition(array $architectureDefinition): array
     {
         if (!array_key_exists('architecture', $architectureDefinition)) {

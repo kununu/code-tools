@@ -1,14 +1,14 @@
 <?php
 declare(strict_types=1);
 
-namespace Kununu\ArchitectureTest\Configuration;
+namespace Kununu\ArchitectureSniffer\Configuration;
 
 use InvalidArgumentException;
 use JsonException;
-use Kununu\ArchitectureTest\Configuration\Selector\ClassSelector;
-use Kununu\ArchitectureTest\Configuration\Selector\InterfaceClassSelector;
-use Kununu\ArchitectureTest\Configuration\Selector\NamespaceSelector;
-use Kununu\ArchitectureTest\Configuration\Selector\Selectable;
+use Kununu\ArchitectureSniffer\Configuration\Selector\ClassSelector;
+use Kununu\ArchitectureSniffer\Configuration\Selector\InterfaceClassSelector;
+use Kununu\ArchitectureSniffer\Configuration\Selector\NamespaceSelector;
+use Kununu\ArchitectureSniffer\Configuration\Selector\Selectable;
 
 enum Selectors: string
 {

@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace Kununu\ArchitectureTest\Configuration\Rules;
+namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 
 use InvalidArgumentException;
-use Kununu\ArchitectureTest\Configuration\Selector\InterfaceClassSelector;
-use Kununu\ArchitectureTest\Configuration\Selector\Selectable;
+use Kununu\ArchitectureSniffer\Configuration\Selector\InterfaceClassSelector;
+use Kununu\ArchitectureSniffer\Configuration\Selector\Selectable;
 use PHPat\Selector\Selector;
 use PHPat\Test\Builder\Rule as PHPatRule;
 use PHPat\Test\PHPat;

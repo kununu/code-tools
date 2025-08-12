@@ -27,11 +27,11 @@ parameters:
     ...
 
 services:
-    - class: Kununu\ArchitectureTest\FollowsFolderStructureRule
+    - class: Kununu\ArchitectureSniffer\FollowsFolderStructureRule
       tags:
         - phpstan.rules.rule
 
-    - class: Kununu\ArchitectureTest\ArchitectureTest
+    - class: Kununu\ArchitectureSniffer\ArchitectureSniffer
       tags:
         - phpat.test
 ```

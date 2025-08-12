@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Kununu\ArchitectureTest\Configuration\Rules;
+namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 
 interface Rule
 {

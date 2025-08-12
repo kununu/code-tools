@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Kununu\ArchitectureTest\Configuration\Selector;
+namespace Kununu\ArchitectureSniffer\Configuration\Selector;
 
 trait RegexTrait
 {

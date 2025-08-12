@@ -1,17 +1,17 @@
 <?php
 declare(strict_types=1);
 
-namespace Kununu\ArchitectureTest\Configuration;
+namespace Kununu\ArchitectureSniffer\Configuration;
 
 use Exception;
 use InvalidArgumentException;
 use JsonException;
-use Kununu\ArchitectureTest\Configuration\Rules\MustBeFinal;
-use Kununu\ArchitectureTest\Configuration\Rules\MustExtend;
-use Kununu\ArchitectureTest\Configuration\Rules\MustImplement;
-use Kununu\ArchitectureTest\Configuration\Rules\MustOnlyDependOnWhitelist;
-use Kununu\ArchitectureTest\Configuration\Rules\MustOnlyHaveOnePublicMethodNamed;
-use Kununu\ArchitectureTest\Configuration\Selector\Selectable;
+use Kununu\ArchitectureSniffer\Configuration\Rules\MustBeFinal;
+use Kununu\ArchitectureSniffer\Configuration\Rules\MustExtend;
+use Kununu\ArchitectureSniffer\Configuration\Rules\MustImplement;
+use Kununu\ArchitectureSniffer\Configuration\Rules\MustOnlyDependOnWhitelist;
+use Kununu\ArchitectureSniffer\Configuration\Rules\MustOnlyHaveOnePublicMethodNamed;
+use Kununu\ArchitectureSniffer\Configuration\Selector\Selectable;
 
 final readonly class SubLayer
 {
@@ -43,8 +43,14 @@ final readonly class SubLayer
                     $rules[] = MustBeFinal::fromArray($selector),
                 MustExtend::KEY                       => $rules[] = MustExtend::fromArray($selector, $item),
                 MustImplement::KEY                    => $rules[] = MustImplement::fromArray($selector, $item),
-                MustOnlyDependOnWhitelist::KEY        => $rules[] = MustOnlyDependOnWhitelist::fromArray($selector, $item),
-                MustOnlyHaveOnePublicMethodNamed::KEY => $rules[] = MustOnlyHaveOnePublicMethodNamed::fromArray($selector, $item),
+                MustOnlyDependOnWhitelist::KEY        => $rules[] = MustOnlyDependOnWhitelist::fromArray(
+                    $selector,
+                    $item
+                ),
+                MustOnlyHaveOnePublicMethodNamed::KEY => $rules[] = MustOnlyHaveOnePublicMethodNamed::fromArray(
+                    $selector,
+                    $item
+                ),
                 default                               => throw new Exception("Unknown key: $key"),
             };
         }

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Kununu\ArchitectureTest;
+namespace Kununu\ArchitectureSniffer;
 
 use PhpParser\Node;
 use PhpParser\Node\Stmt\Namespace_;
