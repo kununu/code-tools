@@ -13,10 +13,8 @@ final readonly class ClassSelector implements Selectable
 
     public const string KEY = 'class';
 
-    public function __construct(
-        public string $name,
-        public string $class,
-    ) {
+    public function __construct(public string $name, public string $class)
+    {
     }
 
     public function getPHPatSelector(): SelectorInterface
