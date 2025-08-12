@@ -7,11 +7,19 @@ use PhpParser\Node;
 use PhpParser\Node\Stmt\Namespace_;
 use PHPStan\Analyser\Scope;
 use PHPStan\Rules\Rule;
+use PHPStan\Rules\RuleError;
 use PHPStan\Rules\RuleErrorBuilder;
 use PHPStan\ShouldNotHappenException;
 
+/**
+ * @implements Rule<Node>
+ */
 final class FollowsFolderStructureRule implements Rule
 {
+    /**
+     * @param array<int, mixed> $architectureLayers
+     * @param array<int, mixed> $deprecatedLayers
+     */
     public function __construct(
         private array $architectureLayers = [],
         private array $deprecatedLayers = [],
@@ -34,13 +42,23 @@ final class FollowsFolderStructureRule implements Rule
 
     /**
      * @throws ShouldNotHappenException
+     *
+     * @return RuleError[]
      */
     public function processNode(Node $node, Scope $scope): array
     {
         $directories = array_merge($this->architectureLayers, $this->deprecatedLayers);
         $basePath = DirectoryFinder::getProjectDirectory() . '/src';
 
-        $actualDirectories = array_filter(glob($basePath . '/*'), 'is_dir');
+        $directory = glob($basePath . '/*');
+
+        if ($directory === false) {
+            return [
+                RuleErrorBuilder::message("Directory does not exist $basePath/*")->build(),
+            ];
+        }
+
+        $actualDirectories = array_filter($directory, 'is_dir');
         $actualNames = array_map('basename', $actualDirectories);
 
         // Check for extra directories

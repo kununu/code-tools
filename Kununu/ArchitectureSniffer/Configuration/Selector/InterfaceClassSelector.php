@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Kununu\ArchitectureSniffer\Configuration\Selector;
 
+use InvalidArgumentException;
 use PHPat\Selector\Selector;
 use PHPat\Selector\SelectorInterface;
 
@@ -14,16 +15,20 @@ final readonly class InterfaceClassSelector implements Selectable
 
     public function __construct(
         public string $name,
-        public string $namespace,
+        public string $interface,
     ) {
     }
 
     public function getPHPatSelector(): SelectorInterface
     {
-        $namespace = $this->makeRegex($this->namespace);
+        $interface = $this->makeRegex($this->interface);
+
+        if (empty($interface)) {
+            throw new InvalidArgumentException('Interface definition should not be an empty string.');
+        }
 
         return Selector::AllOf(
-            Selector::classname($namespace, $namespace !== $this->namespace),
+            Selector::classname($interface, $interface !== $this->interface),
             Selector::isInterface(),
         );
     }

@@ -14,7 +14,7 @@ final readonly class MustBeFinal implements Rule
 {
     public const string KEY = 'final';
 
-    public function __construct(public ?Selectable $selector)
+    public function __construct(public Selectable $selector)
     {
     }
 

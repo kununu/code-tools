@@ -13,6 +13,9 @@ final readonly class MustOnlyDependOnWhitelist implements Rule
 {
     public const string KEY = 'dependency-whitelist';
 
+    /**
+     * @param Selectable[] $dependencyWhitelist
+     */
     public function __construct(
         public Selectable $selector,
         public array $dependencyWhitelist,
@@ -20,6 +23,8 @@ final readonly class MustOnlyDependOnWhitelist implements Rule
     }
 
     /**
+     * @param array<string, mixed> $data
+     *
      * @throws JsonException
      */
     public static function fromArray(Selectable $selector, array $data): self
