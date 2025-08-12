@@ -11,6 +11,7 @@ use Kununu\ArchitectureSniffer\Configuration\Rules\MustExtend;
 use Kununu\ArchitectureSniffer\Configuration\Rules\MustImplement;
 use Kununu\ArchitectureSniffer\Configuration\Rules\MustOnlyDependOnWhitelist;
 use Kununu\ArchitectureSniffer\Configuration\Rules\MustOnlyHaveOnePublicMethodNamed;
+use Kununu\ArchitectureSniffer\Configuration\Rules\Rule;
 use Kununu\ArchitectureSniffer\Configuration\Selector\Selectable;
 
 final readonly class SubLayer
@@ -18,6 +19,9 @@ final readonly class SubLayer
     public const string KEY = 'sub-layers';
     public const string NAME_KEY = 'name';
 
+    /**
+     * @param Rule[] $rules
+     */
     public function __construct(
         public string $name,
         public Selectable $selector,
@@ -26,6 +30,8 @@ final readonly class SubLayer
     }
 
     /**
+     * @param array<string, mixed> $subLayer
+     *
      * @throws JsonException
      * @throws Exception
      */

@@ -16,6 +16,9 @@ final readonly class MustImplement implements Rule
 {
     public const string KEY = 'implements';
 
+    /**
+     * @param InterfaceClassSelector[] $interfaces
+     */
     public function __construct(
         public Selectable $selector,
         public array $interfaces,
@@ -23,6 +26,8 @@ final readonly class MustImplement implements Rule
     }
 
     /**
+     * @param array<string, mixed> $data
+     *
      * @throws JsonException
      */
     public static function fromArray(Selectable $selector, array $data): self

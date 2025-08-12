@@ -3,10 +3,11 @@ declare(strict_types=1);
 
 namespace Kununu\ArchitectureSniffer;
 
+use InvalidArgumentException;
+use JsonException;
 use Kununu\ArchitectureSniffer\Configuration\Layer;
 use Kununu\ArchitectureSniffer\Configuration\Rules\Rule;
 use Kununu\ArchitectureSniffer\Configuration\SubLayer;
-use InvalidArgumentException;
 use PHPat\Test\Builder\Rule as PHPatRule;
 
 final class ArchitectureSniffer
@@ -31,7 +32,11 @@ final class ArchitectureSniffer
     }
 
     /**
-     * @throws \JsonException
+     * @param array<string, mixed> $architectureDefinition
+     *
+     * @throws JsonException
+     *
+     * @return Layer[]
      */
     private function validateArchitectureDefinition(array $architectureDefinition): array
     {
@@ -46,5 +51,4 @@ final class ArchitectureSniffer
 
         return $layers;
     }
-
 }

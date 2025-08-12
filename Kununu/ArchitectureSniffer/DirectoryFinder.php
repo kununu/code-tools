@@ -4,12 +4,15 @@ declare(strict_types=1);
 namespace Kununu\ArchitectureSniffer;
 
 use InvalidArgumentException;
-use RectorPrefix202507\Symfony\Component\Yaml\Yaml;
+use Symfony\Component\Yaml\Yaml;
 
 final readonly class DirectoryFinder
 {
     private const string ARCHITECTURE_DEFINITION_FILE = '/arch_definition.yaml';
 
+    /**
+     * @return array<string, mixed>
+     */
     public static function getArchitectureDefinition(): array
     {
         $filePath = self::getArchitectureDefinitionFile();

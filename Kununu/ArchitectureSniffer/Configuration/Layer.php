@@ -12,6 +12,9 @@ final readonly class Layer
 {
     public const string KEY = 'layer';
 
+    /**
+     * @param SubLayer[] $subLayers
+     */
     public function __construct(
         public string $name,
         public Selectable $selector,
@@ -20,6 +23,8 @@ final readonly class Layer
     }
 
     /**
+     * @param array<string, mixed> $data
+     *
      * @throws JsonException
      * @throws Exception
      */

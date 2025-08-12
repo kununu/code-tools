@@ -21,6 +21,8 @@ final readonly class MustExtend implements Rule
     }
 
     /**
+     * @param array<string, mixed> $data
+     *
      * @throws JsonException
      */
     public static function fromArray(Selectable $selector, array $data): self

@@ -16,6 +16,9 @@ enum Selectors: string
     case InterfaceSelector = InterfaceClassSelector::KEY;
     case NamespaceSelector = NamespaceSelector::KEY;
 
+    /**
+     * @return string[]
+     */
     public static function getValidTypes(): array
     {
         return [
@@ -26,13 +29,15 @@ enum Selectors: string
     }
 
     /**
+     * @param array<string, string> $data
+     *
      * @throws JsonException
      */
     public static function findSelector(array $data, ?string $nameKey = null): Selectable
     {
         foreach (self::getValidTypes() as $type) {
             if (array_key_exists($type, $data)) {
-                return self::createSelector($type, $data[$nameKey ?? $type], $data[$type]);
+                return self::createSelector(self::from($type), $data[$nameKey ?? $type], $data[$type]);
             }
         }
 
@@ -40,12 +45,12 @@ enum Selectors: string
             'Missing selector in data ' . json_encode($data, JSON_THROW_ON_ERROR));
     }
 
-    private static function createSelector(string $type, string $name, string $selection): Selectable
+    private static function createSelector(self $type, string $name, string $selection): Selectable
     {
         return match ($type) {
-            self::ClassSelector->value     => new ClassSelector($name, $selection),
-            self::InterfaceSelector->value => new InterfaceClassSelector($name, $selection),
-            self::NamespaceSelector->value => new NamespaceSelector($name, $selection),
+            self::ClassSelector     => new ClassSelector($name, $selection),
+            self::InterfaceSelector => new InterfaceClassSelector($name, $selection),
+            self::NamespaceSelector => new NamespaceSelector($name, $selection),
         };
     }
 }
