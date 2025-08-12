@@ -1,16 +1,16 @@
 <?php
 declare(strict_types=1);
 
-namespace Kununu\ArchitectureTest\Configuration\Selector;
+namespace Kununu\ArchitectureSniffer\Configuration\Selector;
 
 use PHPat\Selector\Selector;
 use PHPat\Selector\SelectorInterface;
 
-final readonly class ClassSelector implements Selectable
+final readonly class InterfaceClassSelector implements Selectable
 {
     use RegexTrait;
 
-    public const string KEY = 'class';
+    public const string KEY = 'interface';
 
     public function __construct(
         public string $name,
@@ -22,7 +22,10 @@ final readonly class ClassSelector implements Selectable
     {
         $namespace = $this->makeRegex($this->namespace);
 
-        return Selector::classname($namespace, $namespace !== $this->namespace);
+        return Selector::AllOf(
+            Selector::classname($namespace, $namespace !== $this->namespace),
+            Selector::isInterface(),
+        );
     }
 
     public function getName(): string

@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-namespace Kununu\ArchitectureTest\Configuration\Rules;
+namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 
 use InvalidArgumentException;
 use JsonException;
-use Kununu\ArchitectureTest\Configuration\Selector\InterfaceClassSelector;
-use Kununu\ArchitectureTest\Configuration\Selector\Selectable;
-use Kununu\ArchitectureTest\Configuration\Selectors;
+use Kununu\ArchitectureSniffer\Configuration\Selector\InterfaceClassSelector;
+use Kununu\ArchitectureSniffer\Configuration\Selector\Selectable;
+use Kununu\ArchitectureSniffer\Configuration\Selectors;
 use PHPat\Test\PHPat;
 
 final readonly class MustExtend implements Rule

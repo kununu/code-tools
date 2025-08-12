@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Kununu\ArchitectureTest;
+namespace Kununu\ArchitectureSniffer;
 
 use InvalidArgumentException;
 use RectorPrefix202507\Symfony\Component\Yaml\Yaml;
@@ -16,7 +16,7 @@ final readonly class DirectoryFinder
 
         if (!file_exists($filePath)) {
             throw new InvalidArgumentException(
-                'ArchitectureTest definition file not found, please create it at ' . $filePath
+                'ArchitectureSniffer definition file not found, please create it at ' . $filePath
             );
         }
 

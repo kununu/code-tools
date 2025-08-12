@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace Kununu\ArchitectureTest\Configuration;
+namespace Kununu\ArchitectureSniffer\Configuration;
 
 use Exception;
 use InvalidArgumentException;
 use JsonException;
-use Kununu\ArchitectureTest\Configuration\Selector\Selectable;
+use Kununu\ArchitectureSniffer\Configuration\Selector\Selectable;
 
 final readonly class Layer
 {

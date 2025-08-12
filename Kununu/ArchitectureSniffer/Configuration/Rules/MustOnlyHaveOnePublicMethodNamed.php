@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Kununu\ArchitectureTest\Configuration\Rules;
+namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 
-use Kununu\ArchitectureTest\Configuration\Selector\Selectable;
+use Kununu\ArchitectureSniffer\Configuration\Selector\Selectable;
 use PHPat\Test\PHPat;
 
 final readonly class MustOnlyHaveOnePublicMethodNamed implements Rule
