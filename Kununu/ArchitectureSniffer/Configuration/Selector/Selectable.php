@@ -9,5 +9,5 @@ interface Selectable
 {
     public function getPHPatSelector(): SelectorInterface;
 
-    public function getName(): string;
+    public function getDefinition(): string;
 }

@@ -3,49 +3,32 @@ declare(strict_types=1);
 
 namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 
+use Generator;
 use InvalidArgumentException;
-use JsonException;
 use Kununu\ArchitectureSniffer\Configuration\Selector\InterfaceClassSelector;
-use Kununu\ArchitectureSniffer\Configuration\Selector\Selectable;
-use Kununu\ArchitectureSniffer\Configuration\Selectors;
 use PHPat\Test\PHPat;
 
-final readonly class MustExtend implements Rule
+final readonly class MustExtend extends AbstractRule
 {
     public const string KEY = 'extends';
 
     public function __construct(
-        public Selectable $selector,
-        public Selectable $parent,
+        public Generator $extensions,
+        public Generator $selectables,
     ) {
-    }
-
-    /**
-     * @param array<string, mixed> $data
-     *
-     * @throws JsonException
-     */
-    public static function fromArray(Selectable $selector, array $data): self
-    {
-        $parent = Selectors::findSelector($data);
-
-        if ($parent instanceof InterfaceClassSelector) {
+        if ($this->extensions instanceof InterfaceClassSelector) {
             throw new InvalidArgumentException(
-                'The parent class must not be an interface.'
+                'Classes can not extend interfaces.'
             );
         }
-
-        return new self($selector, $parent);
     }
 
-    public function getPHPatRule(): \PHPat\Test\Builder\Rule
+    public function getPHPatRule(string $groupName): \PHPat\Test\Builder\Rule
     {
         return PHPat::rule()
-            ->classes($this->selector->getPHPatSelector())
+            ->classes(...$this->getPHPSelectors($this->selectables))
             ->shouldExtend()
-            ->classes(
-                $this->parent->getPHPatSelector()
-            )
-            ->because("{$this->selector->getName()} should extend {$this->parent->getName()}.");
+            ->classes(...$this->getPHPSelectors($this->extensions))
+            ->because("$groupName should extend class.");
     }
 }

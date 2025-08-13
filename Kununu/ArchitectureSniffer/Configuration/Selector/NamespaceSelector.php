@@ -11,10 +11,7 @@ final readonly class NamespaceSelector implements Selectable
 {
     use RegexTrait;
 
-    public const string KEY = 'namespace';
-
     public function __construct(
-        public string $name,
         public string $namespace,
     ) {
     }
@@ -30,8 +27,8 @@ final readonly class NamespaceSelector implements Selectable
         return Selector::inNamespace($namespace, $namespace !== $this->namespace);
     }
 
-    public function getName(): string
+    public function getDefinition(): string
     {
-        return $this->name;
+        return $this->namespace;
     }
 }

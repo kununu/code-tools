@@ -9,7 +9,7 @@ use JsonException;
 use Kununu\ArchitectureSniffer\Configuration\Rules\MustBeFinal;
 use Kununu\ArchitectureSniffer\Configuration\Rules\MustExtend;
 use Kununu\ArchitectureSniffer\Configuration\Rules\MustImplement;
-use Kununu\ArchitectureSniffer\Configuration\Rules\MustOnlyDependOnWhitelist;
+use Kununu\ArchitectureSniffer\Configuration\Rules\MustOnlyDependOn;
 use Kununu\ArchitectureSniffer\Configuration\Rules\MustOnlyHaveOnePublicMethodNamed;
 use Kununu\ArchitectureSniffer\Configuration\Rules\Rule;
 use Kununu\ArchitectureSniffer\Configuration\Selector\Selectable;
@@ -49,7 +49,7 @@ final readonly class SubLayer
                     $rules[] = MustBeFinal::fromArray($selector),
                 MustExtend::KEY                       => $rules[] = MustExtend::fromArray($selector, $item),
                 MustImplement::KEY                    => $rules[] = MustImplement::fromArray($selector, $item),
-                MustOnlyDependOnWhitelist::KEY        => $rules[] = MustOnlyDependOnWhitelist::fromArray(
+                MustOnlyDependOn::KEY                 => $rules[] = MustOnlyDependOn::fromArray(
                     $selector,
                     $item
                 ),

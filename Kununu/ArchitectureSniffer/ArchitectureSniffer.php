@@ -3,49 +3,31 @@ declare(strict_types=1);
 
 namespace Kununu\ArchitectureSniffer;
 
-use InvalidArgumentException;
-use JsonException;
-use Kununu\ArchitectureSniffer\Configuration\Layer;
+use Kununu\ArchitectureSniffer\Helper\ProjectPathResolver;
 use PHPat\Test\Builder\Rule as PHPatRule;
+use Symfony\Component\Yaml\Yaml;
 
 final class ArchitectureSniffer
 {
+    private const string ARCHITECTURE_FILENAME = 'architecture.yaml';
+
     /**
-     * @throws JsonException
-     *
      * @return iterable<PHPatRule>
      */
     public function testArchitecture(): iterable
     {
-        $archDefinition = DirectoryFinder::getArchitectureDefinition();
-        $layers = $this->validateArchitectureDefinition($archDefinition);
-        foreach ($layers as $layer) {
-            foreach ($layer->subLayers as $subLayer) {
-                foreach ($subLayer->rules as $rule) {
-                    yield $rule->getPHPatRule();
-                }
+        $architecture = $this->getArchitecture();
+        foreach ($architecture->getGroups() as $group) {
+            foreach ($group->getRules() as $rule) {
+                yield $rule;
             }
         }
     }
 
-    /**
-     * @param array<string, mixed> $architectureDefinition
-     *
-     * @throws JsonException
-     *
-     * @return Layer[]
-     */
-    private function validateArchitectureDefinition(array $architectureDefinition): array
+    private function getArchitecture(): Architecture
     {
-        if (!array_key_exists('architecture', $architectureDefinition)) {
-            throw new InvalidArgumentException('Invalid architecture definition, missing architecture key');
-        }
-
-        $layers = [];
-        foreach ($architectureDefinition['architecture'] as $layer) {
-            $layers[] = Layer::fromArray($layer);
-        }
-
-        return $layers;
+        return Architecture::fromArray(
+            Yaml::parseFile(ProjectPathResolver::resolve(self::ARCHITECTURE_FILENAME))
+        );
     }
 }

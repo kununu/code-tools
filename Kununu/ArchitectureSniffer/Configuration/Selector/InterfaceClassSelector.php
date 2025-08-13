@@ -11,10 +11,7 @@ final readonly class InterfaceClassSelector implements Selectable
 {
     use RegexTrait;
 
-    public const string KEY = 'interface';
-
     public function __construct(
-        public string $name,
         public string $interface,
     ) {
     }
@@ -33,8 +30,8 @@ final readonly class InterfaceClassSelector implements Selectable
         );
     }
 
-    public function getName(): string
+    public function getDefinition(): string
     {
-        return $this->name;
+        return $this->interface;
     }
 }

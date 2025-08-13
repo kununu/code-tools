@@ -3,29 +3,24 @@ declare(strict_types=1);
 
 namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 
-use Kununu\ArchitectureSniffer\Configuration\Selector\Selectable;
+use Generator;
 use PHPat\Test\PHPat;
 
-final readonly class MustOnlyHaveOnePublicMethodNamed implements Rule
+final readonly class MustOnlyHaveOnePublicMethodNamed extends AbstractRule
 {
     public const string KEY = 'only-one-public-method-named';
 
     public function __construct(
-        public Selectable $selector,
+        public Generator $selectables,
         public string $functionName,
     ) {
     }
 
-    public static function fromArray(Selectable $base, string $functionName): self
-    {
-        return new self($base, $functionName);
-    }
-
-    public function getPHPatRule(): \PHPat\Test\Builder\Rule
+    public function getPHPatRule(string $groupName): \PHPat\Test\Builder\Rule
     {
         return PHPat::rule()
-            ->classes($this->selector->getPHPatSelector())
+            ->classes(...$this->getPHPSelectors($this->selectables))
             ->shouldHaveOnlyOnePublicMethodNamed($this->functionName)
-            ->because("{$this->selector->getName()} should only have one public method named $this->functionName.");
+            ->because("$groupName should only have one public method named $this->functionName.");
     }
 }

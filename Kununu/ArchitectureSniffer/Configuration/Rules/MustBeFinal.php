@@ -3,38 +3,32 @@ declare(strict_types=1);
 
 namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 
+use Generator;
 use InvalidArgumentException;
-use Kununu\ArchitectureSniffer\Configuration\Selector\InterfaceClassSelector;
-use Kununu\ArchitectureSniffer\Configuration\Selector\Selectable;
+use Kununu\ArchitectureSniffer\Configuration\Selector\ClassSelector;
 use PHPat\Selector\Selector;
 use PHPat\Test\Builder\Rule as PHPatRule;
 use PHPat\Test\PHPat;
 
-final readonly class MustBeFinal implements Rule
+final readonly class MustBeFinal extends AbstractRule
 {
-    public const string KEY = 'final';
-
-    public function __construct(public Selectable $selector)
+    public function __construct(public Generator $selectables)
     {
-    }
-
-    public static function fromArray(Selectable $selector): self
-    {
-        if ($selector instanceof InterfaceClassSelector) {
-            throw new InvalidArgumentException(
-                'The class must not be an interface.'
-            );
+        foreach ($this->selectables as $selectable) {
+            if (!$selectable instanceof ClassSelector) {
+                throw new InvalidArgumentException(
+                    'Only classes can be final.'
+                );
+            }
         }
-
-        return new self($selector);
     }
 
-    public function getPHPatRule(): PHPatRule
+    public function getPHPatRule(string $groupName): PHPatRule
     {
         return PHPat::rule()
-            ->classes($this->selector->getPHPatSelector())
+            ->classes(...$this->getPHPSelectors($this->selectables))
             ->excluding(Selector::isInterface())
             ->shouldBeFinal()
-            ->because("{$this->selector->getName()} must be final.");
+            ->because("$groupName must be final.");
     }
 }

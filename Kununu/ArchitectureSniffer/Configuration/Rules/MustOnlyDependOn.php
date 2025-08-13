@@ -7,11 +7,11 @@ use Generator;
 use PHPat\Selector\Selector;
 use PHPat\Test\PHPat;
 
-final readonly class MustImplement extends AbstractRule
+final readonly class MustOnlyDependOn extends AbstractRule
 {
     public function __construct(
         public Generator $selectables,
-        public Generator $interfaces,
+        public Generator $dependencies,
     ) {
     }
 
@@ -19,9 +19,11 @@ final readonly class MustImplement extends AbstractRule
     {
         return PHPat::rule()
             ->classes(...$this->getPHPSelectors($this->selectables))
-            ->excluding(Selector::isInterface())
-            ->shouldImplement()
-            ->classes(...$this->getPHPSelectors($this->interfaces))
-            ->because("$groupName must implement interface.");
+            ->canOnlyDependOn()
+            ->classes(
+                Selector::classname('/^\\\\*[^\\\\]+$/', true),
+                ...$this->getPHPSelectors($this->dependencies)
+            )
+            ->because("$groupName has dependencies outside the allowed list.");
     }
 }
