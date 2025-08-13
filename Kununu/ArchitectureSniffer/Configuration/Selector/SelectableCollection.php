@@ -63,9 +63,9 @@ final class SelectableCollection
 
         return match (true) {
             array_key_exists($fqcn, self::$singleton->groups) => self::$singleton->getSelectablesByGroup($fqcn),
-            str_starts_with($fqcn, '\\')                      => yield new NamespaceSelector($fqcn),
+            str_starts_with($fqcn, '\\')                      => yield new ClassSelector($fqcn),
             str_ends_with($fqcn, 'Interface') => yield new InterfaceClassSelector($fqcn),
-            default => yield new ClassSelector($fqcn),
+            default => yield new NamespaceSelector($fqcn),
         };
     }
 }

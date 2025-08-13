@@ -1,11 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Kununu\ArchitectureSniffer;
+namespace Kununu\ArchitectureSniffer\Configuration;
 
 use Generator;
 use InvalidArgumentException;
-use Kununu\ArchitectureSniffer\Configuration\Group;
 
 final readonly class Architecture
 {

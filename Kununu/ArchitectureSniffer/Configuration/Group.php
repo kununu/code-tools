@@ -13,11 +13,11 @@ final class Group
 {
     private const string NAME_KEY = 'name';
     public const string INCLUDES_KEY = 'includes';
-    public const string DEPENDS_ON_KEY = 'dependsOn';
+    public const string DEPENDS_ON_KEY = 'depends_on';
     private const string FINAL_KEY = 'final';
     private const string EXTENDS_KEY = 'extends';
     private const string IMPLEMENTS_KEY = 'implements';
-    private const string MUST_ONLY_HAVE_ONE_PUBLIC_METHOD_NAMED_KEY = 'mustOnlyHaveOnePublicMethodNamed';
+    private const string MUST_ONLY_HAVE_ONE_PUBLIC_METHOD_NAMED_KEY = 'must_only_have_one_public_method_named';
 
     /**
      * @var array<Rule>

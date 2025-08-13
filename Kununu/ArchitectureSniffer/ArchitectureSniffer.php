@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Kununu\ArchitectureSniffer;
 
+use Kununu\ArchitectureSniffer\Configuration\Architecture;
 use Kununu\ArchitectureSniffer\Helper\ProjectPathResolver;
 use PHPat\Test\Builder\Rule as PHPatRule;
 use Symfony\Component\Yaml\Yaml;
