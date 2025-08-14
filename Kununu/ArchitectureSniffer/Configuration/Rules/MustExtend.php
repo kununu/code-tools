@@ -16,10 +16,14 @@ final readonly class MustExtend extends AbstractRule
         public Generator $extensions,
         public Generator $selectables,
     ) {
-        if ($this->extensions instanceof InterfaceClassSelector) {
-            throw new InvalidArgumentException(
-                'Classes can not extend interfaces.'
-            );
+        $extensions = clone $this->extensions;
+
+        foreach ($extensions as $extension) {
+            if ($extension instanceof InterfaceClassSelector) {
+                throw new InvalidArgumentException(
+                    'Classes can not extend interfaces.'
+                );
+            }
         }
     }
 

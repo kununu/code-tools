@@ -43,6 +43,9 @@ final class SelectableCollection
         return self::toSelectable($this->groups[$groupName]);
     }
 
+    /**
+     * @param string|array<string> $fqcnListable
+     */
     public static function toSelectable(string|array $fqcnListable): Generator
     {
         if (is_string($fqcnListable)) {
@@ -63,8 +66,8 @@ final class SelectableCollection
         return match (true) {
             array_key_exists($fqcn, self::$singleton->groups) => self::$singleton->getSelectablesByGroup($fqcn),
             str_ends_with($fqcn, '\\')                        => yield new NamespaceSelector($fqcn),
-            str_ends_with($fqcn, 'Interface') => yield new InterfaceClassSelector($fqcn),
-            default => yield new ClassSelector($fqcn),
+            str_ends_with($fqcn, 'Interface')                 => yield new InterfaceClassSelector($fqcn),
+            default                                           => yield new ClassSelector($fqcn),
         };
     }
 }

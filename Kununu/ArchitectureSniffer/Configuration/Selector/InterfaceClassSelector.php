@@ -11,6 +11,8 @@ final readonly class InterfaceClassSelector implements Selectable
 {
     use RegexTrait;
 
+    public const KEY = 'InterfaceSelector';
+
     public function __construct(public string $interface)
     {
     }

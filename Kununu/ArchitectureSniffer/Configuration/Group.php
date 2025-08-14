@@ -6,7 +6,6 @@ namespace Kununu\ArchitectureSniffer\Configuration;
 use Generator;
 use InvalidArgumentException;
 use Kununu\ArchitectureSniffer\Configuration\Rules\Rule;
-use Kununu\ArchitectureSniffer\Configuration\Selector\Selectable;
 use Kununu\ArchitectureSniffer\Configuration\Selector\SelectableCollection;
 
 final class Group
@@ -25,20 +24,23 @@ final class Group
     private array $rules = [];
 
     /**
-     * @param array<Selectable>      $dependsOn
-     * @param array<Selectable>|null $implements
+     * @param array<string>|null $dependsOn
+     * @param array<string>|null $implements
      */
     private function __construct(
         private readonly string $name,
         private readonly SelectableCollection $includes,
         private readonly ?array $dependsOn = null,
         private readonly bool $final = false,
-        private readonly ?Selectable $extends = null,
+        private readonly ?string $extends = null,
         private readonly ?array $implements = null,
         private readonly ?string $mustOnlyHaveOnePublicMethodNamed = null,
     ) {
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public static function fromArray(array $data): self
     {
         if (!array_key_exists(self::NAME_KEY, $data) || array_key_exists(self::INCLUDES_KEY, $data)) {

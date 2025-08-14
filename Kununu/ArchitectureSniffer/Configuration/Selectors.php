@@ -48,9 +48,9 @@ enum Selectors: string
     private static function createSelector(self $type, string $name, string $selection): Selectable
     {
         return match ($type) {
-            self::ClassSelector     => new ClassSelector($name, $selection),
-            self::InterfaceSelector => new InterfaceClassSelector($name, $selection),
-            self::NamespaceSelector => new NamespaceSelector($name, $selection),
+            self::ClassSelector     => new ClassSelector($selection),
+            self::InterfaceSelector => new InterfaceClassSelector($selection),
+            self::NamespaceSelector => new NamespaceSelector($selection),
         };
     }
 }
