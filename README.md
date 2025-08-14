@@ -23,6 +23,33 @@
 ### `bin/php-in-k8s`
 - This is a helper script that allows you to run PHP commands inside a local Kubernetes pod without having to connect to it via a terminal manually.
 
+### `Architecture Sniffer & PHPAT`
+- **Architecture Sniffer** enforces architectural and dependency rules in your PHP codebase, helping you maintain a clean and consistent architecture.
+- It is powered by [PHPAT](https://github.com/carlosas/phpat), a static analysis tool for PHP architecture testing.
+- Architecture Sniffer uses a YAML configuration file (`architecture.yaml`) where you define your architectural groups and their allowed dependencies. Each group is a key under the `architecture` root, e.g.:
+
+  ```yaml
+  architecture:
+    $controllers:
+      includes:
+        - "App\\Controller\\*Controller"
+      depends_on:
+        - "$services"
+    $services:
+      includes:
+        - "App\\Service\\*Service"
+  ```
+- To use Architecture Sniffer with PHPStan, add the extension to your `phpstan.neon`:
+  ```neon
+  includes:
+      - vendor/carlosas/phpat/extension.neon
+  services:
+      -
+          class: PHPAT\PHPStan\PHPStanExtension
+          tags: [phpstan.extension]
+  ```
+- For more details and advanced configuration, see [Kununu/ArchitectureSniffer/README.md](Kununu/ArchitectureSniffer/README.md).
+
 ## Install
 
 ### Add custom private repositories to composer.json
@@ -53,3 +80,4 @@ composer require --dev kununu/code-tools --no-plugins
 - [Rector](docs/Rector/README.md) instructions.
 - [bin/code-tools](docs/CodeTools/README.md) instructions.
 - [bin/php-in-k8s](docs/PhpInK8s/README.md) instructions.
+- [Architecture Sniffer & PHPAT](docs/ArchitectureSniffer/README.md) instructions.
