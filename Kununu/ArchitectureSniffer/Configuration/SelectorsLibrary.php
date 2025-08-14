@@ -17,16 +17,35 @@ final class SelectorsLibrary
 
     public function __construct(private array $groups)
     {
-        foreach ($groups as $groupName => $includes) {
+        foreach ($groups as $groupName => $attributes) {
             $this->passedGroups = [$groupName];
             $resolvedIncludes = [];
-            foreach ($includes as $include) {
-                foreach ($this->resolveGroup($include) as $selectable) {
+            foreach ($attributes[Group::INCLUDES_KEY] as $include) {
+                foreach ($this->resolveInclude($include) as $selectable) {
                     $resolvedIncludes[] = $selectable;
                 }
             }
             $this->flattenedGroups[$groupName] = $resolvedIncludes;
         }
+    }
+
+    private function resolveInclude(string $fqcnOrGroupName): Generator
+    {
+        if (array_key_exists($fqcnOrGroupName, $this->groups)) {
+            if (in_array($fqcnOrGroupName, $this->passedGroups, true)) {
+                return;
+            }
+
+            $this->passedGroups[] = $fqcnOrGroupName;
+
+            foreach ($this->groups[$fqcnOrGroupName] as $subFqcnOrGroupName) {
+                yield from $this->resolveInclude($subFqcnOrGroupName);
+            }
+
+            return;
+        }
+
+        yield $fqcnOrGroupName;
     }
 
     public function getSelector(string $fqcnOrGroup): Generator
@@ -47,7 +66,7 @@ final class SelectorsLibrary
         }
 
         foreach ($this->flattenedGroups[$groupName] as $fqcn) {
-            yield from $this->createSelectable($fqcn);
+            yield $this->createSelectable($fqcn);
         }
     }
 
@@ -58,22 +77,7 @@ final class SelectorsLibrary
         }
     }
 
-    private function resolveGroup(string $fqcnOrGroupName): Generator
-    {
-        if (array_key_exists($fqcnOrGroupName, $this->groups)) {
-            if (in_array($fqcnOrGroupName, $this->passedGroups, true)) {
-                return;
-            }
-
-            foreach ($this->groups[$fqcnOrGroupName] as $subFqcnOrGroupName) {
-                yield from $this->resolveGroup($subFqcnOrGroupName);
-            }
-        }
-
-        yield $this->createSelectable($fqcnOrGroupName);
-    }
-
-    private function createSelectable($fqcn): Selectable
+    private function createSelectable(string $fqcn): Selectable
     {
         return match (true) {
             str_ends_with($fqcn, '\\')                        => new NamespaceSelector($fqcn),

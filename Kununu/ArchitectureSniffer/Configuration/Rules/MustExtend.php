@@ -13,8 +13,8 @@ final readonly class MustExtend extends AbstractRule
     public const string KEY = 'extends';
 
     public function __construct(
-        public Generator $extensions,
-        public Generator $selectables,
+        public array $extensions,
+        public array $selectables,
     ) {
         foreach ($this->extensions as $extension) {
             if ($extension instanceof InterfaceClassSelector) {
@@ -23,8 +23,11 @@ final readonly class MustExtend extends AbstractRule
                 );
             }
         }
+    }
 
-        $this->extensions->rewind();
+    public static function fromGenerators(Generator $extensions, Generator $selectables): self
+    {
+        return new self(iterator_to_array($extensions), iterator_to_array($selectables));
     }
 
     public function getPHPatRule(string $groupName): \PHPat\Test\Builder\Rule

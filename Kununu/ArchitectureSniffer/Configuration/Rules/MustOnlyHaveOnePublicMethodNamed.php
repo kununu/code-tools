@@ -11,9 +11,14 @@ final readonly class MustOnlyHaveOnePublicMethodNamed extends AbstractRule
     public const string KEY = 'only-one-public-method-named';
 
     public function __construct(
-        public Generator $selectables,
+        public array $selectables,
         public string $functionName,
     ) {
+    }
+
+    public static function fromGenerator(Generator $selectables, string $functionName): self
+    {
+        return new self(iterator_to_array($selectables), $functionName);
     }
 
     public function getPHPatRule(string $groupName): \PHPat\Test\Builder\Rule

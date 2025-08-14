@@ -8,7 +8,6 @@ use InvalidArgumentException;
 
 final readonly class Group
 {
-    private const string NAME_KEY = 'name';
     public const string INCLUDES_KEY = 'includes';
     public const string DEPENDS_ON_KEY = 'depends_on';
     private const string FINAL_KEY = 'final';
@@ -52,34 +51,34 @@ final readonly class Group
     public function getRules(SelectorsLibrary $library): Generator
     {
         if ($this->extends) {
-            yield new Rules\MustExtend(
+            yield Rules\MustExtend::fromGenerators(
                 extensions: $library->getSelector($this->extends),
                 selectables: $library->getSelectorsFromGroup($this->name),
             );
         }
 
         if ($this->implements) {
-            yield new Rules\MustImplement(
+            yield Rules\MustImplement::fromGenerators(
                 selectables: $library->getSelectorsFromGroup($this->name),
                 interfaces: $library->getSelectors($this->implements),
             );
         }
 
         if ($this->final) {
-            yield new Rules\MustBeFinal(
+            yield Rules\MustBeFinal::fromGenerator(
                 selectables: $library->getSelectorsFromGroup($this->name),
             );
         }
 
         if ($this->dependsOn) {
-            yield new Rules\MustOnlyDependOn(
+            yield Rules\MustOnlyDependOn::fromGenerators(
                 selectables: $library->getSelectorsFromGroup($this->name),
                 dependencies: $library->getSelectors($this->dependsOn),
             );
         }
 
         if ($this->mustOnlyHaveOnePublicMethodNamed) {
-            yield new Rules\MustOnlyHaveOnePublicMethodNamed(
+            yield Rules\MustOnlyHaveOnePublicMethodNamed::fromGenerator(
                 selectables: $library->getSelectorsFromGroup($this->name),
                 functionName: $this->mustOnlyHaveOnePublicMethodNamed,
             );

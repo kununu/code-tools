@@ -10,9 +10,14 @@ use PHPat\Test\PHPat;
 final readonly class MustImplement extends AbstractRule
 {
     public function __construct(
-        public Generator $selectables,
-        public Generator $interfaces,
+        public array $selectables,
+        public array $interfaces,
     ) {
+    }
+
+    public static function fromGenerators(Generator $selectables, Generator $interfaces): self
+    {
+        return new self(iterator_to_array($selectables), iterator_to_array($interfaces));
     }
 
     public function getPHPatRule(string $groupName): \PHPat\Test\Builder\Rule

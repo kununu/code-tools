@@ -10,9 +10,14 @@ use PHPat\Test\PHPat;
 final readonly class MustOnlyDependOn extends AbstractRule
 {
     public function __construct(
-        public Generator $selectables,
-        public Generator $dependencies,
+        public array $selectables,
+        public array $dependencies,
     ) {
+    }
+
+    public static function fromGenerators(Generator $selectables, Generator $dependencies): self
+    {
+        return new self(iterator_to_array($selectables), iterator_to_array($dependencies));
     }
 
     public function getPHPatRule(string $groupName): \PHPat\Test\Builder\Rule
