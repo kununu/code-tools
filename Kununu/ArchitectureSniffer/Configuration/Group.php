@@ -35,8 +35,8 @@ final readonly class Group
      */
     public static function fromArray(string $name, array $data): self
     {
-        if (!array_key_exists(self::NAME_KEY, $data) || !array_key_exists(self::INCLUDES_KEY, $data)) {
-            throw new InvalidArgumentException('Group configuration must contain "name" and "includes" keys.');
+        if (!array_key_exists(self::INCLUDES_KEY, $data)) {
+            throw new InvalidArgumentException('Group configuration must contain "includes" key.');
         }
 
         return new self(
