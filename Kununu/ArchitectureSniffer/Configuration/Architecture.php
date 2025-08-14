@@ -13,8 +13,10 @@ final readonly class Architecture
     /**
      * @param array<Group> $groups
      */
-    private function __construct(private array $groups)
-    {
+    private function __construct(
+        private array $groups,
+        private SelectorsLibrary $selectorsLibrary,
+    ) {
     }
 
     /**
@@ -79,18 +81,20 @@ final readonly class Architecture
             }
         }
 
-        $groups = array_map(
-            static fn(array $groupData) => Group::fromArray($groupData),
-            $architecture
-        );
+        $groups = [];
+        foreach ($architecture as $groupName => $groupData) {
+            $groups[] = Group::fromArray($groupName, $groupData);
+        }
 
-        return new self($groups);
+        $selectorsLibrary = new SelectorsLibrary($architecture);
+
+        return new self($groups, $selectorsLibrary);
     }
 
     public function getRules(): Generator
     {
         foreach ($this->groups as $group) {
-            yield $group->generateRules()->getRules();
+            yield from $group->getRules($this->selectorsLibrary);
         }
     }
 }

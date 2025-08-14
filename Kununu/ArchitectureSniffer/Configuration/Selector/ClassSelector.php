@@ -11,8 +11,6 @@ final readonly class ClassSelector implements Selectable
 {
     use RegexTrait;
 
-    public const string KEY = 'ClassSelector';
-
     public function __construct(public string $class)
     {
     }

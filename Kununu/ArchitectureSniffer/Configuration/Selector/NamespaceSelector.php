@@ -11,8 +11,6 @@ final readonly class NamespaceSelector implements Selectable
 {
     use RegexTrait;
 
-    public const string KEY = 'NamespaceSelector';
-
     public function __construct(public string $namespace)
     {
     }

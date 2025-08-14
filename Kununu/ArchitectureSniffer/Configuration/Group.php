@@ -5,10 +5,8 @@ namespace Kununu\ArchitectureSniffer\Configuration;
 
 use Generator;
 use InvalidArgumentException;
-use Kununu\ArchitectureSniffer\Configuration\Rules\Rule;
-use Kununu\ArchitectureSniffer\Configuration\Selector\SelectableCollection;
 
-final class Group
+final readonly class Group
 {
     private const string NAME_KEY = 'name';
     public const string INCLUDES_KEY = 'includes';
@@ -19,37 +17,30 @@ final class Group
     private const string MUST_ONLY_HAVE_ONE_PUBLIC_METHOD_NAMED_KEY = 'must_only_have_one_public_method_named';
 
     /**
-     * @var array<Rule>
-     */
-    private array $rules = [];
-
-    /**
      * @param array<string>|null $dependsOn
      * @param array<string>|null $implements
      */
     private function __construct(
-        private readonly string $name,
-        private readonly SelectableCollection $includes,
-        private readonly ?array $dependsOn = null,
-        private readonly bool $final = false,
-        private readonly ?string $extends = null,
-        private readonly ?array $implements = null,
-        private readonly ?string $mustOnlyHaveOnePublicMethodNamed = null,
+        private string $name,
+        private ?array $dependsOn = null,
+        private bool $final = false,
+        private ?string $extends = null,
+        private ?array $implements = null,
+        private ?string $mustOnlyHaveOnePublicMethodNamed = null,
     ) {
     }
 
     /**
      * @param array<string, mixed> $data
      */
-    public static function fromArray(array $data): self
+    public static function fromArray(string $name, array $data): self
     {
         if (!array_key_exists(self::NAME_KEY, $data) || !array_key_exists(self::INCLUDES_KEY, $data)) {
             throw new InvalidArgumentException('Group configuration must contain "name" and "includes" keys.');
         }
 
         return new self(
-            name: $data[self::NAME_KEY],
-            includes: SelectableCollection::fromArray($data[self::INCLUDES_KEY], $data[self::NAME_KEY]),
+            name: $name,
             dependsOn: $data[self::DEPENDS_ON_KEY] ?? null,
             final: $data[self::FINAL_KEY] ?? false,
             extends: $data[self::EXTENDS_KEY] ?? null,
@@ -58,49 +49,40 @@ final class Group
         );
     }
 
-    public function generateRules(): self
+    public function getRules(SelectorsLibrary $library): Generator
     {
         if ($this->extends) {
-            $this->rules[] = new Rules\MustExtend(
-                extensions: SelectableCollection::toSelectable($this->extends),
-                selectables: $this->includes->getSelectablesByGroup($this->name)
+            yield new Rules\MustExtend(
+                extensions: $library->getSelector($this->extends),
+                selectables: $library->getSelectorsFromGroup($this->name),
             );
         }
 
         if ($this->implements) {
-            $this->rules[] = new Rules\MustImplement(
-                selectables: $this->includes->getSelectablesByGroup($this->name),
-                interfaces: SelectableCollection::toSelectable($this->implements),
+            yield new Rules\MustImplement(
+                selectables: $library->getSelectorsFromGroup($this->name),
+                interfaces: $library->getSelectors($this->implements),
             );
         }
 
         if ($this->final) {
-            $this->rules[] = new Rules\MustBeFinal(
-                selectables: $this->includes->getSelectablesByGroup($this->name),
+            yield new Rules\MustBeFinal(
+                selectables: $library->getSelectorsFromGroup($this->name),
             );
         }
 
         if ($this->dependsOn) {
-            $this->rules[] = new Rules\MustOnlyDependOn(
-                selectables: $this->includes->getSelectablesByGroup($this->name),
-                dependencies: SelectableCollection::toSelectable($this->dependsOn),
+            yield new Rules\MustOnlyDependOn(
+                selectables: $library->getSelectorsFromGroup($this->name),
+                dependencies: $library->getSelectors($this->dependsOn),
             );
         }
 
         if ($this->mustOnlyHaveOnePublicMethodNamed) {
-            $this->rules[] = new Rules\MustOnlyHaveOnePublicMethodNamed(
-                selectables: $this->includes->getSelectablesByGroup($this->name),
+            yield new Rules\MustOnlyHaveOnePublicMethodNamed(
+                selectables: $library->getSelectorsFromGroup($this->name),
                 functionName: $this->mustOnlyHaveOnePublicMethodNamed,
             );
-        }
-
-        return $this;
-    }
-
-    public function getRules(): Generator
-    {
-        foreach ($this->rules as $rule) {
-            yield $rule->getPHPatRule($this->name);
         }
     }
 }

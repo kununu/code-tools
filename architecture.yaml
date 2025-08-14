@@ -1,0 +1,158 @@
+architecture:
+  # INTERFACE LAYER
+  $interface_controller:
+    includes:
+      - "App\\Interface\\Controller\\*"
+    depends_on:
+      - "interface_controller"
+      - "App\\Application\\Query\\*\\Query"
+      - "Symfony\\Component\\*"
+      - "Psr\\*"
+      - "App\\Infrastructure\\Api\\*"
+    extends: "App\\Infrastructure\\Api\\Controller\\ApiController"
+    final: false
+
+  $interface_event_processor:
+    includes:
+      - "App\\Interface\\Event\\*\\Processor"
+    depends_on:
+      - "App\\Application\\*"
+      - "Kununu\\Hermes\\EventsProcessorBundle\\*"
+      - "Psr\\Log\\*"
+      - "Symfony\\Component\\Validator\\*"
+    extends: "Kununu\\Hermes\\EventsProcessorBundle\\AbstractProcessor"
+    final: false
+
+  $interface_event_inbound:
+    includes:
+      - "App\\Interface\\Event\\*\\InboundEvent"
+    depends_on:
+      - "App\\Application\\*"
+      - "Psr\\Log\\*"
+      - "Symfony\\Component\\Validator\\*"
+      - "interface_event_outbound"
+    implements:
+      - "Kununu\\Hermes\\EventsProcessorBundle\\ReceivableEventInterface"
+    final: false
+
+  $interface_event_outbound:
+    includes:
+      - "App\\Interface\\Event\\*\\OutboundEvent"
+    depends_on:
+      - "App\\Application\\*"
+      - "Psr\\Log\\*"
+      - "Symfony\\Component\\Validator\\*"
+      - "App\\Interface\\Event\\AbstractNamedEvent"
+    implements:
+      - "Kununu\\Hermes\\EventsProcessorBundle\\EventInterface"
+    extends: "App\\Interface\\Event\\AbstractNamedEvent"
+    final: false
+
+  $interface_console:
+    includes:
+      - "App\\Interface\\Console\\*"
+    depends_on:
+      - "App\\Application\\*"
+      - "Symfony\\Component\\Console\\*"
+      - "Psr\\Log\\*"
+      - "Symfony\\Component\\Validator\\*"
+    extends: "Symfony\\Component\\Console\\Command\\Command"
+    final: true
+    must_only_have_one_public_method_named: "execute"
+
+  # APPLICATION LAYER
+  $application_command:
+    includes:
+      - "App\\Application\\Command\\*\\Command"
+    depends_on:
+      - "Symfony\\Component\\Validator\\Constraints"
+    implements:
+      - "Kununu\\CQRS\\Command\\Command"
+    final: true
+
+  $application_command_handler:
+    includes:
+      - "App\\Application\\Command\\*\\Handler"
+    depends_on:
+      - "App\\Application\\Command\\*"
+      - "App\\Application\\Helper\\*"
+      - "App\\Repository\\Doctrine\\*\\*RepositoryInterface"
+      - "App\\Model\\*"
+      - "App\\Interface\\*"
+      - "Kununu\\Hermes\\EventsProcessorBundle\\EventProducerInterface"
+      - "Psr\\*"
+      - "App\\Infrastructure\\Messaging\\Producer\\SynchronousEventProducerInterface"
+      - "App\\Infrastructure\\Messaging\\Events\\Outbound\\*"
+    implements:
+      - "Kununu\\CQRS\\Command\\CommandHandler"
+    final: true
+    must_only_have_one_public_method_named: "handle"
+
+  $application_query:
+    includes:
+      - "App\\Application\\Query\\*\\Query"
+    depends_on:
+      - "Symfony\\Component\\Validator\\Constraints"
+    implements:
+      - "Kununu\\CQRS\\Query\\Query"
+    final: false
+
+  $application_query_handler:
+    includes:
+      - "App\\Application\\Query\\*\\Handler"
+    depends_on:
+      - "App\\Repository\\Doctrine\\*\\*ReadRepositoryInterface"
+      - "Symfony\\Component\\Validator\\*"
+    implements:
+      - "Kununu\\CQRS\\Query\\QueryHandler"
+    final: false
+
+  $application_helper:
+    includes:
+      - "App\\Application\\Helper\\*"
+    depends_on:
+      - "$model_entity"
+      - "App\\Model\\DataTransferObject\\*"
+    final: true
+
+  # MODEL LAYER
+  $model_entity
+    includes:
+      - "App\\Model\\Entity\\*"
+      - "$model_dto"
+    depends_on:
+      - "Doctrine\\ORM\\Mapping\\*"
+      - "App\\Model\\Entity\\*"
+      - "Doctrine\\DBAL\\Types\\Types"
+    final: false
+
+  - name: "model_dto"
+    includes:
+      - "App\\Model\\DataTransferObject\\*"
+    depends_on:
+      - "App\\Model\\DataTransferObject\\*"
+      - "App\\Infrastructure\\Common\\*"
+      - "Kununu\\Collection\\*"
+    final: false
+
+  # REPOSITORY LAYER
+  - name: "repository_doctrine"
+    includes:
+      - "App\\Repository\\Doctrine\\*\\*Repository"
+    depends_on:
+      - "App\\Model\\*"
+      - "Doctrine\\*"
+      - "App\\Infrastructure\\Common\\*"
+    implements:
+      - "App\\Repository\\Doctrine\\*\\*RepositoryInterface"
+    final: true
+
+  - name: "repository_doctrine_listener"
+    includes:
+      - "App\\Repository\\Doctrine\\*\\*\\Listener"
+    depends_on:
+      - "Kununu\\Hermes\\EventsProcessorBundle\\EventProducerInterface"
+      - "Doctrine\\*"
+      - "App\\Model\\*"
+      - "App\\Repository\\*"
+    final: true
