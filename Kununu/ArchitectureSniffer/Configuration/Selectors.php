@@ -37,7 +37,7 @@ enum Selectors: string
     {
         foreach (self::getValidTypes() as $type) {
             if (array_key_exists($type, $data)) {
-                return self::createSelector(self::from($type), $data[$nameKey ?? $type], $data[$type]);
+                return self::createSelector(self::from($type), $data[$type]);
             }
         }
 
@@ -45,7 +45,7 @@ enum Selectors: string
             'Missing selector in data ' . json_encode($data, JSON_THROW_ON_ERROR));
     }
 
-    private static function createSelector(self $type, string $name, string $selection): Selectable
+    private static function createSelector(self $type, string $selection): Selectable
     {
         return match ($type) {
             self::ClassSelector     => new ClassSelector($selection),
