@@ -18,11 +18,11 @@ final readonly class MustOnlyDependOn extends AbstractRule
     public function getPHPatRule(string $groupName): \PHPat\Test\Builder\Rule
     {
         return PHPat::rule()
-            ->classes(...$this->getPHPSelectors($this->selectables))
+            ->classes(...self::getPHPSelectors($this->selectables))
             ->canOnlyDependOn()
             ->classes(
                 Selector::classname('/^\\\\*[^\\\\]+$/', true),
-                ...$this->getPHPSelectors($this->dependencies)
+                ...self::getPHPSelectors($this->dependencies)
             )
             ->because("$groupName has dependencies outside the allowed list.");
     }

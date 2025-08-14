@@ -43,7 +43,7 @@ final class Group
      */
     public static function fromArray(array $data): self
     {
-        if (!array_key_exists(self::NAME_KEY, $data) || array_key_exists(self::INCLUDES_KEY, $data)) {
+        if (!array_key_exists(self::NAME_KEY, $data) || !array_key_exists(self::INCLUDES_KEY, $data)) {
             throw new InvalidArgumentException('Group configuration must contain "name" and "includes" keys.');
         }
 
@@ -58,7 +58,7 @@ final class Group
         );
     }
 
-    public function generateRules(): Generator
+    public function generateRules(): self
     {
         if ($this->extends) {
             $this->rules[] = new Rules\MustExtend(
@@ -68,31 +68,33 @@ final class Group
         }
 
         if ($this->implements) {
-            yield new Rules\MustImplement(
+            $this->rules[] = new Rules\MustImplement(
                 selectables: $this->includes->getSelectablesByGroup($this->name),
                 interfaces: SelectableCollection::toSelectable($this->implements),
             );
         }
 
         if ($this->final) {
-            yield new Rules\MustBeFinal(
+            $this->rules[] = new Rules\MustBeFinal(
                 selectables: $this->includes->getSelectablesByGroup($this->name),
             );
         }
 
         if ($this->dependsOn) {
-            yield new Rules\MustOnlyDependOn(
+            $this->rules[] = new Rules\MustOnlyDependOn(
                 selectables: $this->includes->getSelectablesByGroup($this->name),
                 dependencies: SelectableCollection::toSelectable($this->dependsOn),
             );
         }
 
         if ($this->mustOnlyHaveOnePublicMethodNamed) {
-            yield new Rules\MustOnlyHaveOnePublicMethodNamed(
+            $this->rules[] = new Rules\MustOnlyHaveOnePublicMethodNamed(
                 selectables: $this->includes->getSelectablesByGroup($this->name),
                 functionName: $this->mustOnlyHaveOnePublicMethodNamed,
             );
         }
+
+        return $this;
     }
 
     public function getRules(): Generator

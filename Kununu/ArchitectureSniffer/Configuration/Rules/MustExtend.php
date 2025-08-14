@@ -16,23 +16,23 @@ final readonly class MustExtend extends AbstractRule
         public Generator $extensions,
         public Generator $selectables,
     ) {
-        $extensions = clone $this->extensions;
-
-        foreach ($extensions as $extension) {
+        foreach ($this->extensions as $extension) {
             if ($extension instanceof InterfaceClassSelector) {
                 throw new InvalidArgumentException(
                     'Classes can not extend interfaces.'
                 );
             }
         }
+
+        $this->extensions->rewind();
     }
 
     public function getPHPatRule(string $groupName): \PHPat\Test\Builder\Rule
     {
         return PHPat::rule()
-            ->classes(...$this->getPHPSelectors($this->selectables))
+            ->classes(...self::getPHPSelectors($this->selectables))
             ->shouldExtend()
-            ->classes(...$this->getPHPSelectors($this->extensions))
+            ->classes(...self::getPHPSelectors($this->extensions))
             ->because("$groupName should extend class.");
     }
 }

@@ -9,5 +9,5 @@ interface Rule
 {
     public function getPHPatRule(string $groupName): \PHPat\Test\Builder\Rule;
 
-    public function getPHPSelectors(Generator $selectors): Generator;
+    public static function getPHPSelectors(Generator $selectors): Generator;
 }

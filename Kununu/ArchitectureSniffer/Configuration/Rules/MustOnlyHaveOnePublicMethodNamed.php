@@ -19,7 +19,7 @@ final readonly class MustOnlyHaveOnePublicMethodNamed extends AbstractRule
     public function getPHPatRule(string $groupName): \PHPat\Test\Builder\Rule
     {
         return PHPat::rule()
-            ->classes(...$this->getPHPSelectors($this->selectables))
+            ->classes(...self::getPHPSelectors($this->selectables))
             ->shouldHaveOnlyOnePublicMethodNamed($this->functionName)
             ->because("$groupName should only have one public method named $this->functionName.");
     }

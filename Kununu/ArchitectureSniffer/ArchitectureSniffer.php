@@ -18,8 +18,8 @@ final class ArchitectureSniffer
     public function testArchitecture(): iterable
     {
         $architecture = $this->getArchitecture();
-        foreach ($architecture->getGroups() as $group) {
-            foreach ($group->getRules() as $rule) {
+        foreach ($architecture->getRules() as $rules) {
+            foreach ($rules as $rule) {
                 yield $rule;
             }
         }

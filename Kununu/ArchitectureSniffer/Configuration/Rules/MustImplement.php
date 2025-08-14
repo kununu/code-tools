@@ -18,10 +18,10 @@ final readonly class MustImplement extends AbstractRule
     public function getPHPatRule(string $groupName): \PHPat\Test\Builder\Rule
     {
         return PHPat::rule()
-            ->classes(...$this->getPHPSelectors($this->selectables))
+            ->classes(...self::getPHPSelectors($this->selectables))
             ->excluding(Selector::isInterface())
             ->shouldImplement()
-            ->classes(...$this->getPHPSelectors($this->interfaces))
+            ->classes(...self::getPHPSelectors($this->interfaces))
             ->because("$groupName must implement interface.");
     }
 }
