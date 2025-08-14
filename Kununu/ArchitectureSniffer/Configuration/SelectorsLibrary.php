@@ -52,7 +52,7 @@ final class SelectorsLibrary
     {
         if (array_key_exists($fqcnOrGroup, $this->flattenedGroups)) {
             foreach ($this->flattenedGroups[$fqcnOrGroup] as $fqcn) {
-                yield from $this->createSelectable($fqcn);
+                yield $this->createSelectable($fqcn);
             }
         }
 

@@ -9,7 +9,7 @@ use Kununu\ArchitectureSniffer\Configuration\Selector\Selectable;
 
 abstract readonly class AbstractRule implements Rule
 {
-    public static function getPHPSelectors(Generator $selectors): Generator
+    public static function getPHPSelectors(iterable $selectors): Generator
     {
         foreach ($selectors as $selector) {
             if (!$selector instanceof Selectable) {

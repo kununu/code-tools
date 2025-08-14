@@ -31,7 +31,7 @@ final readonly class MustBeFinal extends AbstractRule
     public function getPHPatRule(string $groupName): PHPatRule
     {
         return PHPat::rule()
-            ->classes(...self::getPHPSelectors($this->selectables))
+            ->classes(self::getPHPSelectors($this->selectables))
             ->excluding(Selector::isInterface())
             ->shouldBeFinal()
             ->because("$groupName must be final.");
