@@ -29,13 +29,13 @@ final class Group
      * @param array<Selectable>|null $implements
      */
     private function __construct(
-        private string $name,
-        private SelectableCollection $includes,
-        private ?array $dependsOn = null,
-        private bool $final = false,
-        private ?Selectable $extends = null,
-        private ?array $implements = null,
-        private ?string $mustOnlyHaveOnePublicMethodNamed = null,
+        private readonly string $name,
+        private readonly SelectableCollection $includes,
+        private readonly ?array $dependsOn = null,
+        private readonly bool $final = false,
+        private readonly ?Selectable $extends = null,
+        private readonly ?array $implements = null,
+        private readonly ?string $mustOnlyHaveOnePublicMethodNamed = null,
     ) {
     }
 

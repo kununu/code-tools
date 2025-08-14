@@ -161,6 +161,28 @@ Each group in your `architecture.yaml` configuration can have several properties
 - If a group includes from a global namespace other than `App\`, do not define `depends_on` for that group.
 - The configuration will fail with a clear error if these rules are violated.
 
+### How Classes, Interfaces, and Namespaces Are Defined
+
+When specifying patterns or references in your `architecture.yaml` (for `includes`, `depends_on`, etc.), the sniffer interprets them as follows:
+
+- **Group Reference:**
+  - If the string matches a group name defined elsewhere in your configuration, it is treated as a reference to that group. All selectables from that group are included.
+  - Example: `"$services"` refers to the group named `$services`.
+
+- **Namespace:**
+  - If the string ends with a backslash (`\`), it is treated as a namespace. All classes within that namespace are matched.
+  - Example: `"App\\Service\\"` matches everything in the `App\Service` namespace.
+
+- **Interface:**
+  - If the string ends with `Interface`, it is treated as an interface.
+  - Example: `"App\\Service\\ServiceInterface"` matches the interface `ServiceInterface`.
+
+- **Class:**
+  - Any other string is treated as a fully qualified class name (FQCN).
+  - Example: `"App\\Controller\\MyController"` matches the class `MyController`.
+
+This logic applies to all properties that accept patterns or references, such as `includes`, `depends_on`, `extends`, and `implements`.
+
 ## Advanced Features
 
 ### Variable Referencing

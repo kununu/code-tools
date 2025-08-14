@@ -11,9 +11,8 @@ final readonly class InterfaceClassSelector implements Selectable
 {
     use RegexTrait;
 
-    public function __construct(
-        public string $interface,
-    ) {
+    public function __construct(public string $interface)
+    {
     }
 
     public function getPHPatSelector(): SelectorInterface

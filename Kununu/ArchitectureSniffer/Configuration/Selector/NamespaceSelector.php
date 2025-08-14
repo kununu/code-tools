@@ -11,9 +11,8 @@ final readonly class NamespaceSelector implements Selectable
 {
     use RegexTrait;
 
-    public function __construct(
-        public string $namespace,
-    ) {
+    public function __construct(public string $namespace)
+    {
     }
 
     public function getPHPatSelector(): SelectorInterface
