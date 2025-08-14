@@ -29,15 +29,14 @@ Create an `architecture.yaml` in your `/services` directory:
 
 ```yaml
 architecture:
-  - name: "$controllers"
+  $controllers:
     includes:
-      - "App\Controller\*Controller"
+      - "App\\Controller\\*Controller"
     depends_on:
       - "$services"
-
-  - name: "$services"
+  $services:
     includes:
-      - "App\Service\*Service"
+      - "App\\Service\\*Service"
 ```
 
 ## Usage
@@ -74,45 +73,38 @@ The `architecture.yaml` file defines architectural groups and their dependencies
 
 ```yaml
 architecture:
-  - name: "$controllers"
+  $controllers:
     final: true
     extends: "$baseControllers"
     implements:
-      - "App\Controller\ControllerInterface"
+      - "App\\Controller\\ControllerInterface"
     must_only_have_one_public_method_named: "handle"
     includes:
-      - "App\Controller\*Controller"
+      - "App\\Controller\\*Controller"
     depends_on:
       - "$services"
       - "$models"
-      - "External\Library\SomeClass"
-
-  - name: "$baseControllers"
+      - "External\\Library\\SomeClass"
+  $baseControllers:
     includes:
-      - "App\Controller\Base\*BaseController"
-
-  - name: "$services"
+      - "App\\Controller\\Base\\*BaseController"
+  $services:
     final: false
     implements:
-      - "App\Service\ServiceInterface"
+      - "App\\Service\\ServiceInterface"
     includes:
-      - "App\Service\*Service"
+      - "App\\Service\\*Service"
       - "$models"
     depends_on:
       - "$models"
-
-  - name: "$models"
+  $models:
     includes:
-      - "App\Model\*Model"
+      - "App\\Model\\*Model"
 ```
 
 ### Group Properties
 
-Each group in your `architecture.yaml` configuration can have several properties. Only `name` and `includes` are required; all other properties are optional and trigger specific architectural rules:
-
-- **name** (required):
-  - Unique identifier for the group. Prefixing with `$` is recommended to avoid confusion with class names.
-  - Example: `name: "$controllers"`
+Each group in your `architecture.yaml` configuration is now defined as a key under `architecture`. Only `includes` is required; all other properties are optional and trigger specific architectural rules:
 
 - **includes** (required):
   - List of patterns or group names that define which classes/interfaces belong to this group.
@@ -123,7 +115,7 @@ Each group in your `architecture.yaml` configuration can have several properties
   - List of group names or patterns that this group is allowed to depend on.
   - Example: `depends_on: ["$services", "App\\Library\\*"]`
   - **Rule triggered:** Ensures that classes in this group only depend on allowed groups/classes. Violations are reported if dependencies are outside this list.
-  - **Important:** If a group includes from a global namespace other than `App\`, it must NOT have a `depends_on` property. This will cause a configuration error.
+  - **Important:** If a group includes from a global namespace other than `App\\`, it must NOT have a `depends_on` property. This will cause a configuration error.
 
 - **final** (optional):
   - Boolean (`true`/`false`). If `true`, all classes in this group must be declared as `final`.
@@ -148,7 +140,6 @@ Each group in your `architecture.yaml` configuration can have several properties
 #### Summary Table
 | Property                        | Required | Type      | Description                                                                 | Rule Triggered                                                      |
 |----------------------------------|----------|-----------|-----------------------------------------------------------------------------|---------------------------------------------------------------------|
-| name                            | Yes      | string    | Unique group name (recommended: `$` prefix)                                 | Defines group                                                       |
 | includes                        | Yes      | array     | Patterns or group names for group membership                                | Group membership                                                    |
 | depends_on                      | No       | array     | Allowed dependencies (snake_case, not camelCase)                            | Dependency restriction                                              |
 | final                           | No       | boolean   | Require classes to be `final`                                               | Final class enforcement                                             |
@@ -158,7 +149,7 @@ Each group in your `architecture.yaml` configuration can have several properties
 
 **Note:**
 - Property names in YAML must use `snake_case` (e.g., `depends_on`), not camelCase.
-- If a group includes from a global namespace other than `App\`, do not define `depends_on` for that group.
+- If a group includes from a global namespace other than `App\\`, do not define `depends_on` for that group.
 - The configuration will fail with a clear error if these rules are violated.
 
 ### How Classes, Interfaces, and Namespaces Are Defined
@@ -201,7 +192,7 @@ This logic applies to all properties that accept patterns or references, such as
 
 ```yaml
 architecture:
-  - name: "$repositories"
+  $repositories:
     final: true
     implements:
       - "App\Repository\RepositoryInterface"
@@ -211,8 +202,7 @@ architecture:
     depends_on:
       - "$models"
       - "App\Model\*Model"
-
-  - name: "$models"
+  $models:
     includes:
       - "App\Model\*Model"
 ```
