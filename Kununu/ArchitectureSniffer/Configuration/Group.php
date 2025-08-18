@@ -9,6 +9,7 @@ use InvalidArgumentException;
 final readonly class Group
 {
     public const string INCLUDES_KEY = 'includes';
+    public const string EXCLUDES_KEY = 'excludes';
     public const string DEPENDS_ON_KEY = 'depends_on';
     private const string FINAL_KEY = 'final';
     private const string EXTENDS_KEY = 'extends';
@@ -21,6 +22,7 @@ final readonly class Group
      */
     private function __construct(
         private string $name,
+        private ?array $excludes = null,
         private ?array $dependsOn = null,
         private bool $final = false,
         private ?string $extends = null,
@@ -40,6 +42,7 @@ final readonly class Group
 
         return new self(
             name: $name,
+            excludes: $data[self::EXCLUDES_KEY] ?? null,
             dependsOn: $data[self::DEPENDS_ON_KEY] ?? null,
             final: $data[self::FINAL_KEY] ?? false,
             extends: $data[self::EXTENDS_KEY] ?? null,
@@ -74,6 +77,9 @@ final readonly class Group
             yield Rules\MustOnlyDependOn::fromGenerators(
                 selectables: $library->getSelectorsFromGroup($this->name),
                 dependencies: $library->getSelectors($this->dependsOn),
+                extends: $this->extends ? $library->getSelector($this->extends) : null,
+                implements: $this->implements ? $library->getSelectors($this->implements) : null,
+                excludes: $this->excludes ? $library->getSelectors($this->excludes) : null,
             )->getPHPatRule($this->name);
         }
 
