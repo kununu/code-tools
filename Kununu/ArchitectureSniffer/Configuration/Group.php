@@ -54,34 +54,34 @@ final readonly class Group
             yield Rules\MustExtend::fromGenerators(
                 extensions: $library->getSelector($this->extends),
                 selectables: $library->getSelectorsFromGroup($this->name),
-            );
+            )->getPHPatRule($this->name);
         }
 
         if ($this->implements) {
             yield Rules\MustImplement::fromGenerators(
                 selectables: $library->getSelectorsFromGroup($this->name),
                 interfaces: $library->getSelectors($this->implements),
-            );
+            )->getPHPatRule($this->name);
         }
 
         if ($this->final) {
             yield Rules\MustBeFinal::fromGenerator(
                 selectables: $library->getSelectorsFromGroup($this->name),
-            );
+            )->getPHPatRule($this->name);
         }
 
         if ($this->dependsOn) {
             yield Rules\MustOnlyDependOn::fromGenerators(
                 selectables: $library->getSelectorsFromGroup($this->name),
                 dependencies: $library->getSelectors($this->dependsOn),
-            );
+            )->getPHPatRule($this->name);
         }
 
         if ($this->mustOnlyHaveOnePublicMethodNamed) {
             yield Rules\MustOnlyHaveOnePublicMethodNamed::fromGenerator(
                 selectables: $library->getSelectorsFromGroup($this->name),
                 functionName: $this->mustOnlyHaveOnePublicMethodNamed,
-            );
+            )->getPHPatRule($this->name);
         }
     }
 }

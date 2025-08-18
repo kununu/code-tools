@@ -10,8 +10,6 @@ use PHPat\Test\PHPat;
 
 final readonly class MustExtend extends AbstractRule
 {
-    public const string KEY = 'extends';
-
     public function __construct(
         public array $extensions,
         public array $selectables,
@@ -33,9 +31,9 @@ final readonly class MustExtend extends AbstractRule
     public function getPHPatRule(string $groupName): \PHPat\Test\Builder\Rule
     {
         return PHPat::rule()
-            ->classes(self::getPHPSelectors($this->selectables))
+            ->classes(...self::getPHPSelectors($this->selectables))
             ->shouldExtend()
-            ->classes(self::getPHPSelectors($this->extensions))
+            ->classes(...self::getPHPSelectors($this->extensions))
             ->because("$groupName should extend class.");
     }
 }
