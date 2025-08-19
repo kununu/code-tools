@@ -170,8 +170,15 @@ final class CsFixerGitHookCommand extends BaseCommand
 
     private function makeRelativePath(string $from, string $to): string
     {
-        $from = explode(DIRECTORY_SEPARATOR, realpath($from));
-        $to = explode(DIRECTORY_SEPARATOR, realpath($to));
+        $fromReal = realpath($from);
+        $toReal = realpath($to);
+
+        if ($fromReal === false || $toReal === false) {
+            throw new RuntimeException('Invalid path(s) provided.');
+        }
+
+        $from = explode(DIRECTORY_SEPARATOR, $fromReal);
+        $to = explode(DIRECTORY_SEPARATOR, $toReal);
 
         while (count($from) && count($to) && ($from[0] === $to[0])) {
             array_shift($from);
