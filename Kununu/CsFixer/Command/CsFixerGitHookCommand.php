@@ -13,6 +13,9 @@ use Throwable;
 
 final class CsFixerGitHookCommand extends BaseCommand
 {
+    public const SUCCESS = 0;
+    public const FAILURE = 1;
+
     protected function configure(): void
     {
         $this
