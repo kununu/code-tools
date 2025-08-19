@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace Kununu\ArchitectureSniffer\Configuration;
 
-use Generator;
 use InvalidArgumentException;
 
 final readonly class Architecture
@@ -11,18 +10,9 @@ final readonly class Architecture
     public const string ARCHITECTURE_KEY = 'architecture';
 
     /**
-     * @param array<Group> $groups
-     */
-    private function __construct(
-        private array $groups,
-        private SelectorsLibrary $selectorsLibrary,
-    ) {
-    }
-
-    /**
      * @param array<int, array<string, mixed>> $data
      */
-    public static function fromArray(array $data): self
+    public static function fromArray(array $data): iterable
     {
         if (!array_key_exists(self::ARCHITECTURE_KEY, $data)) {
             throw new InvalidArgumentException(
@@ -81,20 +71,8 @@ final readonly class Architecture
             }
         }
 
-        $groups = [];
         foreach ($architecture as $groupName => $groupData) {
-            $groups[] = Group::fromArray($groupName, $groupData);
-        }
-
-        $selectorsLibrary = new SelectorsLibrary($architecture);
-
-        return new self($groups, $selectorsLibrary);
-    }
-
-    public function getRules(): Generator
-    {
-        foreach ($this->groups as $group) {
-            yield from $group->getRules($this->selectorsLibrary);
+            yield from Group::getRules($groupName, $groupData);
         }
     }
 }

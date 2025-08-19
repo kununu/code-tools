@@ -21,15 +21,29 @@ final class SelectorsLibrary
             $this->passedGroups = [$groupName];
             $resolvedIncludes = [];
             foreach ($attributes[Group::INCLUDES_KEY] as $include) {
-                foreach ($this->resolveInclude($include) as $selectable) {
+                foreach ($this->resolveGroup($include, Group::INCLUDES_KEY) as $selectable) {
                     $resolvedIncludes[] = $selectable;
                 }
             }
-            $this->flattenedGroups[$groupName] = $resolvedIncludes;
+            $this->passedGroups = [$groupName];
+            $resolvedExcludes = [];
+            foreach ($attributes[Group::EXCLUDES_KEY] as $include) {
+                foreach ($this->resolveGroup($include, Group::EXCLUDES_KEY) as $selectable) {
+                    $resolvedIncludes[] = $selectable;
+                }
+            }
+            $this->flattenedGroups[$groupName][Group::INCLUDES_KEY] = $resolvedIncludes;
+            $this->flattenedGroups[$groupName][Group::EXCLUDES_KEY] = array_diff($resolvedExcludes, $resolvedIncludes);
+            $this->flattenedGroups[$groupName][Group::DEPENDS_ON_KEY] = $attributes[Group::DEPENDS_ON_KEY];
+            $this->flattenedGroups[$groupName][Group::MUST_NOT_DEPEND_ON_KEY] = $attributes[Group::MUST_NOT_DEPEND_ON_KEY] ?? [];
+            $this->flattenedGroups[$groupName][Group::FINAL_KEY] = $attributes[Group::FINAL_KEY] ?? false;
+            $this->flattenedGroups[$groupName][Group::EXTENDS_KEY] = is_string($attributes[Group::EXTENDS_KEY]) ? [$attributes[Group::EXTENDS_KEY]] : null;
+            $this->flattenedGroups[$groupName][Group::IMPLEMENTS_KEY] = $attributes[Group::IMPLEMENTS_KEY] ?? null;
+            $this->flattenedGroups[$groupName][Group::MUST_ONLY_HAVE_ONE_PUBLIC_METHOD_NAMED_KEY] = $attributes[Group::MUST_ONLY_HAVE_ONE_PUBLIC_METHOD_NAMED_KEY] ?? null;
         }
     }
 
-    private function resolveInclude(string $fqcnOrGroupName): Generator
+    private function resolveGroup(string $fqcnOrGroupName, string $key): Generator
     {
         if (array_key_exists($fqcnOrGroupName, $this->groups)) {
             if (in_array($fqcnOrGroupName, $this->passedGroups, true)) {
@@ -38,8 +52,8 @@ final class SelectorsLibrary
 
             $this->passedGroups[] = $fqcnOrGroupName;
 
-            foreach ($this->groups[$fqcnOrGroupName] as $subFqcnOrGroupName) {
-                yield from $this->resolveInclude($subFqcnOrGroupName);
+            foreach ($this->groups[$fqcnOrGroupName][$key] as $subFqcnOrGroupName) {
+                yield from $this->resolveGroup($subFqcnOrGroupName, $key);
             }
 
             return;
@@ -48,33 +62,125 @@ final class SelectorsLibrary
         yield $fqcnOrGroupName;
     }
 
-    public function getSelector(string $fqcnOrGroup): Generator
-    {
-        if (array_key_exists($fqcnOrGroup, $this->flattenedGroups)) {
-            foreach ($this->flattenedGroups[$fqcnOrGroup] as $fqcn) {
-                yield $this->createSelectable($fqcn);
-            }
-        }
-
-        return [$this->createSelectable($fqcnOrGroup)];
-    }
-
-    public function getSelectorsFromGroup(string $groupName): Generator
+    public function getOnlyPublicFunctionByGroup(string $groupName): string
     {
         if (!array_key_exists($groupName, $this->flattenedGroups)) {
             throw new InvalidArgumentException("Group '$groupName' does not exist.");
         }
 
-        foreach ($this->flattenedGroups[$groupName] as $fqcn) {
+        return $this->flattenedGroups[$groupName][Group::MUST_ONLY_HAVE_ONE_PUBLIC_METHOD_NAMED_KEY];
+    }
+
+    public function getIncludesByGroup(string $groupName): ?Generator
+    {
+        if (!array_key_exists($groupName, $this->flattenedGroups)) {
+            throw new InvalidArgumentException("Group '$groupName' does not exist.");
+        }
+
+        if (empty($this->flattenedGroups[$groupName][Group::INCLUDES_KEY])) {
+            return null;
+        }
+
+        foreach ($this->flattenedGroups[$groupName][Group::INCLUDES_KEY] as $fqcn) {
             yield $this->createSelectable($fqcn);
         }
     }
 
-    public function getSelectors(array $values): Generator
+    public function getExcludesByGroup(string $groupName): ?Generator
+    {
+        if (!array_key_exists($groupName, $this->flattenedGroups)) {
+            throw new InvalidArgumentException("Group '$groupName' does not exist.");
+        }
+
+        if (empty($this->flattenedGroups[$groupName][Group::EXCLUDES_KEY])) {
+            return null;
+        }
+
+        foreach ($this->flattenedGroups[$groupName][Group::EXCLUDES_KEY] as $fqcn) {
+            yield $this->createSelectable($fqcn);
+        }
+    }
+
+    public function getTargetByGroup(string $groupName, string $key): ?Generator
+    {
+        if (!array_key_exists($groupName, $this->flattenedGroups)) {
+            throw new InvalidArgumentException("Group '$groupName' does not exist.");
+        }
+
+        if (empty($this->flattenedGroups[$groupName][$key])) {
+            return null;
+        }
+
+        yield from $this->getSelectors($this->flattenedGroups[$groupName][$key]);
+    }
+
+    public function groupHasKey(string $groupName, string $key): bool
+    {
+        if (!array_key_exists($groupName, $this->flattenedGroups)) {
+            throw new InvalidArgumentException("Group '$groupName' does not exist.");
+        }
+
+        return array_key_exists($key, $this->flattenedGroups[$groupName]);
+    }
+
+    public function getTargetExcludesByGroup(string $groupName, string $key): ?Generator
+    {
+        if (!array_key_exists($groupName, $this->flattenedGroups)) {
+            throw new InvalidArgumentException("Group '$groupName' does not exist.");
+        }
+
+        if (empty($this->flattenedGroups[$groupName][$key])) {
+            return null;
+        }
+
+        yield from array_diff(
+            $this->getPotentialExcludesBy($this->flattenedGroups[$groupName][$key]),
+            $this->getTargetByGroup($this->flattenedGroups[$groupName][$key], $key)
+        );
+    }
+
+    private function getSelector(string $fqcnOrGroup, string $key): ?Generator
+    {
+        if (array_key_exists($fqcnOrGroup, $this->flattenedGroups)) {
+            if (!array_key_exists($key, $this->flattenedGroups[$fqcnOrGroup])) {
+                return null;
+            }
+
+            foreach ($this->flattenedGroups[$fqcnOrGroup][$key] as $fqcn) {
+                yield $this->createSelectable($fqcn);
+            }
+
+            return;
+        }
+
+        yield $this->createSelectable($fqcnOrGroup);
+    }
+
+    private function getSelectors(array $values): ?Generator
     {
         foreach ($values as $fqcnOrGroup) {
-            yield from $this->getSelector($fqcnOrGroup);
+            $generator = $this->getSelector($fqcnOrGroup, Group::INCLUDES_KEY);
+            if ($generator === null) {
+                return null;
+            }
+            yield from $generator;
         }
+    }
+
+    private function getPotentialExcludesBy(array $groups): array
+    {
+        $result = [];
+        foreach ($groups as $groupName) {
+            if (is_string($groupName) && array_key_exists($groupName, $this->flattenedGroups)) {
+                if (!empty($this->flattenedGroups[$groupName][Group::EXCLUDES_KEY])) {
+                    foreach ($this->flattenedGroups[$groupName][Group::EXCLUDES_KEY] as $exclude) {
+                        $result[] = $exclude;
+                    }
+                }
+            }
+        }
+
+        return array_unique($result);
     }
 
     private function createSelectable(string $fqcn): Selectable

@@ -17,13 +17,7 @@ final class ArchitectureSniffer
      */
     public function testArchitecture(): iterable
     {
-        $architecture = $this->getArchitecture();
-        yield from $architecture->getRules();
-    }
-
-    private function getArchitecture(): Architecture
-    {
-        return Architecture::fromArray(
+        yield from Architecture::fromArray(
             Yaml::parseFile(ProjectPathResolver::resolve(self::ARCHITECTURE_FILENAME))
         );
     }

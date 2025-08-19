@@ -111,11 +111,22 @@ Each group in your `architecture.yaml` configuration is now defined as a key und
   - Example: `includes: ["App\\Controller\\*Controller"]`
   - **Rule triggered:** Classes matching these patterns are considered part of the group.
 
+- **excludes** (optional):
+  - List of patterns or group names to be excluded from all rule assertions for this group.
+  - Example: `excludes: ["App\\Controller\\Abstract*", "App\\Service\\Legacy*"]`
+  - This property is used for all rules (extends, implements, depends_on, must_not_depend_on, etc.).
+  - **Note:** To blacklist dependencies, use `must_not_depend_on`.
+
 - **depends_on** (optional):
   - List of group names or patterns that this group is allowed to depend on.
   - Example: `depends_on: ["$services", "App\\Library\\*"]`
   - **Rule triggered:** Ensures that classes in this group only depend on allowed groups/classes. Violations are reported if dependencies are outside this list.
   - **Important:** If a group includes from a global namespace other than `App\\`, it must NOT have a `depends_on` property. This will cause a configuration error.
+
+- **must_not_depend_on** (optional):
+  - List of group names or patterns that this group is forbidden to depend on.
+  - Example: `must_not_depend_on: ["$forbidden", "App\\Forbidden\\*"]`
+  - **Rule triggered:** Reports any class in the group that depends on forbidden groups/classes.
 
 - **final** (optional):
   - Boolean (`true`/`false`). If `true`, all classes in this group must be declared as `final`.
@@ -141,7 +152,9 @@ Each group in your `architecture.yaml` configuration is now defined as a key und
 | Property                        | Required | Type      | Description                                                                 | Rule Triggered                                                      |
 |----------------------------------|----------|-----------|-----------------------------------------------------------------------------|---------------------------------------------------------------------|
 | includes                        | Yes      | array     | Patterns or group names for group membership                                | Group membership                                                    |
-| depends_on                      | No       | array     | Allowed dependencies (snake_case, not camelCase)                            | Dependency restriction                                              |
+| excludes                        | No       | array     | Excludes for all rules in this group                                        | Exclusion from all rule assertions                                   |
+| depends_on                      | No       | array     | Allowed dependencies                                                        | Dependency restriction                                              |
+| must_not_depend_on              | No       | array     | Forbidden dependencies                                                      | Forbidden dependency restriction                                    |
 | final                           | No       | boolean   | Require classes to be `final`                                               | Final class enforcement                                             |
 | extends                         | No       | string    | Required base class/group                                                   | Inheritance enforcement                                             |
 | implements                      | No       | array     | Required interfaces                                                         | Interface implementation enforcement                                |

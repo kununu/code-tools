@@ -8,7 +8,7 @@ use Kununu\ArchitectureSniffer\Configuration\SelectorsLibrary;
 use PHPat\Test\Builder\Rule as PHPatRule;
 use PHPat\Test\PHPat;
 
-final readonly class MustOnlyDependOn extends AbstractRule
+final readonly class MustNotDependOn extends AbstractRule
 {
     public static function createRule(
         string $groupName,
@@ -16,19 +16,21 @@ final readonly class MustOnlyDependOn extends AbstractRule
     ): PHPatRule {
         $includes = $library->getIncludesByGroup($groupName);
         $excludes = $library->getExcludesByGroup($groupName);
-        $onlyDependOn = $library->getTargetByGroup($groupName, Group::DEPENDS_ON_KEY);
-        $onlyDependOnExcludes = $library->getTargetExcludesByGroup($groupName, Group::DEPENDS_ON_KEY);
+        $mostNotDependOn = $library->getTargetByGroup($groupName, Group::MUST_NOT_DEPEND_ON_KEY);
+        $mostNotDependOnExcludes = $library->getTargetExcludesByGroup($groupName, Group::MUST_NOT_DEPEND_ON_KEY);
 
         $rule = PHPat::rule()->classes(...self::getPHPSelectors($includes));
+
         if ($excludes !== null) {
             $rule = $rule->excluding(...self::getPHPSelectors($excludes));
         }
 
-        $rule = $rule->canOnlyDependOn()->classes(...self::getPHPSelectors($onlyDependOn));
-        if ($onlyDependOnExcludes !== null) {
-            $rule = $rule->excluding(...$onlyDependOnExcludes);
+        $rule = $rule->shouldNotDependOn()->classes(...self::getPHPSelectors($mostNotDependOn));
+
+        if ($mostNotDependOnExcludes !== null) {
+            $rule = $rule->excluding(...self::getPHPSelectors($mostNotDependOnExcludes));
         }
 
-        return $rule->because("$groupName must only depend on allowed dependencies.");
+        return $rule->because("$groupName must not depend on forbidden dependencies.");
     }
 }

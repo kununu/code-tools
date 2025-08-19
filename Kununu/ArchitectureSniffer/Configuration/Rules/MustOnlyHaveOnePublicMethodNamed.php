@@ -3,27 +3,29 @@ declare(strict_types=1);
 
 namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 
-use Generator;
+use Kununu\ArchitectureSniffer\Configuration\SelectorsLibrary;
+use PHPat\Test\Builder\Rule as PHPatRule;
 use PHPat\Test\PHPat;
 
 final readonly class MustOnlyHaveOnePublicMethodNamed extends AbstractRule
 {
-    public function __construct(
-        public array $selectables,
-        public string $functionName,
-    ) {
-    }
+    public static function createRule(
+        string $groupName,
+        SelectorsLibrary $library,
+    ): PHPatRule {
+        $includes = $library->getIncludesByGroup($groupName);
+        $excludes = $library->getExcludesByGroup($groupName);
+        $functionName = $library->getOnlyPublicFunctionByGroup($groupName);
 
-    public static function fromGenerator(Generator $selectables, string $functionName): self
-    {
-        return new self(iterator_to_array($selectables), $functionName);
-    }
+        $rule = PHPat::rule()
+            ->classes(...self::getPHPSelectors($includes));
 
-    public function getPHPatRule(string $groupName): \PHPat\Test\Builder\Rule
-    {
-        return PHPat::rule()
-            ->classes(...self::getPHPSelectors($this->selectables))
-            ->shouldHaveOnlyOnePublicMethodNamed($this->functionName)
-            ->because("$groupName should only have one public method named $this->functionName.");
+        if ($excludes !== null) {
+            $rule = $rule->excluding(...self::getPHPSelectors($excludes));
+        }
+
+        return $rule
+            ->shouldHaveOnlyOnePublicMethodNamed($functionName)
+            ->because("$groupName should only have one public method named $functionName");
     }
 }

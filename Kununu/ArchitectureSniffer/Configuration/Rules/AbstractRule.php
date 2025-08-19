@@ -6,7 +6,7 @@ namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 use InvalidArgumentException;
 use Kununu\ArchitectureSniffer\Configuration\Selector\Selectable;
 
-abstract readonly class AbstractRule implements Rule
+abstract readonly class AbstractRule
 {
     public static function getPHPSelectors(iterable $selectors): array
     {

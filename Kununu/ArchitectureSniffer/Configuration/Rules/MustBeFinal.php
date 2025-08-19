@@ -3,37 +3,34 @@ declare(strict_types=1);
 
 namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 
-use Generator;
 use InvalidArgumentException;
 use Kununu\ArchitectureSniffer\Configuration\Selector\ClassSelector;
+use Kununu\ArchitectureSniffer\Configuration\SelectorsLibrary;
 use PHPat\Selector\Selector;
 use PHPat\Test\Builder\Rule as PHPatRule;
 use PHPat\Test\PHPat;
 
 final readonly class MustBeFinal extends AbstractRule
 {
-    public function __construct(public array $selectables)
-    {
-        foreach ($this->selectables as $selectable) {
+    public static function createRule(
+        string $groupName,
+        SelectorsLibrary $library,
+    ): PHPatRule {
+        $includes = $library->getIncludesByGroup($groupName);
+        $excludes = $library->getExcludesByGroup($groupName);
+
+        foreach ($includes as $selectable) {
             if (!$selectable instanceof ClassSelector) {
-                throw new InvalidArgumentException(
-                    'Only classes can be final.'
-                );
+                throw new InvalidArgumentException('Only classes can be final.');
             }
         }
-    }
 
-    public static function fromGenerator(Generator $selectables): self
-    {
-        return new self(iterator_to_array($selectables));
-    }
+        $rule = PHPat::rule()->classes(...self::getPHPSelectors($includes));
 
-    public function getPHPatRule(string $groupName): PHPatRule
-    {
-        return PHPat::rule()
-            ->classes(...self::getPHPSelectors($this->selectables))
-            ->excluding(Selector::isInterface())
-            ->shouldBeFinal()
-            ->because("$groupName must be final.");
+        $excludes = $excludes ? self::getPHPSelectors($excludes) : [];
+        $excludes[] = Selector::isInterface();
+        $rule = $rule->excluding(...$excludes);
+
+        return $rule->shouldBeFinal()->because("$groupName must be final.");
     }
 }
