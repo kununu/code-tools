@@ -25,6 +25,14 @@ final class ArchitectureLibrary
         foreach ($groups as $groupName => $attributes) {
             $this->flattenedGroups[$groupName] = $attributes;
 
+            if (array_key_exists(Group::EXTENDS_KEY, $attributes)) {
+                if (!is_string($attributes[Group::EXTENDS_KEY])) {
+                    throw new InvalidArgumentException("Group '$groupName' 'extends' key must be a string.");
+                }
+
+                $this->flattenedGroups[$groupName][Group::EXTENDS_KEY] = [$attributes[Group::EXTENDS_KEY]];
+            }
+
             $this->passedGroups = [$groupName];
             $resolvedIncludes = [];
             if (!array_key_exists(Group::INCLUDES_KEY, $attributes)) {
@@ -38,21 +46,19 @@ final class ArchitectureLibrary
                     $resolvedIncludes[] = $selectable;
                 }
             }
+            $this->flattenedGroups[$groupName][Group::INCLUDES_KEY] = $resolvedIncludes;
 
             $this->passedGroups = [$groupName];
             $resolvedExcludes = [];
-            if (!array_key_exists(Group::EXCLUDES_KEY, $attributes)) {
-                $attributes[Group::EXCLUDES_KEY] = [];
-            } elseif (!is_array($attributes[Group::EXCLUDES_KEY])) {
-                throw new InvalidArgumentException("Group '$groupName' 'excludes' key must be an array.");
-            }
-            foreach ($attributes[Group::EXCLUDES_KEY] as $excludes) {
-                foreach ($this->resolveGroup($excludes, Group::EXCLUDES_KEY) as $selectable) {
-                    $resolvedIncludes[] = $selectable;
+            if (array_key_exists(Group::EXCLUDES_KEY, $attributes)) {
+                if (!is_array($attributes[Group::EXCLUDES_KEY])) {
+                    throw new InvalidArgumentException("Group '$groupName' 'excludes' key must be an array.");
                 }
-            }
-            $this->flattenedGroups[$groupName][Group::INCLUDES_KEY] = $resolvedIncludes;
-            if (!empty($resolvedExcludes)) {
+                foreach ($attributes[Group::EXCLUDES_KEY] as $excludes) {
+                    foreach ($this->resolveGroup($excludes, Group::EXCLUDES_KEY) as $selectable) {
+                        $resolvedIncludes[] = $selectable;
+                    }
+                }
                 $this->flattenedGroups[$groupName][Group::EXCLUDES_KEY]
                     = array_diff($resolvedExcludes, $resolvedIncludes);
             }
@@ -181,7 +187,7 @@ final class ArchitectureLibrary
         }
 
         $includes = iterator_to_array($this->getTargetByGroup($groupName, $key));
-        $target = $this->flattenedGroups[$groupName][$key];
+        $target = $this->flattenedGroups[$groupName][$key] ?? [];
 
         if (!is_array($target)) {
             throw new InvalidArgumentException(

@@ -42,8 +42,8 @@ abstract readonly class AbstractRule
     ): PHPatRule {
         $includes = $library->getIncludesByGroup($groupName);
         $excludes = $library->getExcludesByGroup($groupName);
-        $target = $targetKey ? $library->getTargetByGroup($groupName, $targetKey) : [];
-        $targetExcludes = $targetKey ? $library->getTargetExcludesByGroup($groupName, $targetKey) : [];
+        $target = $library->getTargetByGroup($groupName, $targetKey);
+        $targetExcludes = $library->getTargetExcludesByGroup($groupName, $targetKey);
 
         $includes = self::getPHPSelectors($includes);
         $excludes = self::getPHPSelectors($excludes);
@@ -56,10 +56,7 @@ abstract readonly class AbstractRule
         }
         $rule = $assertionStep($rule);
 
-        if ($extraSelectors !== []) {
-            $target = array_merge($target, $extraSelectors);
-        }
-        $rule = $rule->classes(...$target);
+        $rule = $rule->classes(...array_merge($target, $extraSelectors));
         if ($targetExcludes !== []) {
             $rule = $rule->excluding(...$targetExcludes);
         }

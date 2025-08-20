@@ -24,7 +24,7 @@ final readonly class MustOnlyDependOn extends AbstractRule
             },
             Group::DEPENDS_ON_KEY,
             "$groupName must only depend on allowed dependencies.",
-            [Selector::classname('/^\\*[^\\]+$/', true)],
+            [Selector::classname('/^\\\\*[^\\\\]+$/', true)],
         );
     }
 }

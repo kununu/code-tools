@@ -82,7 +82,9 @@ final class ArchitectureSniffer
         $library = new ArchitectureLibrary($architecture);
 
         foreach ($architecture as $groupName => $groupData) {
-            yield from Group::getRules($groupName, $library);
+            foreach (Group::getRules($groupName, $library) as $rule) {
+                yield $rule;
+            }
         }
     }
 }
