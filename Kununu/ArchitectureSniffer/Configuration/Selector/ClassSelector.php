@@ -25,9 +25,4 @@ final readonly class ClassSelector implements Selectable
 
         return Selector::classname($class, $class !== $this->class);
     }
-
-    public function getDefinition(): string
-    {
-        return $this->class;
-    }
 }

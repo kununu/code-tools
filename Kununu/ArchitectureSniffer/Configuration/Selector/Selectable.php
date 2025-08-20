@@ -8,6 +8,4 @@ use PHPat\Selector\SelectorInterface;
 interface Selectable
 {
     public function getPHPatSelector(): SelectorInterface;
-
-    public function getDefinition(): string;
 }

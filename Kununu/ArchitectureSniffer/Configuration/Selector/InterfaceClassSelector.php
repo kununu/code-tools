@@ -28,9 +28,4 @@ final readonly class InterfaceClassSelector implements Selectable
             Selector::isInterface(),
         );
     }
-
-    public function getDefinition(): string
-    {
-        return $this->interface;
-    }
 }

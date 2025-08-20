@@ -5,6 +5,8 @@ namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 
 use InvalidArgumentException;
 use Kununu\ArchitectureSniffer\Configuration\Group;
+use Kununu\ArchitectureSniffer\Configuration\Selector\ClassSelector;
+use Kununu\ArchitectureSniffer\Configuration\Selector\NamespaceSelector;
 use Kununu\ArchitectureSniffer\Configuration\SelectorsLibrary;
 use PHPat\Selector\Selector;
 use PHPat\Test\Builder\Rule as PHPatRule;
@@ -38,8 +40,9 @@ final readonly class MustImplement extends AbstractRule
     private static function checkIfInterfaceSelectors(iterable $selectors): iterable
     {
         foreach ($selectors as $selector) {
-            if (!str_ends_with($selector, 'Interface')) {
-                throw new InvalidArgumentException("$selector cannot be used in the MustImplement rule, as it is not an interface.");
+            if ($selector instanceof ClassSelector || $selector instanceof NamespaceSelector) {
+                $name = $selector->namespace ?? $selector->class;
+                throw new InvalidArgumentException("$name cannot be used in the MustImplement rule, as it is not an interface.");
             }
             yield $selector;
         }

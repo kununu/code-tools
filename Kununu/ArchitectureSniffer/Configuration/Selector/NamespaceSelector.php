@@ -25,9 +25,4 @@ final readonly class NamespaceSelector implements Selectable
 
         return Selector::inNamespace($namespace, $namespace !== $this->namespace);
     }
-
-    public function getDefinition(): string
-    {
-        return $this->namespace;
-    }
 }
