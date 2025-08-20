@@ -35,11 +35,14 @@ final class SelectorsLibrary
             $this->flattenedGroups[$groupName][Group::INCLUDES_KEY] = $resolvedIncludes;
             $this->flattenedGroups[$groupName][Group::EXCLUDES_KEY] = array_diff($resolvedExcludes, $resolvedIncludes);
             $this->flattenedGroups[$groupName][Group::DEPENDS_ON_KEY] = $attributes[Group::DEPENDS_ON_KEY] ?? null;
-            $this->flattenedGroups[$groupName][Group::MUST_NOT_DEPEND_ON_KEY] = $attributes[Group::MUST_NOT_DEPEND_ON_KEY] ?? null;
+            $this->flattenedGroups[$groupName][Group::MUST_NOT_DEPEND_ON_KEY]
+                = $attributes[Group::MUST_NOT_DEPEND_ON_KEY] ?? null;
             $this->flattenedGroups[$groupName][Group::FINAL_KEY] = $attributes[Group::FINAL_KEY] ?? null;
-            $this->flattenedGroups[$groupName][Group::EXTENDS_KEY] = is_string($attributes[Group::EXTENDS_KEY]) ? [$attributes[Group::EXTENDS_KEY]] : null;
+            $this->flattenedGroups[$groupName][Group::EXTENDS_KEY]
+                = is_string($attributes[Group::EXTENDS_KEY]) ? [$attributes[Group::EXTENDS_KEY]] : null;
             $this->flattenedGroups[$groupName][Group::IMPLEMENTS_KEY] = $attributes[Group::IMPLEMENTS_KEY] ?? null;
-            $this->flattenedGroups[$groupName][Group::MUST_ONLY_HAVE_ONE_PUBLIC_METHOD_NAMED_KEY] = $attributes[Group::MUST_ONLY_HAVE_ONE_PUBLIC_METHOD_NAMED_KEY] ?? null;
+            $this->flattenedGroups[$groupName][Group::MUST_ONLY_HAVE_ONE_PUBLIC_METHOD_NAMED_KEY]
+                = $attributes[Group::MUST_ONLY_HAVE_ONE_PUBLIC_METHOD_NAMED_KEY] ?? null;
         }
     }
 
@@ -122,7 +125,8 @@ final class SelectorsLibrary
             throw new InvalidArgumentException("Group '$groupName' does not exist.");
         }
 
-        return array_key_exists($key, $this->flattenedGroups[$groupName]) && $this->flattenedGroups[$groupName][$key] !== null;
+        return array_key_exists($key, $this->flattenedGroups[$groupName])
+            && $this->flattenedGroups[$groupName][$key] !== null;
     }
 
     public function getTargetExcludesByGroup(string $groupName, string $key): Generator

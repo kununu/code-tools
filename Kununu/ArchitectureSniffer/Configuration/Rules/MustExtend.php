@@ -44,7 +44,9 @@ final readonly class MustExtend extends AbstractRule
     {
         foreach ($selectors as $selector) {
             if ($selector instanceof InterfaceClassSelector) {
-                throw new InvalidArgumentException("$selector->interface cannot be used in the MustExtend rule, as it is an interface.");
+                throw new InvalidArgumentException(
+                    "$selector->interface cannot be used in the MustExtend rule, as it is an interface."
+                );
             }
             yield $selector;
         }

@@ -43,7 +43,9 @@ final readonly class MustImplement extends AbstractRule
         foreach ($selectors as $selector) {
             if ($selector instanceof ClassSelector || $selector instanceof NamespaceSelector) {
                 $name = $selector->namespace ?? $selector->class;
-                throw new InvalidArgumentException("$name cannot be used in the MustImplement rule, as it is not an interface.");
+                throw new InvalidArgumentException(
+                    "$name cannot be used in the MustImplement rule, as it is not an interface."
+                );
             }
             yield $selector;
         }
