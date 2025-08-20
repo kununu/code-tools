@@ -52,13 +52,13 @@ final class ArchitectureLibrary
             if (!empty($attributes[Group::EXCLUDES_KEY])) {
                 $this->flattenedGroups[$groupName][Group::EXCLUDES_KEY] = array_diff($resolvedExcludes, $resolvedIncludes);
             }
-            if (!array_key_exists( Group::DEPENDS_ON_KEY, $attributes)) {
+            if (!array_key_exists(Group::DEPENDS_ON_KEY, $attributes)) {
                 $this->flattenedGroups[$groupName][Group::DEPENDS_ON_KEY] = $attributes[Group::DEPENDS_ON_KEY];
             }
             if (!array_key_exists(Group::MUST_NOT_DEPEND_ON_KEY, $attributes)) {
                 $this->flattenedGroups[$groupName][Group::MUST_NOT_DEPEND_ON_KEY] = $attributes[Group::MUST_NOT_DEPEND_ON_KEY];
             }
-            if (!array_key_exists( GROUP::FINAL_KEY, $attributes) && $attributes[Group::FINAL_KEY] === true) {
+            if (!array_key_exists(GROUP::FINAL_KEY, $attributes) && $attributes[Group::FINAL_KEY] === true) {
                 $this->flattenedGroups[$groupName][Group::FINAL_KEY] = true;
             }
             if (!array_key_exists(Group::EXCLUDES_KEY, $attributes) && is_string($attributes[Group::EXCLUDES_KEY])) {
@@ -185,8 +185,7 @@ final class ArchitectureLibrary
             throw new InvalidArgumentException("Group '$groupName' does not exist.");
         }
 
-        return array_key_exists($key, $this->flattenedGroups[$groupName])
-            && $this->flattenedGroups[$groupName][$key] !== null;
+        return array_key_exists($key, $this->flattenedGroups[$groupName]);
     }
 
     public function getTargetExcludesByGroup(string $groupName, string $key): Generator
