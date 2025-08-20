@@ -11,7 +11,7 @@ final readonly class Architecture
     public const string ARCHITECTURE_KEY = 'architecture';
 
     /**
-     * @param array<int, array<string, mixed>> $data
+     * @param array<string, array<string, array<string, string[]|string|bool>>> $data
      *
      * @return iterable<PHPatRule>
      */
@@ -58,7 +58,7 @@ final readonly class Architecture
             $architecture,
             static fn(array $group) => !array_filter(
                 is_array($group[Group::INCLUDES_KEY] ?? null) ? $group[Group::INCLUDES_KEY] : [],
-                fn($include) => str_starts_with($include, 'App\\')
+                static fn($include) => str_starts_with($include, 'App\\')
             )
         );
 

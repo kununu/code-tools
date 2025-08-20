@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 
-use InvalidArgumentException;
 use Kununu\ArchitectureSniffer\Configuration\Selector\Selectable;
 use Kununu\ArchitectureSniffer\Configuration\SelectorsLibrary;
+use PHPat\Selector\SelectorInterface;
 use PHPat\Test\Builder\AssertionStep;
 use PHPat\Test\Builder\Rule as PHPatRule;
 use PHPat\Test\Builder\TargetStep;
@@ -13,15 +13,15 @@ use PHPat\Test\PHPat;
 
 abstract readonly class AbstractRule
 {
+    /**
+     * @param iterable<Selectable> $selectors
+     *
+     * @return array<SelectorInterface>
+     */
     public static function getPHPSelectors(iterable $selectors): array
     {
         $result = [];
         foreach ($selectors as $selector) {
-            if (!$selector instanceof Selectable) {
-                throw new InvalidArgumentException(
-                    'Only Selectable instances can be used in rules.'
-                );
-            }
             $result[] = $selector->getPHPatSelector();
         }
 
@@ -30,13 +30,14 @@ abstract readonly class AbstractRule
 
     /**
      * @param callable(AssertionStep): TargetStep $assertionStep
+     * @param array<SelectorInterface>            $extraSelectors
      */
     protected static function buildDependencyRule(
         string $groupName,
         SelectorsLibrary $library,
         callable $assertionStep,
+        string $targetKey,
         string $because = '',
-        ?string $targetKey = null,
         array $extraSelectors = [],
     ): PHPatRule {
         $includes = $library->getIncludesByGroup($groupName);

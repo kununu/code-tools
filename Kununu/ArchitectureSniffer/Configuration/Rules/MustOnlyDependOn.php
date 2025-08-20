@@ -22,8 +22,8 @@ final readonly class MustOnlyDependOn extends AbstractRule
             static function(AssertionStep $rule): TargetStep {
                 return $rule->canOnlyDependOn();
             },
-            "$groupName must only depend on allowed dependencies.",
             Group::DEPENDS_ON_KEY,
+            "$groupName must only depend on allowed dependencies.",
             [Selector::classname('/^\\*[^\\]+$/', true)],
         );
     }

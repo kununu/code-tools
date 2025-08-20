@@ -5,6 +5,7 @@ namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 
 use InvalidArgumentException;
 use Kununu\ArchitectureSniffer\Configuration\Selector\InterfaceClassSelector;
+use Kununu\ArchitectureSniffer\Configuration\Selector\Selectable;
 use Kununu\ArchitectureSniffer\Configuration\SelectorsLibrary;
 use PHPat\Selector\Selector;
 use PHPat\Test\Builder\Rule as PHPatRule;
@@ -28,6 +29,11 @@ final readonly class MustBeFinal extends AbstractRule
         return $rule->shouldBeFinal()->because("$groupName must be final.");
     }
 
+    /**
+     * @param iterable<Selectable> $selectors
+     *
+     * @return iterable<Selectable>
+     */
     private static function checkIfClassSelectors(iterable $selectors): iterable
     {
         foreach ($selectors as $selector) {

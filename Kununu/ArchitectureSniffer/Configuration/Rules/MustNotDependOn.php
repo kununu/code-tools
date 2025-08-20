@@ -21,8 +21,8 @@ final readonly class MustNotDependOn extends AbstractRule
             static function(AssertionStep $rule): TargetStep {
                 return $rule->shouldNotDependOn();
             },
-            "$groupName must not depend on forbidden dependencies.",
             Group::MUST_NOT_DEPEND_ON_KEY,
+            "$groupName must not depend on forbidden dependencies.",
         );
     }
 }

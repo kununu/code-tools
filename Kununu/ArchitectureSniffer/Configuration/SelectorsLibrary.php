@@ -12,14 +12,25 @@ use Kununu\ArchitectureSniffer\Configuration\Selector\Selectable;
 
 final class SelectorsLibrary
 {
+    /** @var array<string, array<string, string[]|string|bool|null>> */
     private array $flattenedGroups = [];
+    /** @var array<string> */
     private array $passedGroups = [];
 
+    /**
+     * @param array<string, array<string, string[]|string|bool>> $groups
+     */
     public function __construct(private readonly array $groups)
     {
         foreach ($groups as $groupName => $attributes) {
             $this->passedGroups = [$groupName];
             $resolvedIncludes = [];
+            if (!array_key_exists(Group::INCLUDES_KEY, $attributes)) {
+                throw new InvalidArgumentException("Group '$groupName' must have an 'includes' key.");
+            }
+            if (!is_array($attributes[Group::INCLUDES_KEY])) {
+                throw new InvalidArgumentException("Group '$groupName' 'includes' key must be an array.");
+            }
             foreach ($attributes[Group::INCLUDES_KEY] as $include) {
                 foreach ($this->resolveGroup($include, Group::INCLUDES_KEY) as $selectable) {
                     $resolvedIncludes[] = $selectable;
@@ -27,13 +38,19 @@ final class SelectorsLibrary
             }
             $this->passedGroups = [$groupName];
             $resolvedExcludes = [];
-            foreach ($attributes[Group::EXCLUDES_KEY] as $include) {
-                foreach ($this->resolveGroup($include, Group::EXCLUDES_KEY) as $selectable) {
+            if (!array_key_exists(Group::EXCLUDES_KEY, $attributes)) {
+                $attributes[Group::EXCLUDES_KEY] = [];
+            } elseif (!is_array($attributes[Group::EXCLUDES_KEY])) {
+                throw new InvalidArgumentException("Group '$groupName' 'excludes' key must be an array.");
+            }
+            foreach ($attributes[Group::EXCLUDES_KEY] as $excludes) {
+                foreach ($this->resolveGroup($excludes, Group::EXCLUDES_KEY) as $selectable) {
                     $resolvedIncludes[] = $selectable;
                 }
             }
             $this->flattenedGroups[$groupName][Group::INCLUDES_KEY] = $resolvedIncludes;
-            $this->flattenedGroups[$groupName][Group::EXCLUDES_KEY] = array_diff($resolvedExcludes, $resolvedIncludes);
+            $this->flattenedGroups[$groupName][Group::EXCLUDES_KEY]
+                = empty($attributes[Group::EXCLUDES_KEY]) ? null : array_diff($resolvedExcludes, $resolvedIncludes);
             $this->flattenedGroups[$groupName][Group::DEPENDS_ON_KEY] = $attributes[Group::DEPENDS_ON_KEY] ?? null;
             $this->flattenedGroups[$groupName][Group::MUST_NOT_DEPEND_ON_KEY]
                 = $attributes[Group::MUST_NOT_DEPEND_ON_KEY] ?? null;
@@ -55,6 +72,11 @@ final class SelectorsLibrary
 
             $this->passedGroups[] = $fqcnOrGroupName;
 
+            if (!is_array($this->groups[$fqcnOrGroupName][$key])) {
+                throw new InvalidArgumentException(
+                    "Group '$fqcnOrGroupName' must have a non-empty '$key' key."
+                );
+            }
             foreach ($this->groups[$fqcnOrGroupName][$key] as $subFqcnOrGroupName) {
                 yield from $this->resolveGroup($subFqcnOrGroupName, $key);
             }
@@ -71,13 +93,26 @@ final class SelectorsLibrary
             throw new InvalidArgumentException("Group '$groupName' does not exist.");
         }
 
-        return $this->flattenedGroups[$groupName][Group::MUST_ONLY_HAVE_ONE_PUBLIC_METHOD_NAMED_KEY];
+        $funtionName = $this->flattenedGroups[$groupName][Group::MUST_ONLY_HAVE_ONE_PUBLIC_METHOD_NAMED_KEY];
+
+        if (!is_string($funtionName) && $funtionName !== null) {
+            $key = Group::MUST_ONLY_HAVE_ONE_PUBLIC_METHOD_NAMED_KEY;
+            throw new InvalidArgumentException(
+                "Group '$groupName' must have a string value for '$key' key."
+            );
+        }
+
+        return $funtionName;
     }
 
     public function getIncludesByGroup(string $groupName): Generator
     {
         if (!array_key_exists($groupName, $this->flattenedGroups)) {
             throw new InvalidArgumentException("Group '$groupName' does not exist.");
+        }
+
+        if (!is_array($this->flattenedGroups[$groupName][Group::INCLUDES_KEY])) {
+            throw new InvalidArgumentException("Group '$groupName' 'includes' key must be an array.");
         }
 
         yield from $this->getSelectors($this->flattenedGroups[$groupName][Group::INCLUDES_KEY]);
@@ -87,6 +122,10 @@ final class SelectorsLibrary
     {
         if (!array_key_exists($groupName, $this->flattenedGroups)) {
             throw new InvalidArgumentException("Group '$groupName' does not exist.");
+        }
+
+        if (!is_array($this->flattenedGroups[$groupName][Group::EXCLUDES_KEY])) {
+            throw new InvalidArgumentException("Group '$groupName' 'excludes' key must be an array.");
         }
 
         yield from $this->getSelectors($this->flattenedGroups[$groupName][Group::EXCLUDES_KEY]);
@@ -99,21 +138,31 @@ final class SelectorsLibrary
         }
 
         if ($key === Group::DEPENDS_ON_KEY) {
+            if (!is_array($this->flattenedGroups[$groupName][Group::INCLUDES_KEY])) {
+                throw new InvalidArgumentException("Group '$groupName' 'includes' key must be an array.");
+            }
+
             yield from $this->getSelectors($this->flattenedGroups[$groupName][Group::INCLUDES_KEY]);
 
             if (
                 array_key_exists(Group::EXTENDS_KEY, $this->flattenedGroups[$groupName])
-                && $this->flattenedGroups[$groupName][Group::EXTENDS_KEY] !== null
+                && is_array($this->flattenedGroups[$groupName][Group::EXTENDS_KEY])
             ) {
                 yield from $this->getSelectors($this->flattenedGroups[$groupName][Group::EXTENDS_KEY]);
             }
 
             if (
                 array_key_exists(Group::IMPLEMENTS_KEY, $this->flattenedGroups[$groupName])
-                && $this->flattenedGroups[$groupName][Group::IMPLEMENTS_KEY] !== null
+                && is_array($this->flattenedGroups[$groupName][Group::IMPLEMENTS_KEY])
             ) {
                 yield from $this->getSelectors($this->flattenedGroups[$groupName][Group::IMPLEMENTS_KEY]);
             }
+        }
+
+        if (!is_array($this->flattenedGroups[$groupName][$key])) {
+            throw new InvalidArgumentException(
+                "Property '$key' of group '$groupName' must be an array."
+            );
         }
 
         yield from $this->getSelectors($this->flattenedGroups[$groupName][$key]);
@@ -136,7 +185,15 @@ final class SelectorsLibrary
         }
 
         $includes = iterator_to_array($this->getTargetByGroup($groupName, $key));
-        foreach ($this->getPotentialExcludesBy($this->flattenedGroups[$groupName][$key]) as $exclude) {
+        $target = $this->flattenedGroups[$groupName][$key];
+
+        if (!is_array($target)) {
+            throw new InvalidArgumentException(
+                "Property '$key' of group '$groupName' must be an array."
+            );
+        }
+
+        foreach ($this->getPotentialExcludesBy($target) as $exclude) {
             if (in_array($exclude, $includes, true)) {
                 continue;
             }
@@ -147,6 +204,12 @@ final class SelectorsLibrary
     private function getSelectorFromIncludes(string $fqcnOrGroup): Generator
     {
         if (array_key_exists($fqcnOrGroup, $this->flattenedGroups)) {
+            if (!is_array($this->flattenedGroups[$fqcnOrGroup][Group::INCLUDES_KEY])) {
+                throw new InvalidArgumentException(
+                    "Group '$fqcnOrGroup' 'includes' key must be an array."
+                );
+            }
+
             foreach ($this->flattenedGroups[$fqcnOrGroup][Group::INCLUDES_KEY] as $fqcn) {
                 yield $this->createSelectable($fqcn);
             }
@@ -157,6 +220,11 @@ final class SelectorsLibrary
         yield $this->createSelectable($fqcnOrGroup);
     }
 
+    /**
+     * @param string[] $values
+     *
+     * @return Generator<Selectable>
+     */
     private function getSelectors(array $values): Generator
     {
         foreach ($values as $fqcnOrGroup) {
@@ -164,15 +232,23 @@ final class SelectorsLibrary
         }
     }
 
+    /**
+     * @param string[] $groups
+     *
+     * @return string[]
+     */
     private function getPotentialExcludesBy(array $groups): array
     {
         $result = [];
         foreach ($groups as $groupName) {
-            if (is_string($groupName) && array_key_exists($groupName, $this->flattenedGroups)) {
-                if (!empty($this->flattenedGroups[$groupName][Group::EXCLUDES_KEY])) {
-                    foreach ($this->flattenedGroups[$groupName][Group::EXCLUDES_KEY] as $exclude) {
-                        $result[] = $exclude;
-                    }
+            if (array_key_exists($groupName, $this->flattenedGroups)) {
+                if (!is_array($this->flattenedGroups[$groupName][Group::EXCLUDES_KEY])) {
+                    throw new InvalidArgumentException(
+                        "Group '$groupName' 'excludes' key must be an array."
+                    );
+                }
+                foreach ($this->flattenedGroups[$groupName][Group::EXCLUDES_KEY] as $exclude) {
+                    $result[] = $exclude;
                 }
             }
         }
