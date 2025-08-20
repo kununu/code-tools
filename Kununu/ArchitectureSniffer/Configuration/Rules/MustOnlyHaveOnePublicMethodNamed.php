@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 
 use InvalidArgumentException;
-use Kununu\ArchitectureSniffer\Configuration\SelectorsLibrary;
+use Kununu\ArchitectureSniffer\Configuration\ArchitectureLibrary;
 use PHPat\Test\Builder\Rule as PHPatRule;
 use PHPat\Test\PHPat;
 
@@ -12,7 +12,7 @@ final readonly class MustOnlyHaveOnePublicMethodNamed extends AbstractRule
 {
     public static function createRule(
         string $groupName,
-        SelectorsLibrary $library,
+        ArchitectureLibrary $library,
     ): PHPatRule {
         $includes = $library->getIncludesByGroup($groupName);
         $excludes = $library->getExcludesByGroup($groupName);

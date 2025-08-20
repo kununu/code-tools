@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 
+use Kununu\ArchitectureSniffer\Configuration\ArchitectureLibrary;
 use Kununu\ArchitectureSniffer\Configuration\Group;
-use Kununu\ArchitectureSniffer\Configuration\SelectorsLibrary;
 use PHPat\Test\Builder\AssertionStep;
 use PHPat\Test\Builder\Rule as PHPatRule;
 use PHPat\Test\Builder\TargetStep;
@@ -13,7 +13,7 @@ final readonly class MustNotDependOn extends AbstractRule
 {
     public static function createRule(
         string $groupName,
-        SelectorsLibrary $library,
+        ArchitectureLibrary $library,
     ): PHPatRule {
         return self::buildDependencyRule(
             $groupName,

@@ -4,10 +4,10 @@ declare(strict_types=1);
 namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 
 use InvalidArgumentException;
+use Kununu\ArchitectureSniffer\Configuration\ArchitectureLibrary;
 use Kununu\ArchitectureSniffer\Configuration\Group;
 use Kununu\ArchitectureSniffer\Configuration\Selector\InterfaceClassSelector;
 use Kununu\ArchitectureSniffer\Configuration\Selector\Selectable;
-use Kununu\ArchitectureSniffer\Configuration\SelectorsLibrary;
 use PHPat\Test\Builder\Rule as PHPatRule;
 use PHPat\Test\PHPat;
 
@@ -15,7 +15,7 @@ final readonly class MustExtend extends AbstractRule
 {
     public static function createRule(
         string $groupName,
-        SelectorsLibrary $selectorsLibrary,
+        ArchitectureLibrary $selectorsLibrary,
     ): PHPatRule {
         $includes = $selectorsLibrary->getIncludesByGroup($groupName);
         $excludes = $selectorsLibrary->getExcludesByGroup($groupName);

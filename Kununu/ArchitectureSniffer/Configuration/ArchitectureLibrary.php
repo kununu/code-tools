@@ -10,7 +10,7 @@ use Kununu\ArchitectureSniffer\Configuration\Selector\InterfaceClassSelector;
 use Kununu\ArchitectureSniffer\Configuration\Selector\NamespaceSelector;
 use Kununu\ArchitectureSniffer\Configuration\Selector\Selectable;
 
-final class SelectorsLibrary
+final class ArchitectureLibrary
 {
     /** @var array<string, array<string, string[]|string|bool|null>> */
     private array $flattenedGroups = [];
@@ -49,17 +49,28 @@ final class SelectorsLibrary
                 }
             }
             $this->flattenedGroups[$groupName][Group::INCLUDES_KEY] = $resolvedIncludes;
-            $this->flattenedGroups[$groupName][Group::EXCLUDES_KEY]
-                = empty($attributes[Group::EXCLUDES_KEY]) ? null : array_diff($resolvedExcludes, $resolvedIncludes);
-            $this->flattenedGroups[$groupName][Group::DEPENDS_ON_KEY] = $attributes[Group::DEPENDS_ON_KEY] ?? null;
-            $this->flattenedGroups[$groupName][Group::MUST_NOT_DEPEND_ON_KEY]
-                = $attributes[Group::MUST_NOT_DEPEND_ON_KEY] ?? null;
-            $this->flattenedGroups[$groupName][Group::FINAL_KEY] = $attributes[Group::FINAL_KEY] ?? null;
-            $this->flattenedGroups[$groupName][Group::EXTENDS_KEY]
-                = is_string($attributes[Group::EXTENDS_KEY]) ? [$attributes[Group::EXTENDS_KEY]] : null;
-            $this->flattenedGroups[$groupName][Group::IMPLEMENTS_KEY] = $attributes[Group::IMPLEMENTS_KEY] ?? null;
-            $this->flattenedGroups[$groupName][Group::MUST_ONLY_HAVE_ONE_PUBLIC_METHOD_NAMED_KEY]
-                = $attributes[Group::MUST_ONLY_HAVE_ONE_PUBLIC_METHOD_NAMED_KEY] ?? null;
+            if (!empty($attributes[Group::EXCLUDES_KEY])) {
+                $this->flattenedGroups[$groupName][Group::EXCLUDES_KEY] = array_diff($resolvedExcludes, $resolvedIncludes);
+            }
+            if (!array_key_exists( Group::DEPENDS_ON_KEY, $attributes)) {
+                $this->flattenedGroups[$groupName][Group::DEPENDS_ON_KEY] = $attributes[Group::DEPENDS_ON_KEY];
+            }
+            if (!array_key_exists(Group::MUST_NOT_DEPEND_ON_KEY, $attributes)) {
+                $this->flattenedGroups[$groupName][Group::MUST_NOT_DEPEND_ON_KEY] = $attributes[Group::MUST_NOT_DEPEND_ON_KEY];
+            }
+            if (!array_key_exists( GROUP::FINAL_KEY, $attributes) && $attributes[Group::FINAL_KEY] === true) {
+                $this->flattenedGroups[$groupName][Group::FINAL_KEY] = true;
+            }
+            if (!array_key_exists(Group::EXCLUDES_KEY, $attributes) && is_string($attributes[Group::EXCLUDES_KEY])) {
+                $this->flattenedGroups[$groupName][Group::EXTENDS_KEY] = [$attributes[Group::EXTENDS_KEY]];
+            }
+            if (!array_key_exists(Group::IMPLEMENTS_KEY, $attributes)) {
+                $this->flattenedGroups[$groupName][Group::IMPLEMENTS_KEY] = $attributes[Group::IMPLEMENTS_KEY];
+            }
+            if (!array_key_exists(Group::MUST_ONLY_HAVE_ONE_PUBLIC_METHOD_NAMED_KEY, $attributes)) {
+                $this->flattenedGroups[$groupName][Group::MUST_ONLY_HAVE_ONE_PUBLIC_METHOD_NAMED_KEY]
+                    = $attributes[Group::MUST_ONLY_HAVE_ONE_PUBLIC_METHOD_NAMED_KEY];
+            }
         }
     }
 

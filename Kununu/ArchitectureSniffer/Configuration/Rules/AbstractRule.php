@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 
+use Kununu\ArchitectureSniffer\Configuration\ArchitectureLibrary;
 use Kununu\ArchitectureSniffer\Configuration\Selector\Selectable;
-use Kununu\ArchitectureSniffer\Configuration\SelectorsLibrary;
 use PHPat\Selector\SelectorInterface;
 use PHPat\Test\Builder\AssertionStep;
 use PHPat\Test\Builder\Rule as PHPatRule;
@@ -34,7 +34,7 @@ abstract readonly class AbstractRule
      */
     protected static function buildDependencyRule(
         string $groupName,
-        SelectorsLibrary $library,
+        ArchitectureLibrary $library,
         callable $assertionStep,
         string $targetKey,
         string $because = '',

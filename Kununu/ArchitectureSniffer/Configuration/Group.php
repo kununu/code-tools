@@ -19,7 +19,7 @@ final readonly class Group
     /**
      * @return iterable<PHPatRule>
      **/
-    public static function getRules(string $groupName, SelectorsLibrary $library): iterable
+    public static function getRules(string $groupName, ArchitectureLibrary $library): iterable
     {
         if ($library->groupHasKey($groupName, self::EXTENDS_KEY)) {
             yield Rules\MustExtend::createRule(
