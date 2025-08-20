@@ -15,7 +15,7 @@ final class SelectorsLibrary
     private array $flattenedGroups = [];
     private array $passedGroups = [];
 
-    public function __construct(private array $groups)
+    public function __construct(private readonly array $groups)
     {
         foreach ($groups as $groupName => $attributes) {
             $this->passedGroups = [$groupName];
@@ -140,10 +140,10 @@ final class SelectorsLibrary
         }
     }
 
-    private function getSelector(string $fqcnOrGroup, string $key): Generator
+    private function getSelectorFromIncludes(string $fqcnOrGroup): Generator
     {
         if (array_key_exists($fqcnOrGroup, $this->flattenedGroups)) {
-            foreach ($this->flattenedGroups[$fqcnOrGroup][$key] as $fqcn) {
+            foreach ($this->flattenedGroups[$fqcnOrGroup][Group::INCLUDES_KEY] as $fqcn) {
                 yield $this->createSelectable($fqcn);
             }
 
@@ -156,7 +156,7 @@ final class SelectorsLibrary
     private function getSelectors(array $values): Generator
     {
         foreach ($values as $fqcnOrGroup) {
-            yield from $this->getSelector($fqcnOrGroup, Group::INCLUDES_KEY);
+            yield from $this->getSelectorFromIncludes($fqcnOrGroup);
         }
     }
 

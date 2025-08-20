@@ -5,8 +5,9 @@ namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 
 use Kununu\ArchitectureSniffer\Configuration\Group;
 use Kununu\ArchitectureSniffer\Configuration\SelectorsLibrary;
+use PHPat\Test\Builder\AssertionStep;
 use PHPat\Test\Builder\Rule as PHPatRule;
-use PHPat\Test\PHPat;
+use PHPat\Test\Builder\TargetStep;
 
 final readonly class MustNotDependOn extends AbstractRule
 {
@@ -14,25 +15,14 @@ final readonly class MustNotDependOn extends AbstractRule
         string $groupName,
         SelectorsLibrary $library,
     ): PHPatRule {
-        $includes = $library->getIncludesByGroup($groupName);
-        $excludes = $library->getExcludesByGroup($groupName);
-        $mostNotDependOn = $library->getTargetByGroup($groupName, Group::MUST_NOT_DEPEND_ON_KEY);
-        $mostNotDependOnExcludes = $library->getTargetExcludesByGroup($groupName, Group::MUST_NOT_DEPEND_ON_KEY);
-
-        $rule = PHPat::rule()->classes(...self::getPHPSelectors($includes));
-
-        $excludes = self::getPHPSelectors($excludes);
-        if ($excludes !== []) {
-            $rule = $rule->excluding(...$excludes);
-        }
-
-        $rule = $rule->shouldNotDependOn()->classes(...self::getPHPSelectors($mostNotDependOn));
-
-        $mostNotDependOnExcludes = self::getPHPSelectors($mostNotDependOnExcludes);
-        if ($mostNotDependOnExcludes !== []) {
-            $rule = $rule->excluding(...$mostNotDependOnExcludes);
-        }
-
-        return $rule->because("$groupName must not depend on forbidden dependencies.");
+        return self::buildDependencyRule(
+            $groupName,
+            $library,
+            static function(AssertionStep $rule): TargetStep {
+                return $rule->shouldNotDependOn();
+            },
+            "$groupName must not depend on forbidden dependencies.",
+            Group::MUST_NOT_DEPEND_ON_KEY,
+        );
     }
 }

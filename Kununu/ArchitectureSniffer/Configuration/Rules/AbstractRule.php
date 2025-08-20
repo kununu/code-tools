@@ -5,6 +5,11 @@ namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 
 use InvalidArgumentException;
 use Kununu\ArchitectureSniffer\Configuration\Selector\Selectable;
+use Kununu\ArchitectureSniffer\Configuration\SelectorsLibrary;
+use PHPat\Test\Builder\AssertionStep;
+use PHPat\Test\Builder\Rule as PHPatRule;
+use PHPat\Test\Builder\TargetStep;
+use PHPat\Test\PHPat;
 
 abstract readonly class AbstractRule
 {
@@ -21,5 +26,46 @@ abstract readonly class AbstractRule
         }
 
         return $result;
+    }
+
+    /**
+     * @param callable(AssertionStep): TargetStep $assertionStep
+     */
+    protected static function buildDependencyRule(
+        string $groupName,
+        SelectorsLibrary $library,
+        callable $assertionStep,
+        string $because = '',
+        ?string $targetKey = null,
+        array $extraSelectors = [],
+    ): PHPatRule {
+        $includes = $library->getIncludesByGroup($groupName);
+        $excludes = $library->getExcludesByGroup($groupName);
+        $target = $targetKey ? $library->getTargetByGroup($groupName, $targetKey) : [];
+        $targetExcludes = $targetKey ? $library->getTargetExcludesByGroup($groupName, $targetKey) : [];
+
+        $includes = self::getPHPSelectors($includes);
+        $excludes = self::getPHPSelectors($excludes);
+        $target = self::getPHPSelectors($target);
+        $targetExcludes = self::getPHPSelectors($targetExcludes);
+
+        $rule = PHPat::rule()->classes(...$includes);
+        if ($excludes !== []) {
+            $rule = $rule->excluding(...$excludes);
+        }
+        $rule = $assertionStep($rule);
+
+        if ($extraSelectors !== []) {
+            $target = array_merge($target, $extraSelectors);
+        }
+        $rule = $rule->classes(...$target);
+        if ($targetExcludes !== []) {
+            $rule = $rule->excluding(...$targetExcludes);
+        }
+        if ($because) {
+            $rule = $rule->because($because);
+        }
+
+        return $rule;
     }
 }

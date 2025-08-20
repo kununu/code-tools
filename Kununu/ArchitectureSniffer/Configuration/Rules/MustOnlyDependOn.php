@@ -6,8 +6,9 @@ namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 use Kununu\ArchitectureSniffer\Configuration\Group;
 use Kununu\ArchitectureSniffer\Configuration\SelectorsLibrary;
 use PHPat\Selector\Selector;
+use PHPat\Test\Builder\AssertionStep;
 use PHPat\Test\Builder\Rule as PHPatRule;
-use PHPat\Test\PHPat;
+use PHPat\Test\Builder\TargetStep;
 
 final readonly class MustOnlyDependOn extends AbstractRule
 {
@@ -15,27 +16,15 @@ final readonly class MustOnlyDependOn extends AbstractRule
         string $groupName,
         SelectorsLibrary $library,
     ): PHPatRule {
-        $includes = $library->getIncludesByGroup($groupName);
-        $excludes = $library->getExcludesByGroup($groupName);
-        $onlyDependOn = $library->getTargetByGroup($groupName, Group::DEPENDS_ON_KEY);
-        $onlyDependOnExcludes = $library->getTargetExcludesByGroup($groupName, Group::DEPENDS_ON_KEY);
-
-        $rule = PHPat::rule()->classes(...self::getPHPSelectors($includes));
-
-        $excludes = self::getPHPSelectors($excludes);
-        if ($excludes !== []) {
-            $rule = $rule->excluding(...$excludes);
-        }
-
-        $onlyDependOn = self::getPHPSelectors($onlyDependOn);
-        $onlyDependOn[] = Selector::classname('/^\\\\*[^\\\\]+$/', true);
-        $rule = $rule->canOnlyDependOn()->classes(...$onlyDependOn);
-
-        $onlyDependOnExcludes = self::getPHPSelectors($onlyDependOnExcludes);
-        if ($onlyDependOnExcludes !== []) {
-            $rule = $rule->excluding(...$onlyDependOnExcludes);
-        }
-
-        return $rule->because("$groupName must only depend on allowed dependencies.");
+        return self::buildDependencyRule(
+            $groupName,
+            $library,
+            static function(AssertionStep $rule): TargetStep {
+                return $rule->canOnlyDependOn();
+            },
+            "$groupName must only depend on allowed dependencies.",
+            Group::DEPENDS_ON_KEY,
+            [Selector::classname('/^\\*[^\\]+$/', true)],
+        );
     }
 }

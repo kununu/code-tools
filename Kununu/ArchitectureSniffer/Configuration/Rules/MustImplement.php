@@ -25,7 +25,7 @@ final readonly class MustImplement extends AbstractRule
 
         $rule = PHPat::rule()->classes(...self::getPHPSelectors($includes));
 
-        $excludeSelectors = $excludes ? self::getPHPSelectors($excludes) : [];
+        $excludeSelectors = self::getPHPSelectors($excludes);
         $excludeSelectors[] = Selector::isInterface();
         $rule = $rule->excluding(...$excludeSelectors);
 

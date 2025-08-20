@@ -21,7 +21,7 @@ final readonly class MustBeFinal extends AbstractRule
 
         $rule = PHPat::rule()->classes(...self::getPHPSelectors($includes));
 
-        $excludes = $excludes ? self::getPHPSelectors($excludes) : [];
+        $excludes = self::getPHPSelectors($excludes);
         $excludes[] = Selector::isInterface();
         $rule = $rule->excluding(...$excludes);
 

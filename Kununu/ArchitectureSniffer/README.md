@@ -104,7 +104,7 @@ architecture:
 
 ### Group Properties
 
-Each group in your `architecture.yaml` configuration is now defined as a key under `architecture`. Only `includes` is required; all other properties are optional and trigger specific architectural rules:
+Each group in your `architecture.yaml` configuration is defined as a key under `architecture`. Only `includes` is required; all other properties are optional and trigger specific architectural rules:
 
 - **includes** (required):
   - List of patterns or group names that define which classes/interfaces belong to this group.
@@ -119,7 +119,9 @@ Each group in your `architecture.yaml` configuration is now defined as a key und
 
 - **depends_on** (optional):
   - List of group names or patterns that this group is allowed to depend on.
-  - Example: `depends_on: ["$services", "App\\Library\\*"]`
+  - To prevent redundant dependencies, the rule will also consider all dependencies from "includes", "extends" and "implements".
+  - Classes from the root namespace are also always included (e.g., `\DateTime`).
+  - Example: `depends_on: ["services", "App\\Library\\*"]`
   - **Rule triggered:** Ensures that classes in this group only depend on allowed groups/classes. Violations are reported if dependencies are outside this list.
   - **Important:** If a group includes from a global namespace other than `App\\`, it must NOT have a `depends_on` property. This will cause a configuration error.
 
@@ -178,7 +180,7 @@ When specifying patterns or references in your `architecture.yaml` (for `include
   - Example: `"App\\Service\\"` matches everything in the `App\Service` namespace.
 
 - **Interface:**
-  - If the string ends with `Interface`, it is treated as an interface.
+  - If the fqcn is a Interface or the regex ends with `Interface`, it is treated as an interface.
   - Example: `"App\\Service\\ServiceInterface"` matches the interface `ServiceInterface`.
 
 - **Class:**
@@ -194,6 +196,22 @@ This logic applies to all properties that accept patterns or references, such as
 - Groups are referenced by their name.
 - The `$` prefix is recommended but not required.
 - The reference must match the group name exactly.
+- When referencing a group, all includes and excludes from that group are considered.
+- Important: Includes overrule excludes, meaning if a exact namespace is listed in both include and exclude, it will only be part of the includes.
+- Example:
+  ```yaml
+  architecture:
+    $command_handler:
+      includes:
+        - "App\\Application\\Command\\*\\*Handler"
+      depends_on:
+        - "$write_repository"
+    $write_repository:
+      includes:
+        - "App\\Repository\\*\\*RepositoryInterface"
+      excludes:
+        - "App\\Repository\\*\\*ReadOnlyRepositoryInterface"
+  ```
 
 ### Pattern Matching
 
@@ -242,3 +260,5 @@ See [LICENSE](../LICENSE).
 
 - [PHPAT Documentation](https://github.com/carlosas/phpat)
 - [Architecture Sniffer (Spryker)](https://github.com/spryker/architecture-sniffer)
+
+
