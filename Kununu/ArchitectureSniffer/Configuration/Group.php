@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Kununu\ArchitectureSniffer\Configuration;
 
+use PHPat\Test\Builder\Rule as PHPatRule;
+
 final readonly class Group
 {
     public const string INCLUDES_KEY = 'includes';
@@ -14,6 +16,9 @@ final readonly class Group
     public const string MUST_ONLY_HAVE_ONE_PUBLIC_METHOD_NAMED_KEY = 'must_only_have_one_public_method_named';
     public const string MUST_NOT_DEPEND_ON_KEY = 'must_not_depend_on';
 
+    /**
+     * @return iterable<PHPatRule>
+     **/
     public static function getRules(string $groupName, SelectorsLibrary $library): iterable
     {
         if ($library->groupHasKey($groupName, self::EXTENDS_KEY)) {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Kununu\ArchitectureSniffer\Configuration;
 
 use InvalidArgumentException;
+use PHPat\Test\Builder\Rule as PHPatRule;
 
 final readonly class Architecture
 {
@@ -11,6 +12,8 @@ final readonly class Architecture
 
     /**
      * @param array<int, array<string, mixed>> $data
+     *
+     * @return iterable<PHPatRule>
      */
     public static function fromArray(array $data): iterable
     {

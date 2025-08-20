@@ -77,9 +77,7 @@ final class SelectorsLibrary
             throw new InvalidArgumentException("Group '$groupName' does not exist.");
         }
 
-        foreach ($this->flattenedGroups[$groupName][Group::INCLUDES_KEY] as $fqcn) {
-            yield $this->createSelectable($fqcn);
-        }
+        yield from $this->getSelectors($this->flattenedGroups[$groupName][Group::INCLUDES_KEY]);
     }
 
     public function getExcludesByGroup(string $groupName): Generator
@@ -88,15 +86,31 @@ final class SelectorsLibrary
             throw new InvalidArgumentException("Group '$groupName' does not exist.");
         }
 
-        foreach ($this->flattenedGroups[$groupName][Group::EXCLUDES_KEY] as $fqcn) {
-            yield $this->createSelectable($fqcn);
-        }
+        yield from $this->getSelectors($this->flattenedGroups[$groupName][Group::EXCLUDES_KEY]);
     }
 
     public function getTargetByGroup(string $groupName, string $key): Generator
     {
         if (!array_key_exists($groupName, $this->flattenedGroups)) {
             throw new InvalidArgumentException("Group '$groupName' does not exist.");
+        }
+
+        if ($key === Group::DEPENDS_ON_KEY) {
+            yield from $this->getSelectors($this->flattenedGroups[$groupName][Group::INCLUDES_KEY]);
+
+            if (
+                array_key_exists(Group::EXTENDS_KEY, $this->flattenedGroups[$groupName])
+                && $this->flattenedGroups[$groupName][Group::EXTENDS_KEY] !== null
+            ) {
+                yield from $this->getSelectors($this->flattenedGroups[$groupName][Group::EXTENDS_KEY]);
+            }
+
+            if (
+                array_key_exists(Group::IMPLEMENTS_KEY, $this->flattenedGroups[$groupName])
+                && $this->flattenedGroups[$groupName][Group::IMPLEMENTS_KEY] !== null
+            ) {
+                yield from $this->getSelectors($this->flattenedGroups[$groupName][Group::IMPLEMENTS_KEY]);
+            }
         }
 
         yield from $this->getSelectors($this->flattenedGroups[$groupName][$key]);
