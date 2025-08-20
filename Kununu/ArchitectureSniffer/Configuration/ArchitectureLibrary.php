@@ -53,7 +53,8 @@ final class ArchitectureLibrary
             }
             $this->flattenedGroups[$groupName][Group::INCLUDES_KEY] = $resolvedIncludes;
             if (!empty($resolvedExcludes)) {
-                $this->flattenedGroups[$groupName][Group::EXCLUDES_KEY] = array_diff($resolvedExcludes, $resolvedIncludes);
+                $this->flattenedGroups[$groupName][Group::EXCLUDES_KEY]
+                    = array_diff($resolvedExcludes, $resolvedIncludes);
             }
         }
     }
