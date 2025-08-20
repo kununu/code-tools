@@ -23,6 +23,8 @@ final class ArchitectureLibrary
     public function __construct(private readonly array $groups)
     {
         foreach ($groups as $groupName => $attributes) {
+            $this->flattenedGroups[$groupName] = $attributes;
+
             $this->passedGroups = [$groupName];
             $resolvedIncludes = [];
             if (!array_key_exists(Group::INCLUDES_KEY, $attributes)) {
@@ -36,6 +38,7 @@ final class ArchitectureLibrary
                     $resolvedIncludes[] = $selectable;
                 }
             }
+
             $this->passedGroups = [$groupName];
             $resolvedExcludes = [];
             if (!array_key_exists(Group::EXCLUDES_KEY, $attributes)) {
@@ -49,27 +52,8 @@ final class ArchitectureLibrary
                 }
             }
             $this->flattenedGroups[$groupName][Group::INCLUDES_KEY] = $resolvedIncludes;
-            if (!empty($attributes[Group::EXCLUDES_KEY])) {
+            if (!empty($resolvedExcludes)) {
                 $this->flattenedGroups[$groupName][Group::EXCLUDES_KEY] = array_diff($resolvedExcludes, $resolvedIncludes);
-            }
-            if (!array_key_exists(Group::DEPENDS_ON_KEY, $attributes)) {
-                $this->flattenedGroups[$groupName][Group::DEPENDS_ON_KEY] = $attributes[Group::DEPENDS_ON_KEY];
-            }
-            if (!array_key_exists(Group::MUST_NOT_DEPEND_ON_KEY, $attributes)) {
-                $this->flattenedGroups[$groupName][Group::MUST_NOT_DEPEND_ON_KEY] = $attributes[Group::MUST_NOT_DEPEND_ON_KEY];
-            }
-            if (!array_key_exists(GROUP::FINAL_KEY, $attributes) && $attributes[Group::FINAL_KEY] === true) {
-                $this->flattenedGroups[$groupName][Group::FINAL_KEY] = true;
-            }
-            if (!array_key_exists(Group::EXCLUDES_KEY, $attributes) && is_string($attributes[Group::EXCLUDES_KEY])) {
-                $this->flattenedGroups[$groupName][Group::EXTENDS_KEY] = [$attributes[Group::EXTENDS_KEY]];
-            }
-            if (!array_key_exists(Group::IMPLEMENTS_KEY, $attributes)) {
-                $this->flattenedGroups[$groupName][Group::IMPLEMENTS_KEY] = $attributes[Group::IMPLEMENTS_KEY];
-            }
-            if (!array_key_exists(Group::MUST_ONLY_HAVE_ONE_PUBLIC_METHOD_NAMED_KEY, $attributes)) {
-                $this->flattenedGroups[$groupName][Group::MUST_ONLY_HAVE_ONE_PUBLIC_METHOD_NAMED_KEY]
-                    = $attributes[Group::MUST_ONLY_HAVE_ONE_PUBLIC_METHOD_NAMED_KEY];
             }
         }
     }
