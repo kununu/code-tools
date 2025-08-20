@@ -309,4 +309,280 @@ final class SelfStatic
 
 PHP
     ],
+
+    'void_return' => [
+        'before' => <<<'PHP'
+<?php
+class VoidExample
+{
+    public function doSomething()
+    {
+        echo "hello";
+    }
+}
+PHP
+        ,
+        'after' => <<<'PHP'
+<?php
+declare(strict_types=1);
+class VoidExample
+{
+    public function doSomething(): void
+    {
+        echo 'hello';
+    }
+}
+
+PHP
+    ],
+
+    'yoda_style' => [
+        'before' => <<<'PHP'
+<?php
+function check($a)
+{
+    if (42 === $a) {
+        return true;
+    }
+
+    if ('bar' != $a) {
+        return false;
+    }
+}
+PHP
+        ,
+        'after' => <<<'PHP'
+<?php
+declare(strict_types=1);
+function check($a)
+{
+    if ($a === 42) {
+        return true;
+    }
+
+    if ($a != 'bar') {
+        return false;
+    }
+}
+
+PHP
+    ],
+
+    'no_extra_blank_lines' => [
+        'before' => <<<'PHP'
+<?php
+namespace Foo;
+
+use Bar;
+
+
+final class ExtraLines
+{
+
+
+    public function test()
+    {
+
+        return 1;
+    }
+}
+PHP
+        ,
+        'after' => <<<'PHP'
+<?php
+declare(strict_types=1);
+
+namespace Foo;
+
+final class ExtraLines
+{
+    public function test()
+    {
+        return 1;
+    }
+}
+
+PHP
+    ],
+
+    'native_function_invocation_noop' => [
+        'before' => <<<'PHP'
+<?php
+namespace Foo;
+
+$result = strlen("abc");
+$now = time();
+PHP
+        ,
+        'after' => <<<'PHP'
+<?php
+declare(strict_types=1);
+
+namespace Foo;
+
+$result = strlen('abc');
+$now = time();
+
+PHP
+    ],
+
+    'single_quote_non_interpolated' => [
+        'before' => <<<'PHP'
+<?php
+$message = "simple string";
+PHP
+        ,
+        'after' => <<<'PHP'
+<?php
+declare(strict_types=1);
+$message = 'simple string';
+
+PHP
+    ],
+
+    'single_quote_interpolated_no_change' => [
+        'before' => <<<'PHP'
+<?php
+$name = 'Name';
+$greeting = "Hello, $name!";
+PHP
+        ,
+        'after' => <<<'PHP'
+<?php
+declare(strict_types=1);
+$name = 'Name';
+$greeting = "Hello, $name!";
+
+PHP
+    ],
+
+    'trailing_comma_in_multiline' => [
+        'before' => <<<'PHP'
+<?php
+$list = [
+    'a',
+    'b'
+];
+PHP
+        ,
+        'after' => <<<'PHP'
+<?php
+declare(strict_types=1);
+$list = [
+    'a',
+    'b',
+];
+
+PHP
+    ],
+
+    'unused_imports_removed_simple' => [
+        'before' => <<<'PHP'
+<?php
+namespace Acme;
+
+use Foo\Used;
+use Foo\Unused;
+
+final class Example
+{
+    public function test(): void
+    {
+        new Used();
+    }
+}
+PHP
+        ,
+        'after' => <<<'PHP'
+<?php
+declare(strict_types=1);
+
+namespace Acme;
+
+use Foo\Used;
+
+final class Example
+{
+    public function test(): void
+    {
+        new Used();
+    }
+}
+
+PHP
+    ],
+
+    'no_superfluous_phpdoc_tags_noop' => [
+        'before' => <<<'PHP'
+<?php
+/**
+ * Class Example
+ *
+ * @package Foo
+ * @author Someone
+ */
+class Example {}
+PHP
+        ,
+        'after' => <<<'PHP'
+<?php
+declare(strict_types=1);
+/**
+ * Class Example
+ *
+ * @author Someone
+ */
+class Example
+{
+}
+
+PHP
+    ],
+
+    'blank_line_after_opening_tag_noop' => [
+        'before' => <<<'PHP'
+<?php
+/** comment directly after open tag */
+class OpenTag {}
+PHP
+        ,
+        'after' => <<<'PHP'
+<?php
+declare(strict_types=1);
+/** comment directly after open tag */
+class OpenTag
+{
+}
+
+PHP
+    ],
+
+    'self_accessor_noop' => [
+        'before' => <<<'PHP'
+<?php
+class SelfAcc
+{
+    private $count = 0;
+    public function inc(): void
+    {
+        static::$count++;
+    }
+}
+PHP
+        ,
+        'after' => <<<'PHP'
+<?php
+declare(strict_types=1);
+class SelfAcc
+{
+    private $count = 0;
+
+    public function inc(): void
+    {
+        ++static::$count;
+    }
+}
+
+PHP
+    ],
 ];
