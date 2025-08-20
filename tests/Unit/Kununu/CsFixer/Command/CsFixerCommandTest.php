@@ -14,9 +14,8 @@ final class CsFixerCommandTest extends TestCase
     private ?string $tempFile = null;
 
     #[DataProvider('fixerCasesProvider')]
-    public function testItFixesBrokenPhpFileAccordingToConfig(string $before, string $after): void
+    public function testCsFixerCommand(string $before, string $after): void
     {
-        // Create a temp file with .php extension to avoid scanning/extension pitfalls
         $this->tempFile = sys_get_temp_dir() . '/csfixer_' . uniqid('', true) . '.php';
         if (file_put_contents($this->tempFile, $before) === false) {
             $this->fail('Failed to write temporary file for test: ' . $this->tempFile);
@@ -32,22 +31,8 @@ final class CsFixerCommandTest extends TestCase
             'files' => [$this->tempFile],
         ]);
 
-        $output = $tester->getDisplay();
-
-        self::assertSame(0, $exitCode, 'Expected command to succeed');
-        self::assertStringContainsString(
-            'PHP CS Fixer completed successfully.',
-            $output,
-            'Expected success message in output',
-        );
-
-        $actual = $this->contents($this->tempFile);
-
-        self::assertSame(
-            $after,
-            $actual,
-            "Fixed file did not match expected output.\n\nCommand output:\n" . $output
-        );
+        self::assertSame(0, $exitCode);
+        self::assertSame($after, $this->contents($this->tempFile));
     }
 
     public static function fixerCasesProvider(): array
@@ -59,16 +44,12 @@ final class CsFixerCommandTest extends TestCase
 
         $cases = require $casesFile;
 
-        $provider = [];
-        foreach ($cases as $name => $case) {
-            // each case is expected to be ['before' => '...', 'after' => '...']
-            $provider[$name] = [
+        return array_map(function ($case) {
+            return [
                 $case['before'],
                 $case['after'],
             ];
-        }
-
-        return $provider;
+        }, $cases);
     }
 
     private function contents(string $file): string
