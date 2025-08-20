@@ -5,7 +5,6 @@ namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 
 use InvalidArgumentException;
 use Kununu\ArchitectureSniffer\Configuration\Group;
-use Kununu\ArchitectureSniffer\Configuration\Selector\InterfaceClassSelector;
 use Kununu\ArchitectureSniffer\Configuration\SelectorsLibrary;
 use PHPat\Test\Builder\Rule as PHPatRule;
 use PHPat\Test\PHPat;
@@ -18,7 +17,7 @@ final readonly class MustExtend extends AbstractRule
     ): PHPatRule {
         $includes = $selectorsLibrary->getIncludesByGroup($groupName);
         $excludes = $selectorsLibrary->getExcludesByGroup($groupName);
-        $extensions = self::checkIfInterfaceSelectors(
+        $extensions = self::checkIfNotInterfaceSelectors(
             $selectorsLibrary->getTargetByGroup($groupName, Group::EXTENDS_KEY)
         );
         $extensionExcludes = $selectorsLibrary->getTargetExcludesByGroup($groupName, Group::EXTENDS_KEY);
@@ -38,11 +37,11 @@ final readonly class MustExtend extends AbstractRule
         return $rule->because("$groupName should extend class.");
     }
 
-    private static function checkIfInterfaceSelectors(iterable $selectors): iterable
+    private static function checkIfNotInterfaceSelectors(iterable $selectors): iterable
     {
         foreach ($selectors as $selector) {
-            if (!$selector instanceof InterfaceClassSelector) {
-                throw new InvalidArgumentException('Only InterfaceClassSelector instances can be used in this rule.');
+            if (str_ends_with($selector, 'Interface')) {
+                throw new InvalidArgumentException("$selector cannot be used in the MustExtend rule, as it is an interface.");
             }
             yield $selector;
         }

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 
+use InvalidArgumentException;
 use Kununu\ArchitectureSniffer\Configuration\Group;
 use Kununu\ArchitectureSniffer\Configuration\SelectorsLibrary;
 use PHPat\Selector\Selector;
@@ -17,7 +18,7 @@ final readonly class MustImplement extends AbstractRule
     ): PHPatRule {
         $includes = $library->getIncludesByGroup($groupName);
         $excludes = $library->getExcludesByGroup($groupName);
-        $interfaces = $library->getTargetByGroup($groupName, Group::INCLUDES_KEY);
+        $interfaces = self::checkIfInterfaceSelectors($library->getTargetByGroup($groupName, Group::INCLUDES_KEY));
         $interfacesExcludes = $library->getTargetExcludesByGroup($groupName, Group::INCLUDES_KEY);
 
         $rule = PHPat::rule()->classes(...self::getPHPSelectors($includes));
@@ -32,5 +33,15 @@ final readonly class MustImplement extends AbstractRule
         }
 
         return $rule->because("$groupName must implement interface.");
+    }
+
+    private static function checkIfInterfaceSelectors(iterable $selectors): iterable
+    {
+        foreach ($selectors as $selector) {
+            if (!str_ends_with($selector, 'Interface')) {
+                throw new InvalidArgumentException("$selector cannot be used in the MustImplement rule, as it is not an interface.");
+            }
+            yield $selector;
+        }
     }
 }
