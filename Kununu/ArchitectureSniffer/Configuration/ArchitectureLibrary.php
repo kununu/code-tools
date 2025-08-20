@@ -126,12 +126,15 @@ final class ArchitectureLibrary
             throw new InvalidArgumentException("Group '$groupName' does not exist.");
         }
 
-        if (array_key_exists(Group::EXCLUDES_KEY, $this->flattenedGroups[$groupName])
-            && !is_array($this->flattenedGroups[$groupName][Group::EXCLUDES_KEY])) {
+        if (!array_key_exists(Group::EXCLUDES_KEY, $this->flattenedGroups[$groupName])) {
+            return;
+        }
+
+        if (!is_array($this->flattenedGroups[$groupName][Group::EXCLUDES_KEY])) {
             throw new InvalidArgumentException("Group '$groupName' 'excludes' key must be an array.");
         }
 
-        yield from $this->getSelectors($this->flattenedGroups[$groupName][Group::EXCLUDES_KEY] ?? []);
+        yield from $this->getSelectors($this->flattenedGroups[$groupName][Group::EXCLUDES_KEY]);
     }
 
     public function getTargetByGroup(string $groupName, string $key): Generator
@@ -244,8 +247,10 @@ final class ArchitectureLibrary
         $result = [];
         foreach ($groups as $groupName) {
             if (array_key_exists($groupName, $this->flattenedGroups)) {
-                if (array_key_exists(Group::EXCLUDES_KEY, $this->flattenedGroups[$groupName])
-                    && !is_array($this->flattenedGroups[$groupName][Group::EXCLUDES_KEY])) {
+                if (!array_key_exists(Group::EXCLUDES_KEY, $this->flattenedGroups[$groupName])) {
+                    continue;
+                }
+                if (!is_array($this->flattenedGroups[$groupName][Group::EXCLUDES_KEY])) {
                     throw new InvalidArgumentException(
                         "Group '$groupName' 'excludes' key must be an array."
                     );
