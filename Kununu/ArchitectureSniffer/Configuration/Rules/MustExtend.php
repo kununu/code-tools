@@ -18,14 +18,10 @@ final readonly class MustExtend extends AbstractRule
     ): PHPatRule {
         $includes = $selectorsLibrary->getIncludesByGroup($groupName);
         $excludes = $selectorsLibrary->getExcludesByGroup($groupName);
-        $extensions = $selectorsLibrary->getTargetByGroup($groupName, Group::EXTENDS_KEY);
+        $extensions = self::checkIfInterfaceSelectors(
+            $selectorsLibrary->getTargetByGroup($groupName, Group::EXTENDS_KEY)
+        );
         $extensionExcludes = $selectorsLibrary->getTargetExcludesByGroup($groupName, Group::EXTENDS_KEY);
-
-        foreach ($extensions as $extension) {
-            if ($extension instanceof InterfaceClassSelector) {
-                throw new InvalidArgumentException('Classes can not extend interfaces.');
-            }
-        }
 
         $rule = PHPat::rule()->classes(...self::getPHPSelectors($includes));
 
@@ -40,5 +36,15 @@ final readonly class MustExtend extends AbstractRule
         }
 
         return $rule->because("$groupName should extend class.");
+    }
+
+    private static function checkIfInterfaceSelectors(iterable $selectors): iterable
+    {
+        foreach ($selectors as $selector) {
+            if (!$selector instanceof InterfaceClassSelector) {
+                throw new InvalidArgumentException('Only InterfaceClassSelector instances can be used in this rule.');
+            }
+            yield $selector;
+        }
     }
 }

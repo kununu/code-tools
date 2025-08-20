@@ -71,8 +71,10 @@ final readonly class Architecture
             }
         }
 
+        $library = new SelectorsLibrary($architecture);
+
         foreach ($architecture as $groupName => $groupData) {
-            yield from Group::getRules($groupName, $groupData);
+            yield from Group::getRules($groupName, $library);
         }
     }
 }

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 
+use iterable;
 use Kununu\ArchitectureSniffer\Configuration\Group;
 use Kununu\ArchitectureSniffer\Configuration\SelectorsLibrary;
 use PHPat\Test\Builder\Rule as PHPatRule;
@@ -20,13 +21,13 @@ final readonly class MustOnlyDependOn extends AbstractRule
         $onlyDependOnExcludes = $library->getTargetExcludesByGroup($groupName, Group::DEPENDS_ON_KEY);
 
         $rule = PHPat::rule()->classes(...self::getPHPSelectors($includes));
-        if ($excludes !== null) {
+        if ($excludes instanceof iterable) {
             $rule = $rule->excluding(...self::getPHPSelectors($excludes));
         }
 
         $rule = $rule->canOnlyDependOn()->classes(...self::getPHPSelectors($onlyDependOn));
-        if ($onlyDependOnExcludes !== null) {
-            $rule = $rule->excluding(...$onlyDependOnExcludes);
+        if ($onlyDependOnExcludes instanceof iterable) {
+            $rule = $rule->excluding(...self::getPHPSelectors($onlyDependOnExcludes));
         }
 
         return $rule->because("$groupName must only depend on allowed dependencies.");

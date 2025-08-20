@@ -16,14 +16,8 @@ final readonly class MustBeFinal extends AbstractRule
         string $groupName,
         SelectorsLibrary $library,
     ): PHPatRule {
-        $includes = $library->getIncludesByGroup($groupName);
+        $includes = self::checkIfClassSelectors($library->getIncludesByGroup($groupName));
         $excludes = $library->getExcludesByGroup($groupName);
-
-        foreach ($includes as $selectable) {
-            if (!$selectable instanceof ClassSelector) {
-                throw new InvalidArgumentException('Only classes can be final.');
-            }
-        }
 
         $rule = PHPat::rule()->classes(...self::getPHPSelectors($includes));
 
@@ -32,5 +26,15 @@ final readonly class MustBeFinal extends AbstractRule
         $rule = $rule->excluding(...$excludes);
 
         return $rule->shouldBeFinal()->because("$groupName must be final.");
+    }
+
+    private static function checkIfClassSelectors(iterable $selectors): iterable
+    {
+        foreach ($selectors as $selector) {
+            if (!$selector instanceof ClassSelector) {
+                throw new InvalidArgumentException('Only ClassSelector instances can be used in this rule.');
+            }
+            yield $selector;
+        }
     }
 }
