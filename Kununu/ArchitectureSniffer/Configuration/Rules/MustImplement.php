@@ -20,8 +20,8 @@ final readonly class MustImplement extends AbstractRule
     ): PHPatRule {
         $includes = $library->getIncludesByGroup($groupName);
         $excludes = $library->getExcludesByGroup($groupName);
-        $interfaces = self::checkIfInterfaceSelectors($library->getTargetByGroup($groupName, Group::INCLUDES_KEY));
-        $interfacesExcludes = $library->getTargetExcludesByGroup($groupName, Group::INCLUDES_KEY);
+        $interfaces = self::checkIfInterfaceSelectors($library->getTargetByGroup($groupName, Group::IMPLEMENTS_KEY));
+        $interfacesExcludes = $library->getTargetExcludesByGroup($groupName, Group::IMPLEMENTS_KEY);
 
         $rule = PHPat::rule()->classes(...self::getPHPSelectors($includes));
 
@@ -30,8 +30,9 @@ final readonly class MustImplement extends AbstractRule
         $rule = $rule->excluding(...$excludeSelectors);
 
         $rule = $rule->shouldImplement()->classes(...self::getPHPSelectors($interfaces));
-        if ($interfacesExcludes !== null) {
-            $rule = $rule->excluding(...self::getPHPSelectors($interfacesExcludes));
+        $interfacesExcludes = self::getPHPSelectors($interfacesExcludes);
+        if ($interfacesExcludes !== []) {
+            $rule = $rule->excluding(...$interfacesExcludes);
         }
 
         return $rule->because("$groupName must implement interface.");

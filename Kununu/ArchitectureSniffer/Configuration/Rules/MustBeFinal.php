@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 
 use InvalidArgumentException;
-use Kununu\ArchitectureSniffer\Configuration\Selector\ClassSelector;
+use Kununu\ArchitectureSniffer\Configuration\Selector\InterfaceClassSelector;
 use Kununu\ArchitectureSniffer\Configuration\SelectorsLibrary;
 use PHPat\Selector\Selector;
 use PHPat\Test\Builder\Rule as PHPatRule;
@@ -31,8 +31,9 @@ final readonly class MustBeFinal extends AbstractRule
     private static function checkIfClassSelectors(iterable $selectors): iterable
     {
         foreach ($selectors as $selector) {
-            if (!$selector instanceof ClassSelector) {
-                throw new InvalidArgumentException('Only ClassSelector instances can be used in this rule.');
+            if ($selector instanceof InterfaceClassSelector) {
+                $name = $selector->interface;
+                throw new InvalidArgumentException("$name must be a class selector for rule MustBeFinal.");
             }
             yield $selector;
         }

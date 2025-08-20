@@ -20,8 +20,9 @@ final readonly class MustOnlyHaveOnePublicMethodNamed extends AbstractRule
         $rule = PHPat::rule()
             ->classes(...self::getPHPSelectors($includes));
 
-        if ($excludes !== null) {
-            $rule = $rule->excluding(...self::getPHPSelectors($excludes));
+        $excludes = self::getPHPSelectors($excludes);
+        if ($excludes !== []) {
+            $rule = $rule->excluding(...$excludes);
         }
 
         return $rule

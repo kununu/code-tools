@@ -25,14 +25,16 @@ final readonly class MustExtend extends AbstractRule
 
         $rule = PHPat::rule()->classes(...self::getPHPSelectors($includes));
 
-        if ($excludes !== null) {
-            $rule = $rule->excluding(...self::getPHPSelectors($excludes));
+        $excludes = self::getPHPSelectors($excludes);
+        if ($excludes !== []) {
+            $rule = $rule->excluding(...$excludes);
         }
 
         $rule = $rule->shouldExtend()->classes(...self::getPHPSelectors($extensions));
 
-        if ($extensionExcludes !== null) {
-            $rule = $rule->excluding(...self::getPHPSelectors($extensionExcludes));
+        $extensionExcludes = self::getPHPSelectors($extensionExcludes);
+        if ($extensionExcludes !== []) {
+            $rule = $rule->excluding(...$extensionExcludes);
         }
 
         return $rule->because("$groupName should extend class.");

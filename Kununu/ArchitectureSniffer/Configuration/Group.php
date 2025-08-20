@@ -16,7 +16,7 @@ final readonly class Group
 
     public static function getRules(string $groupName, SelectorsLibrary $library): iterable
     {
-        if ($library->groupHasKey($groupName, self::DEPENDS_ON_KEY)) {
+        if ($library->groupHasKey($groupName, self::EXTENDS_KEY)) {
             yield Rules\MustExtend::createRule(
                 $groupName,
                 $library
@@ -48,7 +48,7 @@ final readonly class Group
                 $library
             );
         }
-        if ($library->groupHasKey($groupName, self::MUST_ONLY_HAVE_ONE_PUBLIC_METHOD_NAMED_KEY)) {
+        if ($library->getOnlyPublicFunctionByGroup($groupName)) {
             yield Rules\MustOnlyHaveOnePublicMethodNamed::createRule(
                 $groupName,
                 $library

@@ -21,14 +21,16 @@ final readonly class MustNotDependOn extends AbstractRule
 
         $rule = PHPat::rule()->classes(...self::getPHPSelectors($includes));
 
-        if ($excludes !== null) {
-            $rule = $rule->excluding(...self::getPHPSelectors($excludes));
+        $excludes = self::getPHPSelectors($excludes);
+        if ($excludes !== []) {
+            $rule = $rule->excluding(...$excludes);
         }
 
         $rule = $rule->shouldNotDependOn()->classes(...self::getPHPSelectors($mostNotDependOn));
 
-        if ($mostNotDependOnExcludes !== null) {
-            $rule = $rule->excluding(...self::getPHPSelectors($mostNotDependOnExcludes));
+        $mostNotDependOnExcludes = self::getPHPSelectors($mostNotDependOnExcludes);
+        if ($mostNotDependOnExcludes !== []) {
+            $rule = $rule->excluding(...$mostNotDependOnExcludes);
         }
 
         return $rule->because("$groupName must not depend on forbidden dependencies.");
