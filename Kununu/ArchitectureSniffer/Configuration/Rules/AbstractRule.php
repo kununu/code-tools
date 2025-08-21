@@ -57,12 +57,15 @@ abstract readonly class AbstractRule
         $rule = new RelationRule();
 
         $rule->subjects = self::getPHPSelectors($group->flattenedIncludes);
+
+        $excludes = $extraExcludeSelectors;
         if ($group->flattenedExcludes !== null) {
-            $rule->subjectExcludes = array_merge(
+            $excludes = array_merge(
                 self::getPHPSelectors($group->flattenedExcludes),
                 $extraExcludeSelectors
             );
         }
+        $rule->subjectExcludes = $excludes;
 
         $rule->assertion = $specificRule;
         if ($ruleParams !== null) {

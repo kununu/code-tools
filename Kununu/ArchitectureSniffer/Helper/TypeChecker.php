@@ -38,10 +38,6 @@ final readonly class TypeChecker
     }
 
     /**
-     * @param mixed $arrayOfStrings
-     *
-     * @throws InvalidArgumentException if any element is not a string
-     *
      * @return string[]
      */
     public static function castArrayOfStrings(mixed $arrayOfStrings): array

@@ -19,7 +19,7 @@ final readonly class MustOnlyDependOn extends AbstractRule
             throw self::getInvalidCallException(self::class, $group->name, 'dependsOn');
         }
 
-        $targets = $library->resolveTargets($group, $group->dependsOn);
+        $targets = $library->resolveTargets($group, $group->dependsOn, true);
 
         return self::buildDependencyRule(
             group: $group,

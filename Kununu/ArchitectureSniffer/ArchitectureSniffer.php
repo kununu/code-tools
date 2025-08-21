@@ -33,7 +33,7 @@ final class ArchitectureSniffer
 
         $architecture = $data['architecture'];
 
-        if (TypeChecker::isArrayKeysOfStrings($architecture)) {
+        if (!TypeChecker::isArrayKeysOfStrings($architecture)) {
             throw new InvalidArgumentException(
                 'Invalid architecture configuration: "groups" must be a non-empty array.'
             );
