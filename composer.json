@@ -40,7 +40,9 @@
     ],
     "config": {
         "sort-packages": true,
-        "process-timeout": 900
+        "process-timeout": 900,
+        "allow-plugins": {
+            "kununu/scripts": true
     },
     "extra": {
         "class": "Kununu\\CsFixer\\CsFixerPlugin"
