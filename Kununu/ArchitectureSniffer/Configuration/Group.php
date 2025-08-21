@@ -64,11 +64,6 @@ final readonly class Group
         );
     }
 
-    public function hasExcludes(): bool
-    {
-        return $this->flattenedExcludes !== null && count($this->flattenedExcludes) > 0;
-    }
-
     public function shouldBeFinal(): bool
     {
         return $this->isFinal;
