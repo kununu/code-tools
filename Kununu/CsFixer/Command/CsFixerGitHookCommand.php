@@ -13,8 +13,8 @@ use Throwable;
 
 final class CsFixerGitHookCommand extends BaseCommand
 {
-    public const SUCCESS = 0;
     public const FAILURE = 1;
+    public const SUCCESS = 0;
 
     protected function configure(): void
     {
@@ -127,19 +127,24 @@ final class CsFixerGitHookCommand extends BaseCommand
 
     private function resolveVendorDir(string $rootGitPath): string
     {
-        $projectRoot = dirname($rootGitPath);
-        $primary = $projectRoot . '/vendor';
-        $alt = $projectRoot . '/services/vendor';
+        $repoRoot = basename($rootGitPath) === '.git' ? dirname($rootGitPath) : $rootGitPath;
 
-        if (is_dir($alt)) {
-            return realpath($alt) ?: $alt;
+        // Candidates where vendor/ might live: repo root, repo root/services, parent of repo root, parent/services
+        $parentRoot = dirname($repoRoot);
+        $candidates = [
+            $repoRoot . '/vendor',
+            $repoRoot . '/services/vendor',
+            $parentRoot . '/vendor',
+            $parentRoot . '/services/vendor',
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (is_dir($candidate)) {
+                return realpath($candidate) ?: $candidate;
+            }
         }
 
-        if (is_dir($primary)) {
-            return realpath($primary) ?: $primary;
-        }
-
-        throw new RuntimeException('Could not find vendor directory in project root.');
+        throw new RuntimeException('Could not find vendor directory in project root or its parent.');
     }
 
     private function ensureSymlinkRelative(string $target, string $linkPath): void
