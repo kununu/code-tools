@@ -47,6 +47,8 @@ final readonly class Group
         array $targetAttributes,
         ?array $flattenedExcludes,
     ): self {
+        $mustOnlyHaveOnePublicMethodName = $targetAttributes[self::MUST_ONLY_HAVE_ONE_PUBLIC_METHOD_NAMED_KEY];
+
         return new self(
             name: $groupName,
             flattenedIncludes: $flattenedIncludes,
@@ -59,8 +61,8 @@ final readonly class Group
             implements: $targetAttributes[self::IMPLEMENTS_KEY] ?
                 TypeChecker::castArrayOfStrings($targetAttributes[self::IMPLEMENTS_KEY]) : null,
             isFinal: $targetAttributes[self::FINAL_KEY] === true,
-            mustOnlyHaveOnePublicMethodName: is_string($targetAttributes[self::MUST_ONLY_HAVE_ONE_PUBLIC_METHOD_NAMED_KEY]) ?
-                $targetAttributes[self::MUST_ONLY_HAVE_ONE_PUBLIC_METHOD_NAMED_KEY] : null,
+            mustOnlyHaveOnePublicMethodName: is_string($mustOnlyHaveOnePublicMethodName) ?
+                $mustOnlyHaveOnePublicMethodName : null,
         );
     }
 
