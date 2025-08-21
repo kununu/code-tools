@@ -7,6 +7,8 @@ use InvalidArgumentException;
 use Kununu\ArchitectureSniffer\Configuration\ArchitectureLibrary;
 use Kununu\ArchitectureSniffer\Configuration\Group;
 use Kununu\ArchitectureSniffer\Helper\ProjectPathResolver;
+use Kununu\ArchitectureSniffer\Helper\RuleBuilder;
+use Kununu\ArchitectureSniffer\Helper\TypeChecker;
 use PHPat\Test\Builder\Rule as PHPatRule;
 use Symfony\Component\Yaml\Yaml;
 
@@ -20,6 +22,7 @@ final class ArchitectureSniffer
      */
     public function testArchitecture(): iterable
     {
+        /** @var array<string, mixed> $data */
         $data = Yaml::parseFile(ProjectPathResolver::resolve(self::ARCHITECTURE_FILENAME));
 
         if (!array_key_exists(self::ARCHITECTURE_KEY, $data)) {
@@ -30,9 +33,15 @@ final class ArchitectureSniffer
 
         $architecture = $data['architecture'];
 
-        if (empty($architecture)) {
+        if (TypeChecker::isArrayKeysOfStrings($architecture)) {
             throw new InvalidArgumentException(
                 'Invalid architecture configuration: "groups" must be a non-empty array.'
+            );
+        }
+
+        if (!is_array($architecture)) {
+            throw new InvalidArgumentException(
+                'Invalid architecture configuration: "groups" must be an array.'
             );
         }
 
@@ -47,6 +56,7 @@ final class ArchitectureSniffer
                 . 'another qualified group.'
             );
         }
+
         // at least one group with a depends_on property with at least one fqcn or another qualified group
         if (!array_filter(
             $architecture,
@@ -81,8 +91,8 @@ final class ArchitectureSniffer
 
         $library = new ArchitectureLibrary($architecture);
 
-        foreach ($architecture as $groupName => $groupData) {
-            foreach (Group::getRules($groupName, $library) as $rule) {
+        foreach (array_keys($architecture) as $groupName) {
+            foreach (RuleBuilder::getRules($library->getGroupBy($groupName), $library) as $rule) {
                 yield $rule;
             }
         }

@@ -3,37 +3,26 @@ declare(strict_types=1);
 
 namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 
-use InvalidArgumentException;
 use Kununu\ArchitectureSniffer\Configuration\ArchitectureLibrary;
-use PHPat\Test\Builder\Rule as PHPatRule;
-use PHPat\Test\PHPat;
+use Kununu\ArchitectureSniffer\Configuration\Group;
+use PHPat\Rule\Assertion\Declaration\ShouldHaveOnlyOnePublicMethodNamed\ShouldHaveOnlyOnePublicMethodNamed;
+use PHPat\Test\Builder\Rule;
 
 final readonly class MustOnlyHaveOnePublicMethodNamed extends AbstractRule
 {
     public static function createRule(
-        string $groupName,
+        Group $group,
         ArchitectureLibrary $library,
-    ): PHPatRule {
-        $includes = $library->getIncludesByGroup($groupName);
-        $excludes = $library->getExcludesByGroup($groupName);
-        $functionName = $library->getOnlyPublicFunctionByGroup($groupName);
-
-        if ($functionName === null) {
-            throw new InvalidArgumentException(
-                "Group $groupName does not have a public function defined."
-            );
+    ): Rule {
+        if ($group->mustOnlyHaveOnePublicMethodName === null) {
+            throw self::getInvalidCallException(self::class, $group->name, 'mustOnlyHaveOnePublicMethodName');
         }
 
-        $rule = PHPat::rule()
-            ->classes(...self::getPHPSelectors($includes));
-
-        $excludes = self::getPHPSelectors($excludes);
-        if ($excludes !== []) {
-            $rule = $rule->excluding(...$excludes);
-        }
-
-        return $rule
-            ->shouldHaveOnlyOnePublicMethodNamed($functionName)
-            ->because("$groupName should only have one public method named $functionName");
+        return self::buildDependencyRule(
+            group: $group,
+            specificRule: ShouldHaveOnlyOnePublicMethodNamed::class,
+            because: "$group->name should only have one public method named $group->mustOnlyHaveOnePublicMethodName.",
+            ruleParams: ['name' => $group->mustOnlyHaveOnePublicMethodName, 'isRegex' => false],
+        );
     }
 }

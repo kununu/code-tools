@@ -5,26 +5,29 @@ namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 
 use Kununu\ArchitectureSniffer\Configuration\ArchitectureLibrary;
 use Kununu\ArchitectureSniffer\Configuration\Group;
+use PHPat\Rule\Assertion\Relation\CanOnlyDepend\CanOnlyDepend;
 use PHPat\Selector\Selector;
-use PHPat\Test\Builder\AssertionStep;
-use PHPat\Test\Builder\Rule as PHPatRule;
-use PHPat\Test\Builder\TargetStep;
+use PHPat\Test\Builder\Rule;
 
 final readonly class MustOnlyDependOn extends AbstractRule
 {
     public static function createRule(
-        string $groupName,
+        Group $group,
         ArchitectureLibrary $library,
-    ): PHPatRule {
+    ): Rule {
+        if ($group->dependsOn === null) {
+            throw self::getInvalidCallException(self::class, $group->name, 'dependsOn');
+        }
+
+        $targets = $library->resolveTargets($group, $group->dependsOn);
+
         return self::buildDependencyRule(
-            $groupName,
-            $library,
-            static function(AssertionStep $rule): TargetStep {
-                return $rule->canOnlyDependOn();
-            },
-            Group::DEPENDS_ON_KEY,
-            "$groupName must only depend on allowed dependencies.",
-            [Selector::classname('/^\\\\*[^\\\\]+$/', true)],
+            group: $group,
+            specificRule: CanOnlyDepend::class,
+            because: "$group->name must only depend on allowed dependencies.",
+            targets: $targets,
+            targetExcludes: $library->findTargetExcludes($group->dependsOn, $targets),
+            extraTargetSelectors: [Selector::classname('/^\\\\*[^\\\\]+$/', true)],
         );
     }
 }

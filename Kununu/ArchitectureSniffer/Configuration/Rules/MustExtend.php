@@ -7,54 +7,44 @@ use InvalidArgumentException;
 use Kununu\ArchitectureSniffer\Configuration\ArchitectureLibrary;
 use Kununu\ArchitectureSniffer\Configuration\Group;
 use Kununu\ArchitectureSniffer\Configuration\Selector\InterfaceClassSelector;
-use Kununu\ArchitectureSniffer\Configuration\Selector\Selectable;
-use PHPat\Test\Builder\Rule as PHPatRule;
-use PHPat\Test\PHPat;
+use Kununu\ArchitectureSniffer\Helper\SelectorBuilder;
+use PHPat\Rule\Assertion\Relation\ShouldExtend\ShouldExtend;
+use PHPat\Test\Builder\Rule;
 
 final readonly class MustExtend extends AbstractRule
 {
     public static function createRule(
-        string $groupName,
-        ArchitectureLibrary $selectorsLibrary,
-    ): PHPatRule {
-        $includes = $selectorsLibrary->getIncludesByGroup($groupName);
-        $excludes = $selectorsLibrary->getExcludesByGroup($groupName);
-        $extensions = self::checkIfNotInterfaceSelectors(
-            $selectorsLibrary->getTargetByGroup($groupName, Group::EXTENDS_KEY)
+        Group $group,
+        ArchitectureLibrary $library,
+    ): Rule {
+        if ($group->extends === null) {
+            throw self::getInvalidCallException(self::class, $group->name, 'extends');
+        }
+
+        self::checkIfNotInterfaceSelectors($group->flattenedIncludes);
+
+        $targets = $library->resolveTargets($group, [$group->extends]);
+
+        return self::buildDependencyRule(
+            group: $group,
+            specificRule: ShouldExtend::class,
+            because: "$group->name should extend class.",
+            targets: $targets,
+            targetExcludes: $library->findTargetExcludes([$group->extends], $targets),
         );
-        $extensionExcludes = $selectorsLibrary->getTargetExcludesByGroup($groupName, Group::EXTENDS_KEY);
-
-        $rule = PHPat::rule()->classes(...self::getPHPSelectors($includes));
-
-        $excludes = self::getPHPSelectors($excludes);
-        if ($excludes !== []) {
-            $rule = $rule->excluding(...$excludes);
-        }
-
-        $rule = $rule->shouldExtend()->classes(...self::getPHPSelectors($extensions));
-
-        $extensionExcludes = self::getPHPSelectors($extensionExcludes);
-        if ($extensionExcludes !== []) {
-            $rule = $rule->excluding(...$extensionExcludes);
-        }
-
-        return $rule->because("$groupName should extend class.");
     }
 
     /**
-     * @param iterable<Selectable> $selectors
-     *
-     * @return iterable<Selectable>
+     * @param string[] $selectors
      */
-    private static function checkIfNotInterfaceSelectors(iterable $selectors): iterable
+    private static function checkIfNotInterfaceSelectors(array $selectors): void
     {
         foreach ($selectors as $selector) {
-            if ($selector instanceof InterfaceClassSelector) {
+            if (SelectorBuilder::createSelectable($selector) instanceof InterfaceClassSelector) {
                 throw new InvalidArgumentException(
-                    "$selector->interface cannot be used in the MustExtend rule, as it is an interface."
+                    "$selector cannot be used in the MustExtend rule, as it is an interface."
                 );
             }
-            yield $selector;
         }
     }
 }

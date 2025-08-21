@@ -5,43 +5,38 @@ namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 
 use InvalidArgumentException;
 use Kununu\ArchitectureSniffer\Configuration\ArchitectureLibrary;
+use Kununu\ArchitectureSniffer\Configuration\Group;
 use Kununu\ArchitectureSniffer\Configuration\Selector\InterfaceClassSelector;
-use Kununu\ArchitectureSniffer\Configuration\Selector\Selectable;
+use Kununu\ArchitectureSniffer\Helper\SelectorBuilder;
+use PHPat\Rule\Assertion\Declaration\ShouldBeFinal\ShouldBeFinal;
 use PHPat\Selector\Selector;
-use PHPat\Test\Builder\Rule as PHPatRule;
-use PHPat\Test\PHPat;
+use PHPat\Test\Builder\Rule;
 
 final readonly class MustBeFinal extends AbstractRule
 {
     public static function createRule(
-        string $groupName,
+        Group $group,
         ArchitectureLibrary $library,
-    ): PHPatRule {
-        $includes = self::checkIfClassSelectors($library->getIncludesByGroup($groupName));
-        $excludes = $library->getExcludesByGroup($groupName);
+    ): Rule {
+        self::checkIfClassSelectors($group->flattenedIncludes);
 
-        $rule = PHPat::rule()->classes(...self::getPHPSelectors($includes));
-
-        $excludes = self::getPHPSelectors($excludes);
-        $excludes[] = Selector::isInterface();
-        $rule = $rule->excluding(...$excludes);
-
-        return $rule->shouldBeFinal()->because("$groupName must be final.");
+        return self::buildDependencyRule(
+            group: $group,
+            specificRule: ShouldBeFinal::class,
+            because: "$group->name must be final.",
+            extraExcludeSelectors: [Selector::isInterface()]
+        );
     }
 
     /**
-     * @param iterable<Selectable> $selectors
-     *
-     * @return iterable<Selectable>
+     * @param string[] $selectors
      */
-    private static function checkIfClassSelectors(iterable $selectors): iterable
+    private static function checkIfClassSelectors(array $selectors): void
     {
         foreach ($selectors as $selector) {
-            if ($selector instanceof InterfaceClassSelector) {
-                $name = $selector->interface;
-                throw new InvalidArgumentException("$name must be a class selector for rule MustBeFinal.");
+            if (SelectorBuilder::createSelectable($selector) instanceof InterfaceClassSelector) {
+                throw new InvalidArgumentException("$selector must be a class selector for rule MustBeFinal.");
             }
-            yield $selector;
         }
     }
 }
