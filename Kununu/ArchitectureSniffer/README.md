@@ -219,25 +219,6 @@ This logic applies to all properties that accept patterns or references, such as
 - Internally, `*` is converted to `.+` for regex matching.
 - Example: `App\Controller\*Controller` becomes `/App\\Controller\\.+Controller/`.
 
-### Avoiding Accidental Matches
-
-```yaml
-architecture:
-  $repositories:
-    final: true
-    implements:
-      - "App\Repository\RepositoryInterface"
-    must_only_have_one_public_method_named: "find"
-    includes:
-      - "App\Repository\*Repository"
-    depends_on:
-      - "$models"
-      - "App\Model\*Model"
-  $models:
-    includes:
-      - "App\Model\*Model"
-```
-
 ## Troubleshooting & FAQ
 
 - Ensure `architecture.yaml` is in your project root.
