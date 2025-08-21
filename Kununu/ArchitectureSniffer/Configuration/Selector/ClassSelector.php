@@ -11,9 +11,7 @@ final readonly class ClassSelector implements Selectable
 {
     use RegexTrait;
 
-    public const string KEY = 'class';
-
-    public function __construct(public string $name, public string $class)
+    public function __construct(public string $class)
     {
     }
 
@@ -26,10 +24,5 @@ final readonly class ClassSelector implements Selectable
         }
 
         return Selector::classname($class, $class !== $this->class);
-    }
-
-    public function getName(): string
-    {
-        return $this->name;
     }
 }

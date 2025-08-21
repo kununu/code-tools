@@ -11,12 +11,8 @@ final readonly class InterfaceClassSelector implements Selectable
 {
     use RegexTrait;
 
-    public const string KEY = 'interface';
-
-    public function __construct(
-        public string $name,
-        public string $interface,
-    ) {
+    public function __construct(public string $interface)
+    {
     }
 
     public function getPHPatSelector(): SelectorInterface
@@ -31,10 +27,5 @@ final readonly class InterfaceClassSelector implements Selectable
             Selector::classname($interface, $interface !== $this->interface),
             Selector::isInterface(),
         );
-    }
-
-    public function getName(): string
-    {
-        return $this->name;
     }
 }

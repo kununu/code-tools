@@ -3,29 +3,26 @@ declare(strict_types=1);
 
 namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 
-use Kununu\ArchitectureSniffer\Configuration\Selector\Selectable;
-use PHPat\Test\PHPat;
+use Kununu\ArchitectureSniffer\Configuration\ArchitectureLibrary;
+use Kununu\ArchitectureSniffer\Configuration\Group;
+use PHPat\Rule\Assertion\Declaration\ShouldHaveOnlyOnePublicMethodNamed\ShouldHaveOnlyOnePublicMethodNamed;
+use PHPat\Test\Builder\Rule;
 
-final readonly class MustOnlyHaveOnePublicMethodNamed implements Rule
+final readonly class MustOnlyHaveOnePublicMethodNamed extends AbstractRule
 {
-    public const string KEY = 'only-one-public-method-named';
+    public static function createRule(
+        Group $group,
+        ArchitectureLibrary $library,
+    ): Rule {
+        if ($group->mustOnlyHaveOnePublicMethodName === null) {
+            throw self::getInvalidCallException(self::class, $group->name, 'mustOnlyHaveOnePublicMethodName');
+        }
 
-    public function __construct(
-        public Selectable $selector,
-        public string $functionName,
-    ) {
-    }
-
-    public static function fromArray(Selectable $base, string $functionName): self
-    {
-        return new self($base, $functionName);
-    }
-
-    public function getPHPatRule(): \PHPat\Test\Builder\Rule
-    {
-        return PHPat::rule()
-            ->classes($this->selector->getPHPatSelector())
-            ->shouldHaveOnlyOnePublicMethodNamed($this->functionName)
-            ->because("{$this->selector->getName()} should only have one public method named $this->functionName.");
+        return self::buildDependencyRule(
+            group: $group,
+            specificRule: ShouldHaveOnlyOnePublicMethodNamed::class,
+            because: "$group->name should only have one public method named $group->mustOnlyHaveOnePublicMethodName.",
+            ruleParams: ['name' => $group->mustOnlyHaveOnePublicMethodName, 'isRegex' => false],
+        );
     }
 }

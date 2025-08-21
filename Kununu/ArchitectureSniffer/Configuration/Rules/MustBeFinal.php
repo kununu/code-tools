@@ -4,37 +4,39 @@ declare(strict_types=1);
 namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 
 use InvalidArgumentException;
+use Kununu\ArchitectureSniffer\Configuration\ArchitectureLibrary;
+use Kununu\ArchitectureSniffer\Configuration\Group;
 use Kununu\ArchitectureSniffer\Configuration\Selector\InterfaceClassSelector;
-use Kununu\ArchitectureSniffer\Configuration\Selector\Selectable;
+use Kununu\ArchitectureSniffer\Helper\SelectorBuilder;
+use PHPat\Rule\Assertion\Declaration\ShouldBeFinal\ShouldBeFinal;
 use PHPat\Selector\Selector;
-use PHPat\Test\Builder\Rule as PHPatRule;
-use PHPat\Test\PHPat;
+use PHPat\Test\Builder\Rule;
 
-final readonly class MustBeFinal implements Rule
+final readonly class MustBeFinal extends AbstractRule
 {
-    public const string KEY = 'final';
+    public static function createRule(
+        Group $group,
+        ArchitectureLibrary $library,
+    ): Rule {
+        self::checkIfClassSelectors($group->flattenedIncludes);
 
-    public function __construct(public Selectable $selector)
-    {
+        return self::buildDependencyRule(
+            group: $group,
+            specificRule: ShouldBeFinal::class,
+            because: "$group->name must be final.",
+            extraExcludeSelectors: [Selector::isInterface()]
+        );
     }
 
-    public static function fromArray(Selectable $selector): self
+    /**
+     * @param string[] $selectors
+     */
+    private static function checkIfClassSelectors(array $selectors): void
     {
-        if ($selector instanceof InterfaceClassSelector) {
-            throw new InvalidArgumentException(
-                'The class must not be an interface.'
-            );
+        foreach ($selectors as $selector) {
+            if (SelectorBuilder::createSelectable($selector) instanceof InterfaceClassSelector) {
+                throw new InvalidArgumentException("$selector must be a class selector for rule MustBeFinal.");
+            }
         }
-
-        return new self($selector);
-    }
-
-    public function getPHPatRule(): PHPatRule
-    {
-        return PHPat::rule()
-            ->classes($this->selector->getPHPatSelector())
-            ->excluding(Selector::isInterface())
-            ->shouldBeFinal()
-            ->because("{$this->selector->getName()} must be final.");
     }
 }

@@ -4,67 +4,50 @@ declare(strict_types=1);
 namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 
 use InvalidArgumentException;
-use JsonException;
-use Kununu\ArchitectureSniffer\Configuration\Selector\InterfaceClassSelector;
-use Kununu\ArchitectureSniffer\Configuration\Selector\Selectable;
-use Kununu\ArchitectureSniffer\Configuration\Selectors;
+use Kununu\ArchitectureSniffer\Configuration\ArchitectureLibrary;
+use Kununu\ArchitectureSniffer\Configuration\Group;
+use Kununu\ArchitectureSniffer\Configuration\Selector\ClassSelector;
+use Kununu\ArchitectureSniffer\Configuration\Selector\NamespaceSelector;
+use Kununu\ArchitectureSniffer\Helper\SelectorBuilder;
+use PHPat\Rule\Assertion\Relation\ShouldImplement\ShouldImplement;
 use PHPat\Selector\Selector;
-use PHPat\Selector\SelectorInterface;
-use PHPat\Test\PHPat;
+use PHPat\Test\Builder\Rule;
 
-final readonly class MustImplement implements Rule
+final readonly class MustImplement extends AbstractRule
 {
-    public const string KEY = 'implements';
-
-    /**
-     * @param InterfaceClassSelector[] $interfaces
-     */
-    public function __construct(
-        public Selectable $selector,
-        public array $interfaces,
-    ) {
-    }
-
-    /**
-     * @param array<string, mixed> $data
-     *
-     * @throws JsonException
-     */
-    public static function fromArray(Selectable $selector, array $data): self
-    {
-        $interfaces = [];
-        foreach ($data as $interface) {
-            $interfaceSelector = Selectors::findSelector($interface);
-            if (!$interfaceSelector instanceof InterfaceClassSelector) {
-                throw new InvalidArgumentException(
-                    "The {$interfaceSelector->getName()} must be declared as interface."
-                );
-            }
-            $interfaces[] = $interfaceSelector;
+    public static function createRule(
+        Group $group,
+        ArchitectureLibrary $library,
+    ): Rule {
+        if ($group->implements === null) {
+            throw self::getInvalidCallException(self::class, $group->name, 'implements');
         }
 
-        return new self($selector, $interfaces);
+        $targets = $library->resolveTargets($group, $group->implements);
+        self::checkIfInterfaceSelectors($targets);
+
+        return self::buildDependencyRule(
+            group: $group,
+            specificRule: ShouldImplement::class,
+            because: "$group->name must implement interface.",
+            targets: $targets,
+            targetExcludes: $library->findTargetExcludes($group->implements, $targets),
+            extraExcludeSelectors: [Selector::isInterface()],
+        );
     }
 
-    public function getPHPatRule(): \PHPat\Test\Builder\Rule
+    /**
+     * @param string[] $selectors
+     */
+    private static function checkIfInterfaceSelectors(iterable $selectors): void
     {
-        $interfacesString = implode(', ', array_map(
-            static fn(Selectable $interface): string => $interface->getName(),
-            $this->interfaces
-        ));
-
-        return PHPat::rule()
-            ->classes(
-                $this->selector->getPHPatSelector(),
-            )
-            ->excluding(Selector::isInterface())
-            ->shouldImplement()
-            ->classes(
-                ...array_map(
-                    static fn(Selectable $interface): SelectorInterface => $interface->getPHPatSelector(),
-                    $this->interfaces
-                )
-            )
-            ->because("{$this->selector->getName()} must implement $interfacesString.");
+        foreach ($selectors as $selector) {
+            if (SelectorBuilder::createSelectable($selector) instanceof ClassSelector
+                || SelectorBuilder::createSelectable($selector) instanceof NamespaceSelector) {
+                throw new InvalidArgumentException(
+                    "$selector cannot be used in the MustImplement rule, as it is not an interface."
+                );
+            }
+        }
     }
 }

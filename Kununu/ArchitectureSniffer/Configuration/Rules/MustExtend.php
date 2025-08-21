@@ -4,48 +4,47 @@ declare(strict_types=1);
 namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 
 use InvalidArgumentException;
-use JsonException;
+use Kununu\ArchitectureSniffer\Configuration\ArchitectureLibrary;
+use Kununu\ArchitectureSniffer\Configuration\Group;
 use Kununu\ArchitectureSniffer\Configuration\Selector\InterfaceClassSelector;
-use Kununu\ArchitectureSniffer\Configuration\Selector\Selectable;
-use Kununu\ArchitectureSniffer\Configuration\Selectors;
-use PHPat\Test\PHPat;
+use Kununu\ArchitectureSniffer\Helper\SelectorBuilder;
+use PHPat\Rule\Assertion\Relation\ShouldExtend\ShouldExtend;
+use PHPat\Test\Builder\Rule;
 
-final readonly class MustExtend implements Rule
+final readonly class MustExtend extends AbstractRule
 {
-    public const string KEY = 'extends';
+    public static function createRule(
+        Group $group,
+        ArchitectureLibrary $library,
+    ): Rule {
+        if ($group->extends === null) {
+            throw self::getInvalidCallException(self::class, $group->name, 'extends');
+        }
 
-    public function __construct(
-        public Selectable $selector,
-        public Selectable $parent,
-    ) {
+        self::checkIfNotInterfaceSelectors($group->flattenedIncludes);
+
+        $targets = $library->resolveTargets($group, [$group->extends]);
+
+        return self::buildDependencyRule(
+            group: $group,
+            specificRule: ShouldExtend::class,
+            because: "$group->name should extend class.",
+            targets: $targets,
+            targetExcludes: $library->findTargetExcludes([$group->extends], $targets),
+        );
     }
 
     /**
-     * @param array<string, mixed> $data
-     *
-     * @throws JsonException
+     * @param string[] $selectors
      */
-    public static function fromArray(Selectable $selector, array $data): self
+    private static function checkIfNotInterfaceSelectors(array $selectors): void
     {
-        $parent = Selectors::findSelector($data);
-
-        if ($parent instanceof InterfaceClassSelector) {
-            throw new InvalidArgumentException(
-                'The parent class must not be an interface.'
-            );
+        foreach ($selectors as $selector) {
+            if (SelectorBuilder::createSelectable($selector) instanceof InterfaceClassSelector) {
+                throw new InvalidArgumentException(
+                    "$selector cannot be used in the MustExtend rule, as it is an interface."
+                );
+            }
         }
-
-        return new self($selector, $parent);
-    }
-
-    public function getPHPatRule(): \PHPat\Test\Builder\Rule
-    {
-        return PHPat::rule()
-            ->classes($this->selector->getPHPatSelector())
-            ->shouldExtend()
-            ->classes(
-                $this->parent->getPHPatSelector()
-            )
-            ->because("{$this->selector->getName()} should extend {$this->parent->getName()}.");
     }
 }
