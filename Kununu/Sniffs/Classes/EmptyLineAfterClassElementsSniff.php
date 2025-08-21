@@ -39,7 +39,7 @@ class EmptyLineAfterClassElementsSniff implements Sniff
                     T_PROTECTED,
                     T_PRIVATE,
                     T_VAR,
-                    T_READONLY
+                    T_READONLY,
                 ],
                 $position,
                 $scopeEnd
@@ -120,7 +120,7 @@ class EmptyLineAfterClassElementsSniff implements Sniff
         int $scopeStart,
         int $scopeEnd,
         int $tokenType,
-        string $elementType
+        string $elementType,
     ): void {
         $tokens = $phpcsFile->getTokens();
 

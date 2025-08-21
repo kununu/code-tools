@@ -40,7 +40,7 @@ class SniffTestCase extends TestCase
         Sniff $sniffer,
         ?int $errorCount = null,
         ?int $fixableErrorCount = null,
-        bool $fix = false
+        bool $fix = false,
     ): array {
         $codeSniffer = new Runner();
         $codeSniffer->config = new Config(['-s']);

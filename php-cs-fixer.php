@@ -1,0 +1,85 @@
+<?php
+declare(strict_types=1);
+
+use PhpCsFixer\Config;
+use PhpCsFixer\Finder;
+use PhpCsFixer\Runner\Parallel\ParallelConfigFactory;
+
+// Help on rules -> https://cs.symfony.com/doc/rules/index.html
+return (new Config())
+    ->setParallelConfig(ParallelConfigFactory::detect())
+    ->setCacheFile('/tmp/.php-cs-fixer.php.cache')
+    ->setRiskyAllowed(true)
+    ->setRules([
+        // Import rule sets
+        '@Symfony'                         => true,
+        '@Symfony:risky'                   => true,
+        // Custom rules
+        'binary_operator_spaces'           => [
+            'operators' => [
+                '=>' => 'align',
+            ],
+        ],
+        'blank_line_after_opening_tag'     => false,
+        'combine_consecutive_unsets'       => true,
+        'concat_space'                     => [
+            'spacing' => 'one',
+        ],
+        'declare_strict_types'             => true,
+        'explicit_indirect_variable'       => true,
+        'function_declaration'             => [
+            'closure_function_spacing' => 'none',
+            'closure_fn_spacing'       => 'none',
+        ],
+        'global_namespace_import'          => [
+            'import_classes' => true,
+        ],
+        'heredoc_to_nowdoc'                => true,
+        'native_constant_invocation'       => [
+            'fix_built_in' => false,
+            'strict'       => true,
+        ],
+        'native_function_invocation'       => [
+            'include' => [],
+        ],
+        'no_extra_blank_lines'             => [
+            'tokens' => [
+                'attribute',
+                'break',
+                'case',
+                'continue',
+                'curly_brace_block',
+                'default',
+                'extra',
+                'parenthesis_brace_block',
+                'return',
+                'square_brace_block',
+                'switch',
+                'throw',
+                'use',
+            ],
+        ],
+        'no_superfluous_phpdoc_tags'       => false,
+        'no_trailing_whitespace_in_string' => false,
+        'no_useless_else'                  => true,
+        'no_useless_return'                => true,
+        'phpdoc_summary'                   => false,
+        'return_assignment'                => true,
+        'self_accessor'                    => false,
+        'self_static_accessor'             => true,
+        'single_line_throw'                => false,
+        'ternary_to_null_coalescing'       => true,
+        'void_return'                      => true,
+        'yoda_style'                       => [
+            'always_move_variable' => false,
+            'equal'                => false,
+            'identical'            => false,
+            'less_and_greater'     => false,
+        ],
+    ])
+    ->setFinder(
+        Finder::create()
+            ->exclude('vendor')
+            ->exclude('var')
+            ->in(__DIR__)
+    );

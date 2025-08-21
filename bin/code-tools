@@ -1,64 +1,93 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# Resolve project root
+PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || echo "$PWD")"
+
+# Constants
+if [ -d "$PROJECT_ROOT/services/vendor/kununu/code-tools" ]; then
+  readonly CONFIG_DIR="$PROJECT_ROOT/services/vendor/kununu/code-tools"
+elif [ -d "$PROJECT_ROOT/vendor/kununu/code-tools" ]; then
+  readonly CONFIG_DIR="$PROJECT_ROOT/vendor/kununu/code-tools"
+elif [ -d "$PROJECT_ROOT" ]; then
+  readonly CONFIG_DIR="$PROJECT_ROOT"
+else
+  echo "❌ Could not find 'vendor/kununu/code-tools'."
+  exit 1
+fi
+
+readonly CONFIG_FILES=(
+    "dist/php-cs-fixer.php.dist"
+    "dist/phpcs.xml.dist"
+    "dist/rector.php.dist"
+    "dist/.editorconfig.dist"
+)
 
 # Function to display help instructions
 show_help() {
-    echo "Usage: vendor/bin/code-tools publish:config [tool-name]"
-    echo "Valid tool names: code-sniffer or rector"
-    echo "If no tool name is passed, then all the available config files for each tool will be copied."
-    echo "Options:"
-    echo "  --help    Show help message."
+    cat <<EOF
+Usage: vendor/bin/code-tools publish:config [tool-name]
+
+Valid tool names:
+  cs-fixer     => copies dist/php-cs-fixer.php.dist
+  code-sniffer => copies dist/phpcs.xml.dist
+  rector       => copies dist/rector.php.dist
+  editorconfig => copies dist/.editorconfig.dist
+EOF
 }
 
-# Array of config files
-CONFIG_FILES=("dist/phpcs.xml.dist" "dist/rector.php.dist")
+# Function to copy a config file
+copy_config_file() {
+    local source_file="$CONFIG_DIR/$1"
+    local dest_file="${1#dist/}"
+    dest_file="${dest_file%.dist}"
+    local dest_path="$PROJECT_ROOT/$dest_file"
 
-# Check if help is requested
-if [ "$1" == "--help" ]; then
+    if [ -f "$dest_path" ]; then
+        echo "⚠️  Config file '$dest_file' already exists at project level."
+    elif [ -f "$source_file" ]; then
+        cp "$source_file" "$dest_path"
+        echo "✅ Config file '$dest_file' copied to project level."
+    else
+        echo "❌ Config file '$source_file' does not exist."
+    fi
+}
+
+# Parse arguments
+if [ "${1:-}" == "--help" ]; then
     show_help
     exit 0
 fi
 
-# Check if at least one argument is provided
-if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
+if [ "$#" -ne 2 ]; then
     show_help
     exit 1
 fi
 
-# Validate the first argument
 if [ "$1" != "publish:config" ]; then
-    echo "Invalid command. Valid command: publish:config"
+    echo "❌ Invalid command. Valid command: publish:config"
     exit 1
 fi
 
-# Function to copy a config file
-copy_config_file() {
-    local SOURCE_FILE="vendor/kununu/code-tools/$1"
-    local DEST_FILE="${1#dist/}"
-    DEST_FILE="${DEST_FILE%.dist}"
+tool_name="$2"
 
-    if [ -f "$DEST_FILE" ]; then
-        echo "Config file '$DEST_FILE' already exists at project level."
-    elif [ -f "$SOURCE_FILE" ]; then
-        cp "$SOURCE_FILE" "$DEST_FILE"
-        echo "Config file '$DEST_FILE' copied to project level, customize it as you like."
-    else
-        echo "Config file '$SOURCE_FILE' does not exist."
-    fi
-}
-
-# If a second argument is provided, validate and copy the specific config file
-if [ "$#" -eq 2 ]; then
-    if [ "$2" == "code-sniffer" ]; then
+case "$tool_name" in
+    cs-fixer)
+        copy_config_file "dist/php-cs-fixer.php.dist"
+        ;;
+    code-sniffer)
         copy_config_file "dist/phpcs.xml.dist"
-    elif [ "$2" == "rector" ]; then
+        ;;
+    rector)
         copy_config_file "dist/rector.php.dist"
-    else
-        echo "Invalid config file name. Valid config file name: code-sniffer or rector"
+        ;;
+    editorconfig)
+        copy_config_file "dist/.editorconfig.dist"
+        ;;
+    *)
+        echo "❌ Invalid tool name: '$tool_name'"
+        show_help
         exit 1
-    fi
-else
-    # If no second argument, copy all config files
-    for config_file in "${CONFIG_FILES[@]}"; do
-        copy_config_file "$config_file"
-    done
-fi
+        ;;
+esac
