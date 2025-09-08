@@ -57,7 +57,8 @@ final readonly class Group
                 TypeChecker::castArrayOfStrings($targetAttributes[self::DEPENDS_ON_KEY]) : null,
             mustNotDependOn: isset($targetAttributes[self::MUST_NOT_DEPEND_ON_KEY]) ?
                 TypeChecker::castArrayOfStrings($targetAttributes[self::MUST_NOT_DEPEND_ON_KEY]) : null,
-            extends: isset($targetAttributes[self::EXTENDS_KEY]) && is_string($targetAttributes[self::EXTENDS_KEY]) ? $targetAttributes[self::EXTENDS_KEY] : null,
+            extends: isset($targetAttributes[self::EXTENDS_KEY]) && is_string($targetAttributes[self::EXTENDS_KEY]) ?
+                $targetAttributes[self::EXTENDS_KEY] : null,
             implements: isset($targetAttributes[self::IMPLEMENTS_KEY]) ?
                 TypeChecker::castArrayOfStrings($targetAttributes[self::IMPLEMENTS_KEY]) : null,
             isFinal: isset($targetAttributes[self::FINAL_KEY]) && $targetAttributes[self::FINAL_KEY] === true,
