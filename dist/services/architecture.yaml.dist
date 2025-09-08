@@ -1,26 +1,33 @@
 architecture:
   $controller:
     includes:
-      - "*Controller"
-    dependsOn:
+      - "App\\Controller\\*\\*Controller"
+    depends_on:
       - "$cqrs"
-      - "Psr\\"
+      - "$common"
+      - "App\\Domain\\"
+      - "App\\Request\\"
       - "Symfony\\Component\\"
 
   $cqrs:
     includes:
-      - "\\League\\Tactician\\CommandBus"
-      - "\\Kununu\\CQRS\\Bundle\\Bus\\CommandBusInterface"
-      - "$application_query"
-      - "$application_command"
+      - "League\\Tactician\\CommandBus"
+      - "Kununu\\CQRS\\Bundle\\Bus\\CommandBusInterface"
+      - "Kununu\\CQRS\\Bundle\\Controller\\"
+      - "App\\UseCase\\Query\\"
+      - "App\\UseCase\\Command\\"
 
   $cqrs_command:
     includes:
       - "App\\UseCase\\Command\\*\\*Handler"
-    dependsOn:
-      - ""
-      - "App\\Application\\*"
+    depends_on:
+      - "$repository_command"
+      - "$common"
+      - "Kununu\\CQRS\\Command\\"
+      - "Kununu\\CQRS\\Event\\"
+      - "App\\UseCase\\*"
       - "App\\Domain\\*"
+      - "App\\Event\\*"
     implements:
       - "Kununu\\CQRS\\Command\\CommandHandler"
     mustOnlyHaveOnePublicMethodName: "handle"
@@ -28,19 +35,43 @@ architecture:
   $cqrs_query:
     includes:
       - "App\\UseCase\\Query\\*\\*Handler"
-    dependsOn:
-      - "$repository"
-      - "App\\Application\\*"
+    depends_on:
+      - "$repository_query"
+      - "$common"
+      - "Kununu\\CQRS\\Query\\"
+      - "App\\UseCase\\*"
       - "App\\Domain\\*"
     implements:
       - "Kununu\\CQRS\\Query\\QueryHandler"
     mustOnlyHaveOnePublicMethodName: "handle"
 
-  $repository:
+  $repository_command:
     includes:
-      - "*RepositoryInterface"
-    dependsOn:
+      - "App\\UseCase\\Command\\*\\RepositoryInterface"
+    depends_on:
+      - "App\\UseCase\\Command\\"
       - "App\\Domain\\*"
+      - "$common"
       - "Doctrine\\"
       - "OpenSearch\\"
       - "Elasticsearch\\"
+
+  $repository_query:
+    includes:
+      - "App\\UseCase\\Query\\*\\RepositoryInterface"
+    depends_on:
+      - "App\\UseCase\\Query\\"
+      - "App\\Domain\\*"
+      - "$common"
+      - "Doctrine\\"
+      - "OpenSearch\\"
+      - "Elasticsearch\\"
+
+  $common:
+    includes:
+      - "Psr\\"
+      - "Ramsey\\Uuid\\"
+      - "Kununu\\Utilities\\"
+      - "Kununu\\OpenApi\\"
+      - "Kununu\\Monitoring\\"
+      - "Kununu\\ResponseSerializationBundle\\"

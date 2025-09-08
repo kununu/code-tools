@@ -47,20 +47,20 @@ final readonly class Group
         array $targetAttributes,
         ?array $flattenedExcludes,
     ): self {
-        $mustOnlyHaveOnePublicMethodName = $targetAttributes[self::MUST_ONLY_HAVE_ONE_PUBLIC_METHOD_NAMED_KEY];
+        $mustOnlyHaveOnePublicMethodName = $targetAttributes[self::MUST_ONLY_HAVE_ONE_PUBLIC_METHOD_NAMED_KEY] ?? null;
 
         return new self(
             name: $groupName,
             flattenedIncludes: $flattenedIncludes,
             flattenedExcludes: $flattenedExcludes,
-            dependsOn: $targetAttributes[self::DEPENDS_ON_KEY] ?
+            dependsOn: isset($targetAttributes[self::DEPENDS_ON_KEY]) ?
                 TypeChecker::castArrayOfStrings($targetAttributes[self::DEPENDS_ON_KEY]) : null,
-            mustNotDependOn: $targetAttributes[self::MUST_NOT_DEPEND_ON_KEY] ?
+            mustNotDependOn: isset($targetAttributes[self::MUST_NOT_DEPEND_ON_KEY]) ?
                 TypeChecker::castArrayOfStrings($targetAttributes[self::MUST_NOT_DEPEND_ON_KEY]) : null,
-            extends: is_string($targetAttributes[self::EXTENDS_KEY]) ? $targetAttributes[self::EXTENDS_KEY] : null,
-            implements: $targetAttributes[self::IMPLEMENTS_KEY] ?
+            extends: isset($targetAttributes[self::EXTENDS_KEY]) && is_string($targetAttributes[self::EXTENDS_KEY]) ? $targetAttributes[self::EXTENDS_KEY] : null,
+            implements: isset($targetAttributes[self::IMPLEMENTS_KEY]) ?
                 TypeChecker::castArrayOfStrings($targetAttributes[self::IMPLEMENTS_KEY]) : null,
-            isFinal: $targetAttributes[self::FINAL_KEY] === true,
+            isFinal: isset($targetAttributes[self::FINAL_KEY]) && $targetAttributes[self::FINAL_KEY] === true,
             mustOnlyHaveOnePublicMethodName: is_string($mustOnlyHaveOnePublicMethodName) ?
                 $mustOnlyHaveOnePublicMethodName : null,
         );

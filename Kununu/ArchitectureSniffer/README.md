@@ -47,12 +47,17 @@ Add to your `phpstan.neon`:
 
 ```neon
 includes:
-    - vendor/carlosas/phpat/extension.neon
+    - vendor/phpat/phpat/extension.neon
+
+parameters:
+    phpat:
+        - ignore_built_in_classes: false
+        - show_rule_names: true
 
 services:
-    -
-        class: PHPAT\PHPStan\PHPStanExtension
-        tags: [phpstan.extension]
+    - class: Kununu\ArchitectureSniffer\ArchitectureSniffer
+      tags:
+        - phpat.testnsion
 ```
 
 Run analysis:

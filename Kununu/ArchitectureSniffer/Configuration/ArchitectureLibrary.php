@@ -29,7 +29,7 @@ final class ArchitectureLibrary
             $flattenedIncludes = GroupFlattener::flattenIncludes($groupName, $attributes[Group::INCLUDES_KEY]);
             $flattenedExcludes = GroupFlattener::flattenExcludes(
                 groupName: $groupName,
-                excludes: $attributes[Group::EXCLUDES_KEY]
+                excludes: isset($attributes[Group::EXCLUDES_KEY])
                     && TypeChecker::isArrayOfStrings($attributes[Group::EXCLUDES_KEY]) ?
                     $attributes[Group::EXCLUDES_KEY] : [],
                 flattenedIncludes: $flattenedIncludes
