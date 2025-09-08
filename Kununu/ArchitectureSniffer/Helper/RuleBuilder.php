@@ -36,6 +36,13 @@ final readonly class RuleBuilder
             );
         }
 
+        if ($group->shouldBeReadonly()) {
+            yield Rules\MustBeReadonly::createRule(
+                $group,
+                $library
+            );
+        }
+
         if ($group->shouldDependOn()) {
             yield Rules\MustOnlyDependOn::createRule(
                 $group,

@@ -5,11 +5,11 @@ namespace Kununu\ArchitectureSniffer\Configuration\Rules;
 
 use Kununu\ArchitectureSniffer\Configuration\ArchitectureLibrary;
 use Kununu\ArchitectureSniffer\Configuration\Group;
-use PHPat\Rule\Assertion\Declaration\ShouldBeFinal\ShouldBeFinal;
+use PHPat\Rule\Assertion\Declaration\ShouldBeReadonly\ShouldBeReadonly;
 use PHPat\Selector\Selector;
 use PHPat\Test\Builder\Rule;
 
-final readonly class MustBeFinal extends AbstractRule
+final readonly class MustBeReadonly extends AbstractRule
 {
     public static function createRule(
         Group $group,
@@ -17,8 +17,8 @@ final readonly class MustBeFinal extends AbstractRule
     ): Rule {
         return self::buildDependencyRule(
             group: $group,
-            specificRule: ShouldBeFinal::class,
-            because: "$group->name must be final.",
+            specificRule: ShouldBeReadonly::class,
+            because: "$group->name must be read only.",
             extraExcludeSelectors: [Selector::isInterface()]
         );
     }

@@ -11,6 +11,7 @@ final readonly class Group
     public const string EXCLUDES_KEY = 'excludes';
     public const string DEPENDS_ON_KEY = 'depends_on';
     public const string FINAL_KEY = 'final';
+    public const string READONLY_KEY = 'readonly';
     public const string EXTENDS_KEY = 'extends';
     public const string IMPLEMENTS_KEY = 'implements';
     public const string MUST_ONLY_HAVE_ONE_PUBLIC_METHOD_NAMED_KEY = 'must_only_have_one_public_method_named';
@@ -32,6 +33,7 @@ final readonly class Group
         public ?string $extends,
         public ?array $implements,
         public bool $isFinal,
+        public bool $isReadonly,
         public ?string $mustOnlyHaveOnePublicMethodName,
     ) {
     }
@@ -62,6 +64,7 @@ final readonly class Group
             implements: isset($targetAttributes[self::IMPLEMENTS_KEY]) ?
                 TypeChecker::castArrayOfStrings($targetAttributes[self::IMPLEMENTS_KEY]) : null,
             isFinal: isset($targetAttributes[self::FINAL_KEY]) && $targetAttributes[self::FINAL_KEY] === true,
+            isReadonly: isset($targetAttributes[self::READONLY_KEY]) && $targetAttributes[self::READONLY_KEY] === true,
             mustOnlyHaveOnePublicMethodName: is_string($mustOnlyHaveOnePublicMethodName) ?
                 $mustOnlyHaveOnePublicMethodName : null,
         );
@@ -70,6 +73,11 @@ final readonly class Group
     public function shouldBeFinal(): bool
     {
         return $this->isFinal;
+    }
+
+    public function shouldBeReadonly(): bool
+    {
+        return $this->isReadonly;
     }
 
     public function shouldExtend(): bool
