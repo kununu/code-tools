@@ -1,0 +1,46 @@
+architecture:
+  $controller:
+    includes:
+      - "*Controller"
+    dependsOn:
+      - "$cqrs"
+      - "Psr\\"
+      - "Symfony\\Component\\"
+
+  $cqrs:
+    includes:
+      - "\\League\\Tactician\\CommandBus"
+      - "\\Kununu\\CQRS\\Bundle\\Bus\\CommandBusInterface"
+      - "$application_query"
+      - "$application_command"
+
+  $cqrs_command:
+    includes:
+      - "App\\UseCase\\Command\\*\\*Handler"
+    dependsOn:
+      - ""
+      - "App\\Application\\*"
+      - "App\\Domain\\*"
+    implements:
+      - "Kununu\\CQRS\\Command\\CommandHandler"
+    mustOnlyHaveOnePublicMethodName: "handle"
+
+  $cqrs_query:
+    includes:
+      - "App\\UseCase\\Query\\*\\*Handler"
+    dependsOn:
+      - "$repository"
+      - "App\\Application\\*"
+      - "App\\Domain\\*"
+    implements:
+      - "Kununu\\CQRS\\Query\\QueryHandler"
+    mustOnlyHaveOnePublicMethodName: "handle"
+
+  $repository:
+    includes:
+      - "*RepositoryInterface"
+    dependsOn:
+      - "App\\Domain\\*"
+      - "Doctrine\\"
+      - "OpenSearch\\"
+      - "Elasticsearch\\"

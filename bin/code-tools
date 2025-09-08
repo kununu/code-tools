@@ -33,6 +33,7 @@ Valid tool names:
   cs-fixer     => copies dist/php-cs-fixer.php.dist
   code-sniffer => copies dist/phpcs.xml.dist
   rector       => copies dist/rector.php.dist
+  arch-sniffer => copies dist/architecture.yaml.dist
   editorconfig => copies dist/.editorconfig.dist
 EOF
 }
@@ -84,6 +85,9 @@ case "$tool_name" in
         ;;
     editorconfig)
         copy_config_file "dist/.editorconfig.dist"
+        ;;
+    arch-sniffer)
+        copy_config_file "dist/architecture.yaml.dist"
         ;;
     *)
         echo "❌ Invalid tool name: '$tool_name'"
