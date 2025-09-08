@@ -86,9 +86,6 @@ case "$tool_name" in
     editorconfig)
         copy_config_file "dist/.editorconfig.dist"
         ;;
-    arch-sniffer)
-        copy_config_file "dist/services/architecture.yaml.dist"
-        ;;
     *)
         echo "❌ Invalid tool name: '$tool_name'"
         show_help
