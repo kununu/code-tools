@@ -230,7 +230,7 @@ This logic applies to all properties that accept patterns or references, such as
 - Check for typos in group names and references.
 - For a clean static analysis run, use:
   ```sh
-  php vendor/bin/phpstan clear-result && php vendor/bin/phpstan analyse -c phpstan.neon --memory-limit 240M
+  `php vendor/bin/phpstan clear-result && php vendor/bin/phpstan analyse -c phpstan.neon --memory-limit 240M`
   ```
 - For more help, see [PHPAT issues](https://github.com/carlosas/phpat/issues).
 

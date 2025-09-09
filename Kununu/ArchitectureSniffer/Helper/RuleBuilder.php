@@ -62,6 +62,10 @@ final readonly class RuleBuilder
                 $group,
                 $library
             );
+            yield Rules\MustOnlyHaveOnePublicMethod::createRule(
+                $group,
+                $library
+            );
         }
     }
 }
