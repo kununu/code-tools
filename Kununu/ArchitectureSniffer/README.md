@@ -51,13 +51,13 @@ includes:
 
 parameters:
     phpat:
-        - ignore_built_in_classes: false
-        - show_rule_names: true
+        ignore_built_in_classes: false
+        show_rule_names: true
 
 services:
     - class: Kununu\ArchitectureSniffer\ArchitectureSniffer
       tags:
-        - phpat.testnsion
+        - phpat.test
 ```
 
 Run analysis:
