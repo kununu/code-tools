@@ -13,6 +13,14 @@ This helps:
 - Maintain clean and readable code
 - Standardize formatting across different team members' environments
 
+## 🎛️ Usage
+
+To enable it just copy the `.editorconfig` file to your repository root (or use the `vendor/bin/code-tools publish:config editorconfig` command).
+
+For PHPStorm you can find the instruction [here](https://www.jetbrains.com/help/phpstorm/editorconfig.html).
+
+Alternatively you can go to `Settings -> Editor -> Code Style -> PHP -> Scheme -> ⚙️ -> Import Scheme...` and import the `.editorconfig` file as inspection settings without the need to add the file to the repository.
+
 ## ⚙️ Sample .editorconfig
 
 ```ini

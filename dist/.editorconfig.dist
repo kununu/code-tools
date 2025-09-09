@@ -5,7 +5,10 @@ end_of_line = lf
 insert_final_newline = true
 trim_trailing_whitespace = true
 
-[{*.php}]
+[*.{json,yaml,yml,tf}]
+indent_size = 2
+
+[*.php]
 ij_continuation_indent_size = 4
 indent_size = 4
 indent_style = space
