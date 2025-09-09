@@ -73,7 +73,7 @@ final class ArchitectureSniffer
             $architecture,
             static fn(array $group) => !array_filter(
                 is_array($group[Group::INCLUDES_KEY] ?? null) ? $group[Group::INCLUDES_KEY] : [],
-                static fn($include) => str_starts_with($include, 'App\\')
+                static fn($include) => str_starts_with((string) $include, 'App\\')
             )
         );
 

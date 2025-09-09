@@ -27,6 +27,6 @@ jobs:
           ssh_key: ${{ secrets.CLONE_SSH_KEY }}
           ssh_key_pub: ${{ secrets.CLONE_SSH_KEY_PUB }}
       - name: 'Qodana Scan'
-        uses: JetBrains/qodana-action@v2023.3
+        uses: JetBrains/qodana-action@v2025.2
         env:
           QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}

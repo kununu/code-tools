@@ -211,7 +211,7 @@ class MethodSignatureArgumentsSniff implements Sniff
      */
     protected function getLineEndingPosition(array $tokens, int $position): int
     {
-        while (!empty($tokens[$position]) && !str_contains($tokens[$position]['content'], PHP_EOL)) {
+        while (!empty($tokens[$position]) && !str_contains((string) $tokens[$position]['content'], PHP_EOL)) {
             ++$position;
         }
 
@@ -275,7 +275,7 @@ class MethodSignatureArgumentsSniff implements Sniff
         // closing parenthesis
         ++$totalLength;
         // column (:) and space before the returnType
-        $totalLength += mb_strlen($methodProperties['return_type']) + 2;
+        $totalLength += mb_strlen((string) $methodProperties['return_type']) + 2;
 
         return $totalLength;
     }
@@ -286,7 +286,7 @@ class MethodSignatureArgumentsSniff implements Sniff
     protected function getParameterTotalLength(array $methodParameter): int
     {
         $length = 0;
-        $length += mb_strlen($methodParameter['content']);
+        $length += mb_strlen((string) $methodParameter['content']);
 
         return $length;
     }

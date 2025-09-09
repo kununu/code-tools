@@ -20,7 +20,7 @@ final class CsFixerGitHookCommandTest extends TestCase
         $app->add(new CsFixerGitHookCommand());
 
         $command = $app->find('kununu:cs-fixer-git-hook');
-        $tester  = new CommandTester($command);
+        $tester = new CommandTester($command);
 
         chdir($this->repoDir);
 
@@ -54,7 +54,7 @@ final class CsFixerGitHookCommandTest extends TestCase
         $app->add(new CsFixerGitHookCommand());
 
         $command = $app->find('kununu:cs-fixer-git-hook');
-        $tester  = new CommandTester($command);
+        $tester = new CommandTester($command);
 
         $exitCode = $tester->execute([]);
 
@@ -67,7 +67,7 @@ final class CsFixerGitHookCommandTest extends TestCase
         self::assertTrue(is_executable($hook), 'pre-commit should be executable');
 
         $symlinkConfig = $gitPath . '/kununu/.php-cs-fixer.php';
-        $symlinkBin    = $gitPath . '/kununu/php-cs-fixer';
+        $symlinkBin = $gitPath . '/kununu/php-cs-fixer';
 
         self::assertTrue(is_link($symlinkConfig), '.php-cs-fixer.php symlink should exist');
         self::assertTrue(is_link($symlinkBin), 'php-cs-fixer symlink should exist');

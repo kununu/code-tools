@@ -24,7 +24,7 @@ class NoNewLineBeforeDeclareStrictSniff implements Sniff
         if ($declare !== false) {
             $isEmptyLine = $phpcsFile->findNext(T_WHITESPACE, $stackPtr + 1, $declare);
 
-            if ($isEmptyLine !== false && str_contains($tokens[$isEmptyLine]['content'], "\n")) {
+            if ($isEmptyLine !== false && str_contains((string) $tokens[$isEmptyLine]['content'], "\n")) {
                 $error = 'Empty line before declare(strict_types=1) is not allowed';
                 $fix = $phpcsFile->addFixableError($error, $isEmptyLine, 'EmptyLineBeforeDeclare');
 

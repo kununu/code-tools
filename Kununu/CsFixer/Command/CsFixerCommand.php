@@ -14,12 +14,9 @@ use Throwable;
 
 final class CsFixerCommand extends BaseCommand
 {
-    public const FAILURE = 1;
-    public const SUCCESS = 0;
-
-    private const ARGUMENT_FILES = 'files';
-    private const OPTION_CONFIG = 'config';
-    private const OPTION_EXTRA_ARGS = 'extra-args';
+    private const string ARGUMENT_FILES = 'files';
+    private const string OPTION_CONFIG = 'config';
+    private const string OPTION_EXTRA_ARGS = 'extra-args';
 
     protected function configure(): void
     {
