@@ -1,3 +1,5 @@
+[![Qodana](https://github.com/kununu/code-tools/actions/workflows/code_quality.yml/badge.svg)](https://github.com/kununu/code-tools/actions/workflows/code_quality.yml)
+
 <p align="center">
   <img src="/docs/code-tools-logo.png" alt="Brancher"/>
 </p>
