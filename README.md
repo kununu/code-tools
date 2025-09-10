@@ -57,22 +57,6 @@
   ```
 - For more details and advanced configuration, see [Kununu/ArchitectureSniffer/README.md](docs/ArchitectureSniffer/README.md).
 
-## Install
-
-### Add custom private repositories to composer.json
-
-```json
-{
-  "repositories": [
-    {
-      "type": "vcs",
-      "url": "https://github.com/kununu/code-tools.git",
-      "no-api": true
-    }
-  ]
-}
-```
-
 ### Require Library as a dev dependency
 
 You can use this library by issuing the following command:
