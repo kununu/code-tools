@@ -55,7 +55,7 @@
           class: PHPAT\PHPStan\PHPStanExtension
           tags: [phpstan.extension]
   ```
-- For more details and advanced configuration, see [Kununu/ArchitectureSniffer/README.md](Kununu/ArchitectureSniffer/README.md).
+- For more details and advanced configuration, see [Kununu/ArchitectureSniffer/README.md](docs/ArchitectureSniffer/README.md).
 
 ## Install
 
