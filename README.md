@@ -55,23 +55,7 @@
           class: PHPAT\PHPStan\PHPStanExtension
           tags: [phpstan.extension]
   ```
-- For more details and advanced configuration, see [Kununu/ArchitectureSniffer/README.md](Kununu/ArchitectureSniffer/README.md).
-
-## Install
-
-### Add custom private repositories to composer.json
-
-```json
-{
-  "repositories": [
-    {
-      "type": "vcs",
-      "url": "https://github.com/kununu/code-tools.git",
-      "no-api": true
-    }
-  ]
-}
-```
+- For more details and advanced configuration, see [Kununu/ArchitectureSniffer/README.md](docs/ArchitectureSniffer/README.md).
 
 ### Require Library as a dev dependency
 

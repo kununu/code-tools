@@ -79,7 +79,10 @@ return (new Config())
     ])
     ->setFinder(
         Finder::create()
-            ->exclude('vendor')
-            ->exclude('var')
+            ->exclude([
+                'vendor',
+                'var',
+                '_data',
+            ])
             ->in(__DIR__)
     );

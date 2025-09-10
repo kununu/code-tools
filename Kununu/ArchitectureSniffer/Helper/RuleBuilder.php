@@ -5,7 +5,14 @@ namespace Kununu\ArchitectureSniffer\Helper;
 
 use Kununu\ArchitectureSniffer\Configuration\ArchitectureLibrary;
 use Kununu\ArchitectureSniffer\Configuration\Group;
-use Kununu\ArchitectureSniffer\Configuration\Rules;
+use Kununu\ArchitectureSniffer\Configuration\Rules\MustBeFinal;
+use Kununu\ArchitectureSniffer\Configuration\Rules\MustBeReadonly;
+use Kununu\ArchitectureSniffer\Configuration\Rules\MustExtend;
+use Kununu\ArchitectureSniffer\Configuration\Rules\MustImplement;
+use Kununu\ArchitectureSniffer\Configuration\Rules\MustNotDependOn;
+use Kununu\ArchitectureSniffer\Configuration\Rules\MustOnlyDependOn;
+use Kununu\ArchitectureSniffer\Configuration\Rules\MustOnlyHaveOnePublicMethod;
+use Kununu\ArchitectureSniffer\Configuration\Rules\MustOnlyHaveOnePublicMethodNamed;
 use PHPat\Test\Builder\Rule as PHPatRule;
 
 final readonly class RuleBuilder
@@ -16,53 +23,53 @@ final readonly class RuleBuilder
     public static function getRules(Group $group, ArchitectureLibrary $library): iterable
     {
         if ($group->shouldExtend()) {
-            yield Rules\MustExtend::createRule(
+            yield MustExtend::createRule(
                 $group,
                 $library
             );
         }
 
         if ($group->shouldImplement()) {
-            yield Rules\MustImplement::createRule(
+            yield MustImplement::createRule(
                 $group,
                 $library
             );
         }
 
         if ($group->shouldBeFinal()) {
-            yield Rules\MustBeFinal::createRule(
+            yield MustBeFinal::createRule(
                 $group,
                 $library
             );
         }
 
         if ($group->shouldBeReadonly()) {
-            yield Rules\MustBeReadonly::createRule(
+            yield MustBeReadonly::createRule(
                 $group,
                 $library
             );
         }
 
         if ($group->shouldDependOn()) {
-            yield Rules\MustOnlyDependOn::createRule(
+            yield MustOnlyDependOn::createRule(
                 $group,
                 $library
             );
         }
 
         if ($group->shouldNotDependOn()) {
-            yield Rules\MustNotDependOn::createRule(
+            yield MustNotDependOn::createRule(
                 $group,
                 $library
             );
         }
 
         if ($group->shouldOnlyHaveOnePublicMethodNamed()) {
-            yield Rules\MustOnlyHaveOnePublicMethodNamed::createRule(
+            yield MustOnlyHaveOnePublicMethodNamed::createRule(
                 $group,
                 $library
             );
-            yield Rules\MustOnlyHaveOnePublicMethod::createRule(
+            yield MustOnlyHaveOnePublicMethod::createRule(
                 $group,
                 $library
             );

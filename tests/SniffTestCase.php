@@ -17,9 +17,9 @@ use ReflectionClass;
  */
 class SniffTestCase extends TestCase
 {
-    private const FILE_BEFORE = 'before/Fixme.php';
+    private const string FILE_BEFORE = 'before/Fixme.php';
 
-    private const FILE_AFTER = 'after/Fixme.php';
+    private const string FILE_AFTER = 'after/Fixme.php';
 
     protected function assertSnifferFindsErrors(Sniff $sniffer, int $errorCount): array
     {
