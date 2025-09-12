@@ -21,7 +21,6 @@
         "symfony/yaml": "^6.4"
     },
     "require-dev": {
-        "kununu/scripts": "^6.1",
         "phpunit/phpunit": "^11.5"
     },
     "autoload": {
@@ -40,10 +39,7 @@
     ],
     "config": {
         "sort-packages": true,
-        "process-timeout": 900,
-        "allow-plugins": {
-            "kununu/scripts": true
-        }
+        "process-timeout": 900
     },
     "extra": {
         "class": "Kununu\\CsFixer\\CsFixerPlugin"
