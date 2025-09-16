@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 return [
     'declare_strict_types' => [
         'before' => <<<'PHP'
@@ -12,8 +14,7 @@ final class DeclaresMissing
         return 1;
     }
 }
-PHP
-        ,
+PHP,
         'after' => <<<'PHP'
 <?php
 declare(strict_types=1);
@@ -28,7 +29,7 @@ final class DeclaresMissing
     }
 }
 
-PHP
+PHP,
     ],
 
     'combine_consecutive_unsets' => [
@@ -37,8 +38,7 @@ PHP
 $a = 1; $b = 2;
 unset($a);
 unset($b);
-PHP
-        ,
+PHP,
         'after' => <<<'PHP'
 <?php
 declare(strict_types=1);
@@ -46,7 +46,7 @@ $a = 1;
 $b = 2;
 unset($a, $b);
 
-PHP
+PHP,
     ],
 
     'binary_operator_spaces' => [
@@ -57,8 +57,7 @@ $arr = [
     'two'  =>2,
     'three'=> 3
 ];
-PHP
-        ,
+PHP,
         'after' => <<<'PHP'
 <?php
 declare(strict_types=1);
@@ -68,7 +67,7 @@ $arr = [
     'three'=> 3,
 ];
 
-PHP
+PHP,
     ],
 
     'explicit_indirect_variable' => [
@@ -76,29 +75,27 @@ PHP
 <?php
 $name = 'foo';
 $$name = 'value';
-PHP
-        ,
+PHP,
         'after' => <<<'PHP'
 <?php
 declare(strict_types=1);
 $name = 'foo';
 ${$name} = 'value';
 
-PHP
+PHP,
     ],
 
     'concat_space' => [
         'before' => <<<'PHP'
 <?php
 $greeting = "Hi"."There";
-PHP
-        ,
+PHP,
         'after' => <<<'PHP'
 <?php
 declare(strict_types=1);
 $greeting = 'HiThere';
 
-PHP
+PHP,
     ],
 
     'heredoc_to_nowdoc' => [
@@ -107,8 +104,7 @@ PHP
 $doc = <<<EOS
 This heredoc has no variables and could be a nowdoc.
 EOS;
-PHP
-        ,
+PHP,
         'after' => <<<'PHP'
 <?php
 declare(strict_types=1);
@@ -116,7 +112,7 @@ $doc = <<<'EOS'
 This heredoc has no variables and could be a nowdoc.
 EOS;
 
-PHP
+PHP,
     ],
 
     'global_namespace_import' => [
@@ -132,8 +128,7 @@ final class UseGlobalWithoutImport
         echo $dt->format('Y');
     }
 }
-PHP
-        ,
+PHP,
         'after' => <<<'PHP'
 <?php
 declare(strict_types=1);
@@ -151,7 +146,7 @@ final class UseGlobalWithoutImport
     }
 }
 
-PHP
+PHP,
     ],
 
     'function_declaration_spacing' => [
@@ -168,8 +163,7 @@ class FnSpacing
         return $fn(1);
     }
 }
-PHP
-        ,
+PHP,
         'after' => <<<'PHP'
 <?php
 declare(strict_types=1);
@@ -185,7 +179,7 @@ class FnSpacing
     }
 }
 
-PHP
+PHP,
     ],
 
     'no_useless_else_and_no_useless_return' => [
@@ -212,8 +206,7 @@ class UselessElse
         return static::$count > 0;
     }
 }
-PHP
-        ,
+PHP,
         'after' => <<<'PHP'
 <?php
 declare(strict_types=1);
@@ -236,7 +229,7 @@ class UselessElse
     }
 }
 
-PHP
+PHP,
     ],
 
     'ternary_to_null_coalescing' => [
@@ -246,8 +239,7 @@ function maybe($x)
 {
     return isset($x) ? $x : null;
 }
-PHP
-        ,
+PHP,
         'after' => <<<'PHP'
 <?php
 declare(strict_types=1);
@@ -256,7 +248,7 @@ function maybe($x)
     return $x ?? null;
 }
 
-PHP
+PHP,
     ],
 
     'return_assignment' => [
@@ -267,8 +259,7 @@ function assignThenReturn()
     $a = 5;
     return $a;
 }
-PHP
-        ,
+PHP,
         'after' => <<<'PHP'
 <?php
 declare(strict_types=1);
@@ -277,7 +268,7 @@ function assignThenReturn()
     return 5;
 }
 
-PHP
+PHP,
     ],
 
     'self_static_accessor' => [
@@ -292,8 +283,7 @@ final class SelfStatic
         return static::$count > 0;
     }
 }
-PHP
-        ,
+PHP,
         'after' => <<<'PHP'
 <?php
 declare(strict_types=1);
@@ -307,7 +297,7 @@ final class SelfStatic
     }
 }
 
-PHP
+PHP,
     ],
 
     'void_return' => [
@@ -320,8 +310,7 @@ class VoidExample
         echo "hello";
     }
 }
-PHP
-        ,
+PHP,
         'after' => <<<'PHP'
 <?php
 declare(strict_types=1);
@@ -333,7 +322,7 @@ class VoidExample
     }
 }
 
-PHP
+PHP,
     ],
 
     'yoda_style' => [
@@ -349,23 +338,22 @@ function check($a)
         return false;
     }
 }
-PHP
-        ,
+PHP,
         'after' => <<<'PHP'
 <?php
 declare(strict_types=1);
 function check($a)
 {
-    if ($a === 42) {
+    if (42 === $a) {
         return true;
     }
 
-    if ($a != 'bar') {
+    if ('bar' != $a) {
         return false;
     }
 }
 
-PHP
+PHP,
     ],
 
     'no_extra_blank_lines' => [
@@ -386,8 +374,7 @@ final class ExtraLines
         return 1;
     }
 }
-PHP
-        ,
+PHP,
         'after' => <<<'PHP'
 <?php
 declare(strict_types=1);
@@ -402,7 +389,7 @@ final class ExtraLines
     }
 }
 
-PHP
+PHP,
     ],
 
     'native_function_invocation_noop' => [
@@ -412,8 +399,7 @@ namespace Foo;
 
 $result = strlen("abc");
 $now = time();
-PHP
-        ,
+PHP,
         'after' => <<<'PHP'
 <?php
 declare(strict_types=1);
@@ -423,21 +409,20 @@ namespace Foo;
 $result = strlen('abc');
 $now = time();
 
-PHP
+PHP,
     ],
 
     'single_quote_non_interpolated' => [
         'before' => <<<'PHP'
 <?php
 $message = "simple string";
-PHP
-        ,
+PHP,
         'after' => <<<'PHP'
 <?php
 declare(strict_types=1);
 $message = 'simple string';
 
-PHP
+PHP,
     ],
 
     'single_quote_interpolated_no_change' => [
@@ -445,15 +430,14 @@ PHP
 <?php
 $name = 'Name';
 $greeting = "Hello, $name!";
-PHP
-        ,
+PHP,
         'after' => <<<'PHP'
 <?php
 declare(strict_types=1);
 $name = 'Name';
 $greeting = "Hello, $name!";
 
-PHP
+PHP,
     ],
 
     'trailing_comma_in_multiline' => [
@@ -463,8 +447,7 @@ $list = [
     'a',
     'b'
 ];
-PHP
-        ,
+PHP,
         'after' => <<<'PHP'
 <?php
 declare(strict_types=1);
@@ -473,7 +456,7 @@ $list = [
     'b',
 ];
 
-PHP
+PHP,
     ],
 
     'unused_imports_removed_simple' => [
@@ -491,8 +474,7 @@ final class Example
         new Used();
     }
 }
-PHP
-        ,
+PHP,
         'after' => <<<'PHP'
 <?php
 declare(strict_types=1);
@@ -509,7 +491,7 @@ final class Example
     }
 }
 
-PHP
+PHP,
     ],
 
     'no_superfluous_phpdoc_tags_noop' => [
@@ -522,8 +504,7 @@ PHP
  * @author Someone
  */
 class Example {}
-PHP
-        ,
+PHP,
         'after' => <<<'PHP'
 <?php
 declare(strict_types=1);
@@ -536,7 +517,7 @@ class Example
 {
 }
 
-PHP
+PHP,
     ],
 
     'blank_line_after_opening_tag_noop' => [
@@ -544,8 +525,7 @@ PHP
 <?php
 /** comment directly after open tag */
 class OpenTag {}
-PHP
-        ,
+PHP,
         'after' => <<<'PHP'
 <?php
 declare(strict_types=1);
@@ -554,7 +534,7 @@ class OpenTag
 {
 }
 
-PHP
+PHP,
     ],
 
     'self_accessor_noop' => [
@@ -568,8 +548,7 @@ class SelfAcc
         static::$count++;
     }
 }
-PHP
-        ,
+PHP,
         'after' => <<<'PHP'
 <?php
 declare(strict_types=1);
@@ -583,6 +562,6 @@ class SelfAcc
     }
 }
 
-PHP
+PHP,
     ],
 ];
