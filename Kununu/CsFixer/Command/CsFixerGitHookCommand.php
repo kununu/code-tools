@@ -42,11 +42,11 @@ final class CsFixerGitHookCommand extends BaseCommand
 
             $io->success('PHP CS Fixer Git pre‑commit hook installed successfully.');
 
-            return self::SUCCESS;
+            return 0;
         } catch (Throwable $e) {
             $io->error('Installation failed: ' . $e->getMessage());
 
-            return self::FAILURE;
+            return 1;
         }
     }
 
