@@ -13,6 +13,9 @@ use Throwable;
 
 final class CsFixerGitHookCommand extends BaseCommand
 {
+    public const int SUCCESS = 0;
+    public const int FAILURE = 1;
+
     protected function configure(): void
     {
         $this
@@ -42,11 +45,11 @@ final class CsFixerGitHookCommand extends BaseCommand
 
             $io->success('PHP CS Fixer Git pre‑commit hook installed successfully.');
 
-            return 0;
+            return self::SUCCESS;
         } catch (Throwable $e) {
             $io->error('Installation failed: ' . $e->getMessage());
 
-            return 1;
+            return self::FAILURE;
         }
     }
 
