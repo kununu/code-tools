@@ -12,7 +12,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: '8.4'
           coverage: none
 
       - name: Cache Composer dependencies
@@ -25,7 +25,7 @@ jobs:
       - name: Install composer dependencies
         uses: php-actions/composer@v6
         with:
-          php_version: '8.3'
+          php_version: '8.4'
           version: 2
           args: --optimize-autoloader --no-progress --no-interaction
           ssh_key: ${{ secrets.CLONE_SSH_KEY }}
