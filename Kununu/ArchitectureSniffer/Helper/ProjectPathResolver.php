@@ -5,7 +5,7 @@ namespace Kununu\ArchitectureSniffer\Helper;
 
 final readonly class ProjectPathResolver
 {
-    protected static function getProjectDirectory(): string
+    private static function getProjectDirectory(): string
     {
         $directory = dirname(__DIR__);
 

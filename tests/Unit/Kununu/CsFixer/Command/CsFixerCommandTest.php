@@ -44,7 +44,7 @@ final class CsFixerCommandTest extends TestCase
 
         $cases = require $casesFile;
 
-        return array_map(fn($case) => [$case['before'], $case['after']], $cases);
+        return array_map(static fn($case) => [$case['before'], $case['after']], $cases);
     }
 
     private function contents(string $file): string
