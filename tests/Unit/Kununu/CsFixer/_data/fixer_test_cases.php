@@ -171,7 +171,7 @@ class FnSpacing
 {
     public function doStuff()
     {
-        $fn = function($x) {
+        $fn = static function($x) {
             return $x;
         };
 
