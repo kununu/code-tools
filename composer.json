@@ -1,64 +1,71 @@
 {
-    "name": "kununu/code-tools",
-    "description": "Code Tools",
-    "type": "composer-plugin",
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "Team Rosa Mota",
-            "email": "rosamota-dev@kununu.com"
-        }
-    ],
-    "require": {
-        "php": ">=8.3",
-        "phpat/phpat": "^0.11.4",
-        "phpstan/phpstan": "^2.1",
-        "composer-plugin-api": "^2.0",
-        "composer/composer": "^2.8",
-        "friendsofphp/php-cs-fixer": "^3.75",
-        "rector/rector": "^2.0",
-        "squizlabs/php_codesniffer": "^3.10",
-        "symfony/yaml": "^6.4 || ^7.4"
-    },
-    "require-dev": {
-        "phpunit/phpunit": "^11.5"
-    },
-    "autoload": {
-        "psr-4": {
-            "Kununu\\": "Kununu/"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Tests\\": "tests/"
-        }
-    },
-    "bin": [
-        "bin/code-tools",
-        "bin/php-in-k8s"
-    ],
-    "config": {
-        "sort-packages": true,
-        "process-timeout": 900
-    },
-    "extra": {
-        "class": "Kununu\\CsFixer\\CsFixerPlugin"
-    },
-    "scripts": {
-        "test-unit": "phpunit",
-        "cs-fixer-check": "php-cs-fixer check --config=php-cs-fixer.php",
-        "cs-fixer-fix": "php-cs-fixer fix --config=php-cs-fixer.php",
-        "cs-check": "phpcs --standard=phpcs.xml Kununu/ tests/",
-        "cs-fix": "phpcbf --standard=phpcs.xml Kununu/ tests/",
-        "stan": "phpstan analyze",
-        "rector": "rector process --dry-run Kununu/ tests/ -vvv",
-        "rector-fix": "rector process Kununu/ tests/",
-        "ci-checks": [
-            "@cs-fixer-check",
-            "@cs-check",
-            "@stan",
-            "@rector",
-            "@test-unit"
-        ]
+  "name": "kununu/code-tools",
+  "description": "Code Tools",
+  "license": "MIT",
+  "type": "composer-plugin",
+  "authors": [
+    {
+      "name": "Team Rosa Mota",
+      "email": "rosamota-dev@kununu.com"
     }
+  ],
+  "require": {
+    "php": ">=8.4",
+    "composer-plugin-api": "^2.0",
+    "composer/composer": "^2.8",
+    "friendsofphp/php-cs-fixer": "^3.93",
+    "phpat/phpat": "^0.11.4",
+    "phpstan/phpstan": "^2.1",
+    "rector/rector": "^2.0",
+    "squizlabs/php_codesniffer": "^3.10",
+    "symfony/console": "^6.4 || ^7.4",
+    "symfony/process": "^6.4 || ^7.4",
+    "symfony/yaml": "^6.4 || ^7.4"
+  },
+  "require-dev": {
+    "ergebnis/composer-normalize": "^2.50",
+    "phpunit/phpunit": "^11.5",
+    "shipmonk/composer-dependency-analyser": "^1.8"
+  },
+  "autoload": {
+    "psr-4": {
+      "Kununu\\": "Kununu/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
+  "bin": [
+    "bin/code-tools",
+    "bin/php-in-k8s"
+  ],
+  "config": {
+    "allow-plugins": {
+      "ergebnis/composer-normalize": true
+    },
+    "process-timeout": 900,
+    "sort-packages": true
+  },
+  "extra": {
+    "class": "Kununu\\CsFixer\\CsFixerPlugin"
+  },
+  "scripts": {
+    "ci-checks": [
+      "@cs-fixer-check",
+      "@cs-check",
+      "@stan",
+      "@rector",
+      "@test-unit"
+    ],
+    "cs-check": "phpcs --standard=phpcs.xml Kununu/ tests/",
+    "cs-fix": "phpcbf --standard=phpcs.xml Kununu/ tests/",
+    "cs-fixer-check": "php-cs-fixer check --config=php-cs-fixer.php",
+    "cs-fixer-fix": "php-cs-fixer fix --config=php-cs-fixer.php",
+    "rector": "rector process --dry-run Kununu/ tests/ -vvv",
+    "rector-fix": "rector process Kununu/ tests/",
+    "stan": "phpstan analyze",
+    "test-unit": "phpunit"
+  }
 }

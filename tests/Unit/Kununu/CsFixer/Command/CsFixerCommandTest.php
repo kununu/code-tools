@@ -22,7 +22,10 @@ final class CsFixerCommandTest extends TestCase
         }
 
         $application = new Application();
-        $application->add(new CsFixerCommand());
+        $command = new CsFixerCommand();
+        method_exists($application, 'addCommand')
+            ? $application->addCommand($command)
+            : $application->add($command);
 
         $command = $application->find('kununu:cs-fixer');
         $tester = new CommandTester($command);

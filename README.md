@@ -1,5 +1,5 @@
-[![Qodana](https://github.com/kununu/code-tools/actions/workflows/code_quality.yml/badge.svg)](https://github.com/kununu/code-tools/actions/workflows/code_quality.yml)
-
+![Continuous Integration](https://github.com/kununu/code-tools/actions/workflows/continuous-integration.yml/badge.svg)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=kununu_code-tools&metric=alert_status)](https://sonarcloud.io/dashboard?id=kununu_code-tools)
 <p align="center">
   <img src="/docs/code-tools-logo.png" alt="Brancher"/>
 </p>
