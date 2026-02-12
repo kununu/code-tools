@@ -26,12 +26,16 @@ jobs:
         with:
           php-version: 8.4
           coverage: none
+          tools: composer-dependency-analyser, composer-normalize, composer-require-checker
 
       - name: Install Composer Dependencies
         uses: ramsey/composer-install@v3
         with:
           dependency-versions: "highest"
           composer-options: "--prefer-stable --optimize-autoloader --no-progress --no-interaction"
+
+      - name: Run Composer Dependency Analyser
+        run: composer-dependency-analyser
 
       - name: Run code style sniffer
         run: vendor/bin/phpcs --standard=phpcs.xml Kununu/ tests/
