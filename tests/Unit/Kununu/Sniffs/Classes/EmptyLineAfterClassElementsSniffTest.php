@@ -10,7 +10,7 @@ class EmptyLineAfterClassElementsSniffTest extends SniffTestCase
 {
     public function testEmptyLineAfterClassElementsSniffer(): void
     {
-        $this->assertSnifferFindsFixableErrors(new EmptyLineAfterClassElementsSniff(), 2, 2);
+        $this->assertSnifferFindsFixableErrors(new EmptyLineAfterClassElementsSniff(), 4, 4);
     }
 
     public function testEmptyLineAfterClassElementsFixer(): void

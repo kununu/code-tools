@@ -10,6 +10,14 @@ class LineLengthSniffTest extends SniffTestCase
 {
     public function testMethodSignatureArgumentsSniffer(): void
     {
-        $this->assertSnifferFindsErrors(new LineLengthSniff(), 3);
+        $this->assertSnifferFindsErrors(new LineLengthSniff(), 4);
+    }
+
+    public function testIgnoreUseStatementsCoversUseBranch(): void
+    {
+        $sniff = new LineLengthSniff();
+        $sniff->ignoreUseStatements = true;
+
+        $this->assertSnifferFindsErrors($sniff, 4);
     }
 }

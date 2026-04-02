@@ -121,6 +121,28 @@ final class CsFixerCommandTest extends TestCase
         self::assertSame(CsFixerCommand::FAILURE, $exitCode);
     }
 
+    public function testCsFixerCommandReturnsFailureWhenProcessFails(): void
+    {
+        $this->tempFile = sys_get_temp_dir() . '/csfixer_' . uniqid('', true) . '.php';
+        file_put_contents($this->tempFile, "<?php\ndeclare(strict_types=1);\n");
+
+        $application = new Application();
+        $command = new CsFixerCommand();
+        method_exists($application, 'addCommand')
+            ? $application->addCommand($command)
+            : $application->add($command);
+
+        $command = $application->find('kununu:cs-fixer');
+        $tester = new CommandTester($command);
+
+        $exitCode = $tester->execute([
+            'files'        => [$this->tempFile],
+            '--extra-args' => ['--invalid-flag-xyz'],
+        ]);
+
+        self::assertSame(CsFixerCommand::FAILURE, $exitCode);
+    }
+
     protected function tearDown(): void
     {
         if ($this->tempFile !== null && is_file($this->tempFile)) {

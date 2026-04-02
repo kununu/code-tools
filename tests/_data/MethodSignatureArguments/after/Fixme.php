@@ -15,4 +15,20 @@ class Fixme
         string $thirdArgument
     ): void {
     }
+
+    public function aReallyLongMethodNameWithNoParametersThatIsDefinitelyOverOneHundredAndTwentyCharactersForCoverage(): void
+    {
+    }
+
+    public function multilineWithFirstLineParamsAndLongEnough(string $firstParamWithLongName,
+        string $secondParamWithAlsoALongName
+    ): void {
+    }
+
+    public function multiThree(
+        int $a,
+        int $b,
+        int $c
+    ): void {
+    }
 }
