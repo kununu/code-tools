@@ -9,8 +9,8 @@ use Composer\Plugin\Capability\CommandProvider;
 use Composer\Script\ScriptEvents;
 use Kununu\CsFixer\CsFixerPlugin;
 use Kununu\CsFixer\Provider\CsFixerCommandProvider;
-use PHPUnit\Framework\Attributes\WithoutErrorHandler;
 use PHPUnit\Framework\TestCase;
+use Throwable;
 
 final class CsFixerPluginTest extends TestCase
 {
@@ -77,7 +77,7 @@ final class CsFixerPluginTest extends TestCase
         ob_start();
         try {
             $plugin->addCsFixerGitHooks();
-        } catch (\Throwable) {
+        } catch (Throwable) {
         }
         ob_end_clean();
 

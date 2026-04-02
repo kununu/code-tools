@@ -23,7 +23,10 @@ final class GroupFlattenerTest extends TestCase
             ],
         ];
 
-        $result = GroupFlattener::flattenIncludes('services', ['App\\Service\\UserService', 'App\\Service\\OrderService']);
+        $result = GroupFlattener::flattenIncludes(
+            'services',
+            ['App\\Service\\UserService', 'App\\Service\\OrderService']
+        );
 
         self::assertSame(['App\\Service\\UserService', 'App\\Service\\OrderService'], $result);
     }
@@ -112,7 +115,11 @@ final class GroupFlattenerTest extends TestCase
             ],
         ];
 
-        $result = GroupFlattener::flattenExcludes('services', ['App\\Service\\UserService'], ['App\\Service\\UserService']);
+        $result = GroupFlattener::flattenExcludes(
+            'services',
+            ['App\\Service\\UserService'],
+            ['App\\Service\\UserService']
+        );
 
         self::assertNull($result);
     }

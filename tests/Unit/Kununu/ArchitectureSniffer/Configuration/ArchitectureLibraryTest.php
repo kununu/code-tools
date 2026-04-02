@@ -5,7 +5,6 @@ namespace Tests\Unit\Kununu\ArchitectureSniffer\Configuration;
 
 use InvalidArgumentException;
 use Kununu\ArchitectureSniffer\Configuration\ArchitectureLibrary;
-use Kununu\ArchitectureSniffer\Configuration\Group;
 use PHPUnit\Framework\TestCase;
 
 final class ArchitectureLibraryTest extends TestCase

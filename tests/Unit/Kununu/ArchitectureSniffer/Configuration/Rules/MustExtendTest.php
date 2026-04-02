@@ -74,7 +74,10 @@ final class MustExtendTest extends TestCase
             mustOnlyHaveOnePublicMethodName: null,
         );
         $library = new ArchitectureLibrary([
-            'services' => ['includes' => ['App\\Contract\\ServiceInterface'], 'extends' => 'App\\Base\\AbstractService'],
+            'services' => [
+                'includes' => ['App\\Contract\\ServiceInterface'],
+                'extends'  => 'App\\Base\\AbstractService',
+            ],
         ]);
 
         self::expectException(InvalidArgumentException::class);

@@ -49,7 +49,11 @@ final class MustBeFinalTest extends TestCase
             mustOnlyHaveOnePublicMethodName: null,
         );
         $library = new ArchitectureLibrary([
-            'services' => ['includes' => ['App\\Service\\MyService'], 'excludes' => ['App\\Service\\Internal\\'], 'final' => true],
+            'services' => [
+                'includes' => ['App\\Service\\MyService'],
+                'excludes' => ['App\\Service\\Internal\\'],
+                'final'    => true,
+            ],
         ]);
 
         $result = MustBeFinal::createRule($group, $library);

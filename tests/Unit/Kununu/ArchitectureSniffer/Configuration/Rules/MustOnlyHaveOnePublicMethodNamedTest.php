@@ -27,7 +27,10 @@ final class MustOnlyHaveOnePublicMethodNamedTest extends TestCase
             mustOnlyHaveOnePublicMethodName: 'handle',
         );
         $library = new ArchitectureLibrary([
-            'handlers' => ['includes' => ['App\\Handler\\MyHandler'], 'must_only_have_one_public_method_named' => 'handle'],
+            'handlers' => [
+                'includes'                               => ['App\\Handler\\MyHandler'],
+                'must_only_have_one_public_method_named' => 'handle',
+            ],
         ]);
 
         $result = MustOnlyHaveOnePublicMethodNamed::createRule($group, $library);

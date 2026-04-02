@@ -19,13 +19,13 @@ final class TypeCheckerTest extends TestCase
     public static function isArrayKeysOfStringsProvider(): array
     {
         return [
-            'string keys'          => [['a' => 1, 'b' => 2], true],
-            'empty array'          => [[], true],
-            'integer keys'         => [[1, 2, 3], false],
-            'mixed keys'           => [['a' => 1, 0 => 2], false],
+            'string keys'           => [['a' => 1, 'b' => 2], true],
+            'empty array'           => [[], true],
+            'integer keys'          => [[1, 2, 3], false],
+            'mixed keys'            => [['a' => 1, 0 => 2], false],
             'not an array (string)' => ['hello', false],
-            'not an array (int)'   => [42, false],
-            'not an array (null)'  => [null, false],
+            'not an array (int)'    => [42, false],
+            'not an array (null)'   => [null, false],
         ];
     }
 

@@ -28,7 +28,10 @@ final class MustImplementTest extends TestCase
             mustOnlyHaveOnePublicMethodName: null,
         );
         $library = new ArchitectureLibrary([
-            'services' => ['includes' => ['App\\Service\\MyService'], 'implements' => ['App\\Contract\\ServiceInterface']],
+            'services' => [
+                'includes'   => ['App\\Service\\MyService'],
+                'implements' => ['App\\Contract\\ServiceInterface'],
+            ],
         ]);
 
         $result = MustImplement::createRule($group, $library);

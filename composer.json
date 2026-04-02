@@ -63,7 +63,7 @@
     "cs-fix": "phpcbf --standard=phpcs.xml Kununu/ tests/",
     "cs-fixer-check": "php-cs-fixer check --config=php-cs-fixer.php",
     "cs-fixer-fix": "php-cs-fixer fix --config=php-cs-fixer.php",
-    "rector": "rector process --dry-run Kununu/ tests/ -vvv",
+    "rector": "rector process --dry-run Kununu/ tests/",
     "rector-fix": "rector process Kununu/ tests/",
     "stan": "phpstan analyze",
     "test-unit": "phpunit"
