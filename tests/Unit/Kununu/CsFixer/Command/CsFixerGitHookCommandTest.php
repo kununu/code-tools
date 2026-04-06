@@ -118,19 +118,15 @@ final class CsFixerGitHookCommandTest extends TestCase
         mkdir($mainRepo, 0777, true);
         chdir($mainRepo);
         exec('git init 2>/dev/null');
-        exec('git commit --allow-empty -m "init" 2>/dev/null');
-        exec('git worktree add ' . escapeshellarg($this->repoDir) . ' HEAD 2>/dev/null');
+
+        file_put_contents(
+            $this->repoDir . '/.git',
+            'gitdir: ' . $mainRepo . '/.git' . "\n"
+        );
 
         chdir($this->repoDir);
 
-        $app = new Application();
-        $command = new CsFixerGitHookCommand();
-        method_exists($app, 'addCommand')
-            ? $app->addCommand($command)
-            : $app->add($command);
-
-        $command = $app->find('kununu:cs-fixer-git-hook');
-        $tester = new CommandTester($command);
+        $tester = $this->createCommandTester();
 
         $exitCode = $tester->execute([]);
 
