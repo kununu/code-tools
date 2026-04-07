@@ -80,21 +80,21 @@ final class CsFixerGitHookCommand extends BaseCommand
         $sourceHook = __DIR__ . '/../Hooks/git-pre-commit';
         $destHook = $hooksDir . '/pre-commit';
 
-        if (!is_dir($hooksDir) && !mkdir($hooksDir, 0777, true) && !is_dir($hooksDir)) {
+        if (!is_dir($hooksDir) && !@mkdir($hooksDir, 0777, true) && !is_dir($hooksDir)) {
             throw new RuntimeException(sprintf(
                 'Could not create hooks directory: "%s".',
                 $hooksDir
             ));
         }
 
-        if (file_exists($destHook) && !unlink($destHook)) {
+        if (file_exists($destHook) && !@unlink($destHook)) {
             throw new RuntimeException(sprintf(
                 'Could not remove existing hook at "%s".',
                 $destHook
             ));
         }
 
-        if (!copy($sourceHook, $destHook)) {
+        if (!@copy($sourceHook, $destHook)) {
             throw new RuntimeException(sprintf(
                 'Failed to copy hook from "%s" to "%s".',
                 $sourceHook,
@@ -102,7 +102,7 @@ final class CsFixerGitHookCommand extends BaseCommand
             ));
         }
 
-        if (!chmod($destHook, 0755)) {
+        if (!@chmod($destHook, 0755)) {
             throw new RuntimeException(sprintf(
                 'Failed to make hook executable at "%s".',
                 $destHook
@@ -151,7 +151,7 @@ final class CsFixerGitHookCommand extends BaseCommand
     {
         $linkDir = dirname($linkPath);
 
-        if (!is_dir($linkDir) && !mkdir($linkDir, 0777, true) && !is_dir($linkDir)) {
+        if (!is_dir($linkDir) && !@mkdir($linkDir, 0777, true) && !is_dir($linkDir)) {
             throw new RuntimeException(sprintf(
                 'Could not create directory for symlink: "%s".',
                 $linkDir
@@ -164,7 +164,7 @@ final class CsFixerGitHookCommand extends BaseCommand
 
         $relativeTarget = $this->makeRelativePath($linkDir, $target);
 
-        if (!symlink($relativeTarget, $linkPath)) {
+        if (!@symlink($relativeTarget, $linkPath)) {
             throw new RuntimeException(sprintf(
                 'Failed to create symlink from "%s" to "%s".',
                 $linkPath,

@@ -7,3 +7,6 @@ composer.phar
 /tests/.results/
 .DS_Store
 *.local
+
+.claude
+.cursor

@@ -79,6 +79,126 @@ final class CsFixerGitHookCommandTest extends TestCase
         self::assertTrue(is_link($symlinkBin), 'php-cs-fixer symlink should exist');
     }
 
+    public function testReinstallRemovesExistingHookAndSymlinks(): void
+    {
+        chdir($this->repoDir);
+        exec('git init 2>/dev/null');
+
+        $vendorBase = $this->baseDir . '/vendor';
+        $codeToolsDir = $vendorBase . '/kununu/code-tools';
+        $binDir = $vendorBase . '/bin';
+        mkdir($codeToolsDir, 0777, true);
+        mkdir($binDir, 0777, true);
+        file_put_contents($codeToolsDir . '/php-cs-fixer.php', "<?php\n// stub\n");
+        file_put_contents($binDir . '/php-cs-fixer', "#!/usr/bin/env php\n<?php\n");
+        @chmod($binDir . '/php-cs-fixer', 0755);
+
+        $app = new Application();
+        $command = new CsFixerGitHookCommand();
+        method_exists($app, 'addCommand')
+            ? $app->addCommand($command)
+            : $app->add($command);
+
+        $command = $app->find('kununu:cs-fixer-git-hook');
+        $tester = new CommandTester($command);
+
+        $tester->execute([]);
+
+        $exitCode = $tester->execute([]);
+
+        self::assertSame(CsFixerGitHookCommand::SUCCESS, $exitCode);
+        self::assertFileExists($this->repoDir . '/.git/hooks/pre-commit');
+        self::assertTrue(is_link($this->repoDir . '/.git/kununu/.php-cs-fixer.php'));
+        self::assertTrue(is_link($this->repoDir . '/.git/kununu/php-cs-fixer'));
+    }
+
+    public function testFailsWhenGitPathIsNotDirectory(): void
+    {
+        $mainRepo = $this->baseDir . '/main';
+        mkdir($mainRepo, 0777, true);
+        chdir($mainRepo);
+        exec('git init 2>/dev/null');
+
+        file_put_contents(
+            $this->repoDir . '/.git',
+            'gitdir: ' . $mainRepo . '/.git' . "\n"
+        );
+
+        chdir($this->repoDir);
+
+        $tester = $this->createCommandTester();
+
+        $exitCode = $tester->execute([]);
+
+        self::assertSame(CsFixerGitHookCommand::FAILURE, $exitCode);
+        self::assertStringContainsString('.git directory not found', $tester->getDisplay());
+    }
+
+    public function testFailsWhenHooksDirCannotBeCreated(): void
+    {
+        chdir($this->repoDir);
+        exec('git init 2>/dev/null');
+        exec('rm -rf ' . escapeshellarg($this->repoDir . '/.git/hooks'));
+        chmod($this->repoDir . '/.git', 0555);
+
+        $tester = $this->createCommandTester();
+
+        $exitCode = $tester->execute([]);
+
+        chmod($this->repoDir . '/.git', 0755);
+
+        self::assertSame(CsFixerGitHookCommand::FAILURE, $exitCode);
+        self::assertStringContainsString('Could not create hooks directory', $tester->getDisplay());
+    }
+
+    public function testFailsWhenHookCopyFails(): void
+    {
+        chdir($this->repoDir);
+        exec('git init 2>/dev/null');
+        chmod($this->repoDir . '/.git/hooks', 0555);
+
+        $tester = $this->createCommandTester();
+
+        $exitCode = $tester->execute([]);
+
+        chmod($this->repoDir . '/.git/hooks', 0755);
+
+        self::assertSame(CsFixerGitHookCommand::FAILURE, $exitCode);
+        self::assertStringContainsString('Failed to copy hook', $tester->getDisplay());
+    }
+
+    public function testFailsWhenExistingHookCannotBeRemoved(): void
+    {
+        chdir($this->repoDir);
+        exec('git init 2>/dev/null');
+
+        $hooksDir = $this->repoDir . '/.git/hooks';
+        file_put_contents($hooksDir . '/pre-commit', '#!/bin/sh');
+        chmod($hooksDir, 0555);
+
+        $tester = $this->createCommandTester();
+
+        $exitCode = $tester->execute([]);
+
+        chmod($hooksDir, 0755);
+
+        self::assertSame(CsFixerGitHookCommand::FAILURE, $exitCode);
+        self::assertStringContainsString('Could not remove existing hook', $tester->getDisplay());
+    }
+
+    public function testFailsWhenVendorDirNotFound(): void
+    {
+        chdir($this->repoDir);
+        exec('git init 2>/dev/null');
+
+        $tester = $this->createCommandTester();
+
+        $exitCode = $tester->execute([]);
+
+        self::assertSame(CsFixerGitHookCommand::FAILURE, $exitCode);
+        self::assertStringContainsString('Could not find vendor directory', $tester->getDisplay());
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -95,8 +215,20 @@ final class CsFixerGitHookCommandTest extends TestCase
     {
         chdir($this->oldCwd);
         if (is_dir($this->baseDir)) {
+            exec('chmod -R 755 ' . escapeshellarg($this->baseDir) . ' 2>/dev/null');
             exec('rm -rf ' . escapeshellarg($this->baseDir));
         }
         parent::tearDown();
+    }
+
+    private function createCommandTester(): CommandTester
+    {
+        $app = new Application();
+        $command = new CsFixerGitHookCommand();
+        method_exists($app, 'addCommand')
+            ? $app->addCommand($command)
+            : $app->add($command);
+
+        return new CommandTester($app->find('kununu:cs-fixer-git-hook'));
     }
 }

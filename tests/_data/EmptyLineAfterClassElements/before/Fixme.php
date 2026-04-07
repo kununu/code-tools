@@ -26,3 +26,42 @@ class Fixme
         $this->propertyOne = 'value';
     }
 }
+
+class ExtraBlankAfterConst
+{
+    public const string A = 'a';
+
+
+
+    public function doSomething(): void
+    {
+    }
+}
+
+class ExtraBlankAfterProp
+{
+    private readonly string $prop;
+
+
+
+    public function doSomething(): void
+    {
+    }
+}
+
+class PropertyThenClose
+{
+    protected string $onlyProperty;
+}
+
+class ConstantThenClose
+{
+    public const string ONLY = 'only';
+}
+
+class NoPropertiesOrConstants
+{
+    public function firstMethod(): void
+    {
+    }
+}
