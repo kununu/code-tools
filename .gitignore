@@ -8,5 +8,6 @@ composer.phar
 .DS_Store
 *.local
 
+CLAUDE.md
 .claude
 .cursor

@@ -55,6 +55,9 @@ jobs:
       - name: Run Rector
         run: vendor/bin/rector process --ansi --dry-run --config rector.php Kununu/ tests/
 
+      - name: Run Psalm
+        run: vendor/bin/psalm --no-cache
+
   build:
     needs: checks
     name: PHPUnit
