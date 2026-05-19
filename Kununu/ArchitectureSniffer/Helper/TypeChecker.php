@@ -39,13 +39,23 @@ final readonly class TypeChecker
 
     /**
      * @return string[]
+     *
+     * @psalm-return list<string>
      */
     public static function castArrayOfStrings(mixed $arrayOfStrings): array
     {
-        if (self::isArrayOfStrings($arrayOfStrings) === false) {
+        if (!is_array($arrayOfStrings)) {
             throw new InvalidArgumentException('Input must be an array of strings.');
         }
 
-        return $arrayOfStrings;
+        $result = [];
+        foreach ($arrayOfStrings as $item) {
+            if (!is_string($item)) {
+                throw new InvalidArgumentException('Input must be an array of strings.');
+            }
+            $result[] = $item;
+        }
+
+        return $result;
     }
 }

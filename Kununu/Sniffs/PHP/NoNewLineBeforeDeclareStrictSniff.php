@@ -9,7 +9,7 @@ use PHP_CodeSniffer\Sniffs\Sniff;
 /**
  * Prevents empty new line before declare(strict_types=1).
  */
-class NoNewLineBeforeDeclareStrictSniff implements Sniff
+final class NoNewLineBeforeDeclareStrictSniff implements Sniff
 {
     public function register(): array
     {

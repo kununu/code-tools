@@ -6,7 +6,7 @@ namespace Kununu\Sniffs\Files;
 use PHP_CodeSniffer\Files\File;
 use PHP_CodeSniffer\Standards\Generic\Sniffs\Files\LineLengthSniff as PHP_CodeSnifferLineLengthSniff;
 
-class LineLengthSniff extends PHP_CodeSnifferLineLengthSniff
+final class LineLengthSniff extends PHP_CodeSnifferLineLengthSniff
 {
     public $lineLimit = 100;
     public $absoluteLineLimit = 120;
@@ -14,6 +14,7 @@ class LineLengthSniff extends PHP_CodeSnifferLineLengthSniff
 
     public function process(File $phpcsFile, $stackPtr): int
     {
+        /** @var array<int, array{column: int, code: int|string, content: string, line: int}> $tokens */
         $tokens = $phpcsFile->getTokens();
         for ($i = 1; $i < $phpcsFile->numTokens; ++$i) {
             if ($tokens[$i]['column'] === 1) {

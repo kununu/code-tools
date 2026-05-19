@@ -113,9 +113,10 @@ final class CsFixerGitHookCommand extends BaseCommand
     private function linkConfigAndBinary(string $gitPath): void
     {
         $vendorDir = $this->resolveVendorDir($gitPath);
+        $codeToolsDir = $this->resolveCodeToolsDir($vendorDir);
 
         $this->ensureSymlinkRelative(
-            $vendorDir . '/kununu/code-tools/php-cs-fixer.php',
+            $codeToolsDir . '/php-cs-fixer.php',
             $gitPath . '/kununu/.php-cs-fixer.php'
         );
 
@@ -123,6 +124,24 @@ final class CsFixerGitHookCommand extends BaseCommand
             $vendorDir . '/bin/php-cs-fixer',
             $gitPath . '/kununu/php-cs-fixer'
         );
+    }
+
+    private function resolveCodeToolsDir(string $vendorDir): string
+    {
+        // Standard installation: code-tools is in vendor/kununu/code-tools
+        $vendorPath = $vendorDir . '/kununu/code-tools';
+        if (is_dir($vendorPath) && file_exists($vendorPath . '/php-cs-fixer.php')) {
+            return $vendorPath;
+        }
+
+        // Self-installation: running in the code-tools repo itself
+        // The config file is at the repo root (vendor's parent directory)
+        $repoRoot = dirname($vendorDir);
+        if (file_exists($repoRoot . '/php-cs-fixer.php')) {
+            return $repoRoot;
+        }
+
+        throw new RuntimeException('Could not locate code-tools package.');
     }
 
     private function resolveVendorDir(string $rootGitPath): string
@@ -140,7 +159,9 @@ final class CsFixerGitHookCommand extends BaseCommand
 
         foreach ($candidates as $candidate) {
             if (is_dir($candidate)) {
-                return realpath($candidate) ?: $candidate;
+                $realCandidate = realpath($candidate);
+
+                return $realCandidate !== false ? $realCandidate : $candidate;
             }
         }
 
