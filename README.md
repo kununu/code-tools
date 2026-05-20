@@ -22,6 +22,10 @@
 - Though the usage of this tool is not mandatory, it is highly recommended to use it to ensure the quality of the codebase.
 - Learn more about PHP_CodeSniffer at official page [here](https://github.com/PHPCSStandards/PHP_CodeSniffer/wiki).
 
+### `Psalm`
+- Psalm is a static analysis tool for PHP that helps identify bugs, type errors, and other issues in your codebase before runtime. It provides advanced type inference and can detect complex issues that other tools might miss.
+- Learn more about Psalm at the official page [here](https://psalm.dev/).
+
 ### `Rector`
 - Rector is a tool that automatically upgrades and refactors your PHP code. It is a tool that helps you to keep your code up-to-date and clean.
 - Learn more about Rector at official page [here](https://getrector.com/documentation).
@@ -72,6 +76,7 @@ composer require --dev kununu/code-tools --no-plugins
 - [.editorconfig](docs/EditorConfig/README.md) instructions.
 - [PHP-CS-Fixer](docs/CsFixer/README.md) instructions.
 - [PHP_CodeSniffer](docs/CodeSniffer/README.md) instructions.
+- [Psalm](docs/Psalm/README.md) instructions.
 - [Rector](docs/Rector/README.md) instructions.
 - [bin/code-tools](docs/CodeTools/README.md) instructions.
 - [bin/php-in-k8s](docs/PhpInK8s/README.md) instructions.
