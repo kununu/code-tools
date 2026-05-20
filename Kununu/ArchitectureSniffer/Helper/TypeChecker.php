@@ -13,13 +13,7 @@ final readonly class TypeChecker
             return false;
         }
 
-        foreach (array_keys($arr) as $key) {
-            if (!is_string($key)) {
-                return false;
-            }
-        }
-
-        return true;
+        return array_all(array_keys($arr), static fn($key) => is_string($key));
     }
 
     public static function isArrayOfStrings(mixed $arr): bool

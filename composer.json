@@ -16,11 +16,13 @@
     "friendsofphp/php-cs-fixer": "^3.93",
     "phpat/phpat": "^0.11.4",
     "phpstan/phpstan": "^2.1",
+    "psalm/plugin-symfony": "^5.3",
     "rector/rector": "^2.0",
     "squizlabs/php_codesniffer": "^3.10",
     "symfony/console": "^6.4 || ^7.4",
     "symfony/process": "^6.4 || ^7.4",
-    "symfony/yaml": "^6.4 || ^7.4"
+    "symfony/yaml": "^6.4 || ^7.4",
+    "vimeo/psalm": "^6.16"
   },
   "require-dev": {
     "ergebnis/composer-normalize": "^2.50",
@@ -57,12 +59,15 @@
       "@cs-check",
       "@stan",
       "@rector",
+      "@psalm",
       "@test-unit"
     ],
     "cs-check": "phpcs --standard=phpcs.xml Kununu/ tests/",
     "cs-fix": "phpcbf --standard=phpcs.xml Kununu/ tests/",
     "cs-fixer-check": "php-cs-fixer check --config=php-cs-fixer.php",
     "cs-fixer-fix": "php-cs-fixer fix --config=php-cs-fixer.php",
+    "psalm": "psalm --no-cache",
+    "psalm-baseline": "psalm --no-cache --set-baseline=psalm-baseline.xml",
     "rector": "rector process --dry-run Kununu/ tests/",
     "rector-fix": "rector process Kununu/ tests/",
     "stan": "phpstan analyze",

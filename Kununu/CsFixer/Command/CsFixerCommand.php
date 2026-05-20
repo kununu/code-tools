@@ -76,7 +76,7 @@ final class CsFixerCommand extends BaseCommand
             return self::FAILURE;
         }
 
-        $configSource = $input->getOption(self::OPTION_CONFIG) ?: __DIR__ . '/../../../php-cs-fixer.php';
+        $configSource = $input->getOption(self::OPTION_CONFIG) ?? __DIR__ . '/../../../php-cs-fixer.php';
         $configPath = realpath($configSource);
 
         if ($configPath === false || !is_file($configPath)) {

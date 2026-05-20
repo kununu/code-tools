@@ -20,6 +20,7 @@ fi
 readonly CONFIG_FILES=(
     "dist/php-cs-fixer.php.dist"
     "dist/phpcs.xml.dist"
+    "dist/psalm.xml.dist"
     "dist/rector.php.dist"
     "dist/.editorconfig.dist"
 )
@@ -32,6 +33,7 @@ Usage: vendor/bin/code-tools publish:config [tool-name]
 Valid tool names:
   cs-fixer     => copies dist/php-cs-fixer.php.dist
   code-sniffer => copies dist/phpcs.xml.dist
+  psalm        => copies dist/psalm.xml.dist
   rector       => copies dist/rector.php.dist
   editorconfig => copies dist/.editorconfig.dist
 EOF
@@ -78,6 +80,9 @@ case "$tool_name" in
         ;;
     code-sniffer)
         copy_config_file "dist/phpcs.xml.dist"
+        ;;
+    psalm)
+        copy_config_file "dist/psalm.xml.dist"
         ;;
     rector)
         copy_config_file "dist/rector.php.dist"

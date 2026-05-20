@@ -19,8 +19,8 @@ use Symfony\Component\Console\Output\StreamOutput;
 
 final class CsFixerPlugin implements PluginInterface, EventSubscriberInterface, Capable
 {
-    private Composer $composer;
-    private IOInterface $io;
+    private ?Composer $composer = null;
+    private ?IOInterface $io = null;
 
     public static function getSubscribedEvents(): array
     {
@@ -54,6 +54,10 @@ final class CsFixerPlugin implements PluginInterface, EventSubscriberInterface, 
     /** @throws ExceptionInterface */
     public function addCsFixerGitHooks(): void
     {
+        if ($this->composer === null || $this->io === null) {
+            return;
+        }
+
         $command = new CsFixerGitHookCommand();
         $command->setComposer($this->composer);
         $command->setIO($this->io);

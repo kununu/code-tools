@@ -52,6 +52,9 @@ jobs:
       - name: Run PHPStan
         run: vendor/bin/phpstan analyse
 
+      - name: Run Psalm
+        run: vendor/bin/psalm --no-cache
+
       - name: Run Rector
         run: vendor/bin/rector process --ansi --dry-run --config rector.php Kununu/ tests/
 

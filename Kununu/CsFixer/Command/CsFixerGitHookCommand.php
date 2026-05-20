@@ -140,7 +140,9 @@ final class CsFixerGitHookCommand extends BaseCommand
 
         foreach ($candidates as $candidate) {
             if (is_dir($candidate)) {
-                return realpath($candidate) ?: $candidate;
+                $resolved = realpath($candidate);
+
+                return $resolved !== false ? $resolved : $candidate;
             }
         }
 
