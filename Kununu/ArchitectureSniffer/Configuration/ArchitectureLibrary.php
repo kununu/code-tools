@@ -17,44 +17,28 @@ final class ArchitectureLibrary
      */
     public function __construct(array $groups)
     {
-        /** @var array<string, array<string, string[]|string|bool>> $groupsTyped */
-        $groupsTyped = $groups;
-        GroupFlattener::$groups = $groupsTyped;
+        GroupFlattener::$groups = $groups;
 
         foreach ($groups as $groupName => $attributes) {
-            if (!is_array($attributes)) {
-                throw new InvalidArgumentException(
-                    "Group '$groupName' must be an array."
-                );
-            }
-
             if (!TypeChecker::isArrayOfStrings($attributes[Group::INCLUDES_KEY])) {
                 throw new InvalidArgumentException(
                     "Group '$groupName' includes must be an array of strings."
                 );
             }
 
-            /** @var string[] $includes */
-            $includes = $attributes[Group::INCLUDES_KEY];
-            $flattenedIncludes = GroupFlattener::flattenIncludes($groupName, $includes);
-
-            /** @var string[] $excludes */
-            $excludes = isset($attributes[Group::EXCLUDES_KEY])
-                && TypeChecker::isArrayOfStrings($attributes[Group::EXCLUDES_KEY])
-                    ? $attributes[Group::EXCLUDES_KEY]
-                    : [];
+            $flattenedIncludes = GroupFlattener::flattenIncludes($groupName, $attributes[Group::INCLUDES_KEY]);
             $flattenedExcludes = GroupFlattener::flattenExcludes(
                 groupName: $groupName,
-                excludes: $excludes,
+                excludes: isset($attributes[Group::EXCLUDES_KEY])
+                    && TypeChecker::isArrayOfStrings($attributes[Group::EXCLUDES_KEY]) ?
+                    $attributes[Group::EXCLUDES_KEY] : [],
                 flattenedIncludes: $flattenedIncludes
             );
 
-            /** @var array<string, string|bool|string[]> $targetAttributes */
-            $targetAttributes = $attributes;
             $this->groups[$groupName] = Group::buildFrom(
                 groupName: $groupName,
                 flattenedIncludes: $flattenedIncludes,
-                targetAttributes: $targetAttributes,
+                targetAttributes: $attributes,
                 flattenedExcludes: $flattenedExcludes,
             );
         }

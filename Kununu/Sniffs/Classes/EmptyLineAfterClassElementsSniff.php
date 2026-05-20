@@ -6,7 +6,7 @@ namespace Kununu\Sniffs\Classes;
 use PHP_CodeSniffer\Files\File;
 use PHP_CodeSniffer\Sniffs\Sniff;
 
-final class EmptyLineAfterClassElementsSniff implements Sniff
+class EmptyLineAfterClassElementsSniff implements Sniff
 {
     public function register(): array
     {
@@ -25,7 +25,7 @@ final class EmptyLineAfterClassElementsSniff implements Sniff
         $this->checkProperties($phpcsFile, $classOpen, $classClose);
     }
 
-    private function checkProperties(File $phpcsFile, int $scopeStart, int $scopeEnd): void
+    protected function checkProperties(File $phpcsFile, int $scopeStart, int $scopeEnd): void
     {
         $tokens = $phpcsFile->getTokens();
         $lastProperty = null;
@@ -115,7 +115,7 @@ final class EmptyLineAfterClassElementsSniff implements Sniff
         }
     }
 
-    private function checkLastElement(
+    protected function checkLastElement(
         File $phpcsFile,
         int $scopeStart,
         int $scopeEnd,
@@ -181,7 +181,7 @@ final class EmptyLineAfterClassElementsSniff implements Sniff
     /**
      * @param array<int, array<string, mixed>> $tokens
      */
-    private function fix(File $phpcsFile, mixed $found, int $semicolon, int $nextContent, array $tokens): void
+    protected function fix(File $phpcsFile, mixed $found, int $semicolon, int $nextContent, array $tokens): void
     {
         $phpcsFile->fixer->beginChangeset();
         if ($found > 1) {

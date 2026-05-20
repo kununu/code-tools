@@ -76,10 +76,7 @@ final class CsFixerCommand extends BaseCommand
             return self::FAILURE;
         }
 
-        $configOption = $input->getOption(self::OPTION_CONFIG);
-        $configSource = is_string($configOption) && $configOption !== ''
-            ? $configOption
-            : __DIR__ . '/../../../php-cs-fixer.php';
+        $configSource = $input->getOption(self::OPTION_CONFIG) ?? __DIR__ . '/../../../php-cs-fixer.php';
         $configPath = realpath($configSource);
 
         if ($configPath === false || !is_file($configPath)) {
@@ -127,7 +124,6 @@ final class CsFixerCommand extends BaseCommand
     private function getVendorDir(): ?string
     {
         try {
-            /** @var mixed $vendorDir */
             $vendorDir = $this->requireComposer()->getConfig()->get('vendor-dir');
 
             if (is_string($vendorDir) && is_dir($vendorDir)) {

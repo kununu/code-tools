@@ -69,19 +69,12 @@ final class ArchitectureSniffer
             );
         }
         // groups with at least one include from a global namespace other than App\\, the depends_on properties must not be defined
-        /** @var array<string, array<string, mixed>> $architecture */
         $groupsWithIncludesFromGlobalNamespace = array_filter(
             $architecture,
-            static function(array $group): bool {
-                /** @var array<string>|mixed $includes */
-                $includes = $group[Group::INCLUDES_KEY] ?? null;
-                $includesArray = is_array($includes) ? $includes : [];
-
-                return !array_filter(
-                    $includesArray,
-                    static fn(string $include): bool => str_starts_with($include, 'App\\')
-                );
-            }
+            static fn(array $group) => !array_filter(
+                is_array($group[Group::INCLUDES_KEY] ?? null) ? $group[Group::INCLUDES_KEY] : [],
+                static fn(mixed $include): bool => str_starts_with((string) $include, 'App\\')
+            )
         );
 
         if ($groupsWithIncludesFromGlobalNamespace) {
@@ -96,12 +89,9 @@ final class ArchitectureSniffer
             }
         }
 
-        /** @var array<string, mixed> $architectureTyped */
-        $architectureTyped = $architecture;
-        $library = new ArchitectureLibrary($architectureTyped);
+        $library = new ArchitectureLibrary($architecture);
 
-        /** @var string $groupName */
-        foreach (array_keys($architectureTyped) as $groupName) {
+        foreach (array_keys($architecture) as $groupName) {
             foreach (RuleBuilder::getRules($library->getGroupBy($groupName), $library) as $rule) {
                 yield $rule;
             }

@@ -9,14 +9,14 @@ use PHP_CodeSniffer\Sniffs\Sniff;
 /**
  * Prevents empty new line before declare(strict_types=1).
  */
-final class NoNewLineBeforeDeclareStrictSniff implements Sniff
+class NoNewLineBeforeDeclareStrictSniff implements Sniff
 {
     public function register(): array
     {
         return [T_OPEN_TAG];
     }
 
-    public function process(File $phpcsFile, $stackPtr): int
+    public function process(File $phpcsFile, $stackPtr)
     {
         $tokens = $phpcsFile->getTokens();
         $declare = $phpcsFile->findNext(T_DECLARE, $stackPtr + 1);

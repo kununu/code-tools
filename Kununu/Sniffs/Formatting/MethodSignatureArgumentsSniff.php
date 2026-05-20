@@ -12,7 +12,7 @@ use PHP_CodeSniffer\Sniffs\Sniff;
  *
  * Prevent the usage of multiline for short method signatures and single lines for long ones.
  */
-final class MethodSignatureArgumentsSniff implements Sniff
+class MethodSignatureArgumentsSniff implements Sniff
 {
     public int $methodSignatureLengthHardBreak = 120;
 
@@ -90,7 +90,7 @@ final class MethodSignatureArgumentsSniff implements Sniff
         $this->makeMethodSignatureSingleLine($phpcsFile, $stackPtr);
     }
 
-    private function makeMethodSignatureSingleLine(File $phpcsFile, int $stackPtr): void
+    protected function makeMethodSignatureSingleLine(File $phpcsFile, int $stackPtr): void
     {
         $tokens = $phpcsFile->getTokens();
 
@@ -123,7 +123,7 @@ final class MethodSignatureArgumentsSniff implements Sniff
         $phpcsFile->fixer->endChangeset();
     }
 
-    private function makeMethodSignatureMultiline(File $phpcsFile, int $stackPtr): void
+    protected function makeMethodSignatureMultiline(File $phpcsFile, int $stackPtr): void
     {
         $tokens = $phpcsFile->getTokens();
         $openParenthesisPosition = $tokens[$stackPtr]['parenthesis_opener'];
@@ -155,7 +155,7 @@ final class MethodSignatureArgumentsSniff implements Sniff
         $phpcsFile->fixer->endChangeset();
     }
 
-    private function removeEverythingBetweenPositions(File $phpcsFile, int $fromPosition, int $toPosition): void
+    protected function removeEverythingBetweenPositions(File $phpcsFile, int $fromPosition, int $toPosition): void
     {
         for ($i = $fromPosition + 1; $i < $toPosition; ++$i) {
             $phpcsFile->fixer->replaceToken($i, '');
@@ -165,7 +165,7 @@ final class MethodSignatureArgumentsSniff implements Sniff
     /**
      * @param array<int, array<string, mixed>> $tokens
      */
-    private function areTokensOnTheSameLine(array $tokens, int $firstPosition, int $secondPosition): bool
+    protected function areTokensOnTheSameLine(array $tokens, int $firstPosition, int $secondPosition): bool
     {
         return $tokens[$firstPosition]['line'] === $tokens[$secondPosition]['line'];
     }
@@ -173,7 +173,7 @@ final class MethodSignatureArgumentsSniff implements Sniff
     /**
      * @throws DeepExitException
      */
-    private function getMethodSignatureLength(File $phpcsFile, int $stackPtr): int
+    protected function getMethodSignatureLength(File $phpcsFile, int $stackPtr): int
     {
         $tokens = $phpcsFile->getTokens();
         if ($tokens[$stackPtr]['code'] !== T_FUNCTION) {
@@ -191,7 +191,7 @@ final class MethodSignatureArgumentsSniff implements Sniff
         return $this->getMethodSignatureMultilineLength($tokens, $stackPtr, $methodProperties, $methodParameters);
     }
 
-    private function getIndentationWhitespace(File $phpcsFile, int $prevIndex): string
+    protected function getIndentationWhitespace(File $phpcsFile, int $prevIndex): string
     {
         $tokens = $phpcsFile->getTokens();
 
@@ -209,7 +209,7 @@ final class MethodSignatureArgumentsSniff implements Sniff
     /**
      * @param array<int, array<string, mixed>> $tokens
      */
-    private function getLineEndingPosition(array $tokens, int $position): int
+    protected function getLineEndingPosition(array $tokens, int $position): int
     {
         while (!empty($tokens[$position]) && !str_contains((string) $tokens[$position]['content'], PHP_EOL)) {
             ++$position;
@@ -221,7 +221,7 @@ final class MethodSignatureArgumentsSniff implements Sniff
     /**
      * @param array<int, array<string, mixed>> $tokens
      */
-    private function getMethodSingleLineSignatureLength(array $tokens, int $stackPtr): int
+    protected function getMethodSingleLineSignatureLength(array $tokens, int $stackPtr): int
     {
         $position = $this->getLineEndingPosition($tokens, $stackPtr);
 
@@ -231,7 +231,7 @@ final class MethodSignatureArgumentsSniff implements Sniff
     /**
      * @param array<int, array<string, mixed>> $tokens
      */
-    private function getFirstTokenOfLine(array $tokens, int $index): int
+    protected function getFirstTokenOfLine(array $tokens, int $index): int
     {
         $line = $tokens[$index]['line'];
 
@@ -248,7 +248,7 @@ final class MethodSignatureArgumentsSniff implements Sniff
      * @param array<string, mixed>             $methodProperties
      * @param array<array<string, mixed>>      $methodParameters
      */
-    private function getMethodSignatureMultilineLength(
+    protected function getMethodSignatureMultilineLength(
         array $tokens,
         int $stackPtr,
         array $methodProperties,
@@ -283,7 +283,7 @@ final class MethodSignatureArgumentsSniff implements Sniff
     /**
      * @param array<string, mixed> $methodParameter
      */
-    private function getParameterTotalLength(array $methodParameter): int
+    protected function getParameterTotalLength(array $methodParameter): int
     {
         $length = 0;
         $length += mb_strlen((string) $methodParameter['content']);

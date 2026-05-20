@@ -13,13 +13,7 @@ final readonly class TypeChecker
             return false;
         }
 
-        foreach (array_keys($arr) as $key) {
-            if (!is_string($key)) {
-                return false;
-            }
-        }
-
-        return true;
+        return array_all(array_keys($arr), static fn($key) => is_string($key));
     }
 
     public static function isArrayOfStrings(mixed $arr): bool
@@ -39,23 +33,13 @@ final readonly class TypeChecker
 
     /**
      * @return string[]
-     *
-     * @psalm-return list<string>
      */
     public static function castArrayOfStrings(mixed $arrayOfStrings): array
     {
-        if (!is_array($arrayOfStrings)) {
+        if (self::isArrayOfStrings($arrayOfStrings) === false) {
             throw new InvalidArgumentException('Input must be an array of strings.');
         }
 
-        $result = [];
-        foreach ($arrayOfStrings as $item) {
-            if (!is_string($item)) {
-                throw new InvalidArgumentException('Input must be an array of strings.');
-            }
-            $result[] = $item;
-        }
-
-        return $result;
+        return $arrayOfStrings;
     }
 }
