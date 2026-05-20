@@ -76,8 +76,8 @@ composer require --dev kununu/code-tools --no-plugins
 - [.editorconfig](docs/EditorConfig/README.md) instructions.
 - [PHP-CS-Fixer](docs/CsFixer/README.md) instructions.
 - [PHP_CodeSniffer](docs/CodeSniffer/README.md) instructions.
-- [Rector](docs/Rector/README.md) instructions.
 - [Psalm](docs/Psalm/README.md) instructions.
+- [Rector](docs/Rector/README.md) instructions.
 - [bin/code-tools](docs/CodeTools/README.md) instructions.
 - [bin/php-in-k8s](docs/PhpInK8s/README.md) instructions.
 - [Architecture Sniffer & PHPAT](docs/ArchitectureSniffer/README.md) instructions.
