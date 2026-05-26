@@ -12,6 +12,7 @@
 
 ## Out of the box usage
 - The default configuration analyzes the `src` directory with error level 2 (strict).
+- The default configuration includes the Symfony and PHPUnit plugins.
 - The `--config` flag is used to specify the configuration to be used.
 
 ### Run Psalm analysis
@@ -55,6 +56,7 @@ Stubs help Psalm understand types from external libraries that lack proper type 
     </projectFiles>
 
     <plugins>
+        <pluginClass class="Psalm\PhpUnitPlugin\Plugin"/>
         <pluginClass class="Psalm\SymfonyPsalmPlugin\Plugin"/>
     </plugins>
 
@@ -83,6 +85,7 @@ Suppress specific issues for certain directories or files:
     </projectFiles>
 
     <plugins>
+        <pluginClass class="Psalm\PhpUnitPlugin\Plugin"/>
         <pluginClass class="Psalm\SymfonyPsalmPlugin\Plugin"/>
     </plugins>
 
@@ -120,6 +123,7 @@ Baselines allow you to suppress existing issues while enforcing strict analysis 
     </projectFiles>
 
     <plugins>
+        <pluginClass class="Psalm\PhpUnitPlugin\Plugin"/>
         <pluginClass class="Psalm\SymfonyPsalmPlugin\Plugin"/>
     </plugins>
 </psalm>
@@ -139,7 +143,7 @@ vendor/bin/psalm --config=psalm.xml
 | `errorLevel` | `2` | Strictness level (1=strictest, 8=most lenient) |
 | `findUnusedCode` | `false` | Detect unused classes, methods, and variables |
 | `ensureOverrideAttribute` | `false` | Require `#[Override]` attribute on overridden methods |
-| `errorBaseline` | - | Path to baseline file for suppressing existing issues |
+| `errorBaseline` | `—` | Path to baseline file for suppressing existing issues |
 
 ## Baseline management
 
