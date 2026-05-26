@@ -21,6 +21,7 @@ return $config
             'friendsofphp/php-cs-fixer',
             'phpstan/phpstan',
             'psalm/plugin-symfony',
+            'psalm/plugin-phpunit',
             'rector/rector',
             'squizlabs/php_codesniffer',
             'vimeo/psalm',
