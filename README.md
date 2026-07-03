@@ -81,3 +81,7 @@ composer require --dev kununu/code-tools --no-plugins
 - [bin/code-tools](docs/CodeTools/README.md) instructions.
 - [bin/php-in-k8s](docs/PhpInK8s/README.md) instructions.
 - [Architecture Sniffer & PHPAT](docs/ArchitectureSniffer/README.md) instructions.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, testing, and the PR/release process.

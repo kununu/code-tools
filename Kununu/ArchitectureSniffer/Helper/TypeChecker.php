@@ -22,13 +22,7 @@ final readonly class TypeChecker
             return false;
         }
 
-        foreach ($arr as $item) {
-            if (!is_string($item)) {
-                return false;
-            }
-        }
-
-        return true;
+        return array_all($arr, static fn($item) => is_string($item));
     }
 
     /**
