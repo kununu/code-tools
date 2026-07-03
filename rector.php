@@ -15,6 +15,7 @@ return RectorConfig::configure()
     ->withSkip([
         AddOverrideAttributeToOverriddenMethodsRector::class,
         __DIR__ . '/tests/bootstrap.php',
+        __DIR__ . '/tests/_data',
         __DIR__ . '/rector.php',
     ])
     ->withImportNames();
