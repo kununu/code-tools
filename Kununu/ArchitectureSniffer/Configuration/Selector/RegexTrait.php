@@ -12,6 +12,10 @@ trait RegexTrait
                 $path = substr($path, 1);
             }
 
+            if (str_ends_with($path, '\\')) {
+                $path = substr($path, 0, -1);
+            }
+
             $path = str_replace('\\', '\\\\', $path);
 
             return '/' . str_replace('*', '.+', $path) . '/';
