@@ -23,7 +23,7 @@
     "symfony/console": "^6.4 || ^7.4",
     "symfony/process": "^6.4 || ^7.4",
     "symfony/yaml": "^6.4 || ^7.4",
-    "vimeo/psalm": "^6.16"
+    "vimeo/psalm": "6.x-dev as 6.16"
   },
   "require-dev": {
     "ergebnis/composer-normalize": "^2.50",
