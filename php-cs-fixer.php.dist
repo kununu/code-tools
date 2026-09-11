@@ -1,0 +1,19 @@
+<?php
+declare(strict_types=1);
+
+use PhpCsFixer\Config;
+use PhpCsFixer\Finder;
+
+// We want to use the same rules as the consumers. We only need to exclude additional paths.
+// So we are just changing the finder
+/** @var Config $config */
+$config = require __DIR__ . '/dist/php-cs-fixer.php.dist';
+/** @var Finder $finder */
+$finder = $config->getFinder();
+
+return $config
+    ->setFinder(
+        $finder
+            ->exclude('tests/resources')
+            ->in(__DIR__),
+    );

@@ -1,0 +1,30 @@
+includes:
+  - vendor/phpstan/phpstan-phpunit/extension.neon
+  - vendor/phpstan/phpstan-phpunit/rules.neon
+
+parameters:
+  # Customize level according to project needs
+  level: 1
+
+  # every entry must exist, or PHPStan aborts; there is no optional marker for paths
+  paths:
+    - src
+    # - tests
+
+  errorFormat: table
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Customize according to project needs (add/remove desired sections by stripping the leading "# ")
+#
+#   treatPhpDocTypesAsCertain: false
+#
+#   # a plain path must exist; append "(?)" to make it optional, or use an fnmatch pattern
+#   excludePaths:
+#     - src/Migrations/ (?)
+#
+#   # an entry that matches nothing is itself reported, unless reportUnmatched is false
+#   ignoreErrors:
+#     -
+#       identifier: property.uninitializedReadonly
+#       path: tests
+#       reportUnmatched: false

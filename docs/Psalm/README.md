@@ -172,3 +172,7 @@ vendor/bin/psalm --config=psalm.xml --ignore-baseline
 - [Psalm Configuration Reference](https://psalm.dev/docs/running_psalm/configuration/)
 - [Psalm Plugins](https://psalm.dev/plugins)
 - [Psalm Issue Types](https://psalm.dev/docs/running_psalm/issues/)
+
+---
+
+[Back to Index](../../README.md)
