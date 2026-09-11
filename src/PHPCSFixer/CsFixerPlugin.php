@@ -25,10 +25,7 @@ final class CsFixerPlugin implements PluginInterface, EventSubscriberInterface, 
 
     public static function getSubscribedEvents(): array
     {
-        return [
-            ScriptEvents::POST_INSTALL_CMD => ['addCsFixerGitHooks'],
-            ScriptEvents::POST_UPDATE_CMD  => ['addCsFixerGitHooks'],
-        ];
+        return [ScriptEvents::POST_INSTALL_CMD => ['addCsFixerGitHooks'], ScriptEvents::POST_UPDATE_CMD  => ['addCsFixerGitHooks']];
     }
 
     /**
