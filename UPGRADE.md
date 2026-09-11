@@ -14,14 +14,31 @@ Publishing a config never overwrites a file you already have (`code-tools` warns
 
 #### 1. Update `installed_paths` in your `phpcs.xml`
 
-The custom sniffs moved inside the package. If you have published a `phpcs.xml`, edit it:
+The custom sniffs moved inside the package, so the standard now sits one level deeper. Whatever
+value your published `phpcs.xml` has today, append `/src/PHPCodeSniffer` to it.
+
+Both of the spellings below are in use, and both need the same edit:
+
+```diff
+-<config name="installed_paths" value="vendor/kununu/code-tools"/>
++<config name="installed_paths" value="vendor/kununu/code-tools/src/PHPCodeSniffer"/>
+```
 
 ```diff
 -<config name="installed_paths" value="../../kununu/code-tools"/>
 +<config name="installed_paths" value="../../kununu/code-tools/src/PHPCodeSniffer"/>
 ```
 
-Without this PHP_CodeSniffer cannot find the `Kununu` standard and every run aborts.
+They differ only in what they are relative to. A value starting with `.` is resolved against
+`vendor/squizlabs/php_codesniffer`, which is why the shipped template uses `../../`. Any other
+value is used as given, so it resolves from the directory you run `phpcs` in, normally the
+project root.
+
+Without this edit PHP_CodeSniffer cannot find the `Kununu` standard and every run aborts with:
+
+```console
+ERROR: Referenced sniff "Kununu" does not exist.
+```
 
 #### 2. Update the Architecture Sniffer class in your `phpstan.neon`
 
