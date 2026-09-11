@@ -143,7 +143,7 @@ vendor/bin/psalm --config=psalm.xml
 | `errorLevel` | `2` | Strictness level (1=strictest, 8=most lenient) |
 | `findUnusedCode` | `false` | Detect unused classes, methods, and variables |
 | `ensureOverrideAttribute` | `false` | Require `#[Override]` attribute on overridden methods |
-| `errorBaseline` | `—` | Path to baseline file for suppressing existing issues |
+| `errorBaseline` | `-` | Path to baseline file for suppressing existing issues |
 
 ## Baseline management
 

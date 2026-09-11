@@ -100,8 +100,8 @@ vendor/bin/phpstan analyse --configuration=phpstan.neon
 |-----------------------------|---------|--------------------------------------------------------------------|
 | `level`                     | `1`     | Strictness level (0=most lenient, 10/`max`=strictest)              |
 | `paths`                     | `src`   | Paths to analyze (`tests` ships commented out)                     |
-| `excludePaths`              | `—`     | Paths skipped during analysis                                      |
-| `ignoreErrors`              | `—`     | Errors to suppress, ideally matched by `identifier`                |
+| `excludePaths`              | `-`     | Paths skipped during analysis                                      |
+| `ignoreErrors`              | `-`     | Errors to suppress, ideally matched by `identifier`                |
 | `treatPhpDocTypesAsCertain` | `true`  | Whether PHPDoc types are trusted as certain                        |
 
 ## Baseline management
