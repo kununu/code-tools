@@ -29,16 +29,16 @@ Guidance for AI agents working in this repository. For install and usage see `RE
 
 ## Code layout
 
-- `src/` — PSR-4 source (`Kununu\CodeTools\` namespace):
+- `src/`: PSR-4 source (`Kununu\CodeTools\` namespace):
   - `PHPCSFixer/` (composer plugin, command, git hook, provider)
   - `ArchitectureSniffer/` (PHPAT architecture rules)
-  - `PHPCodeSniffer/Kununu/` — the PHP_CodeSniffer standard: `ruleset.xml` plus `Sniffs/`.
+  - `PHPCodeSniffer/Kununu/` holds the PHP_CodeSniffer standard: `ruleset.xml` plus `Sniffs/`.
     These are the one exception to the namespace above; see Conventions below.
 - `bin/`
   - The `code-tools` and `php-in-k8s` executables.
 - `dist/`
   - `*.dist` config templates published into consuming projects.
-- Root configs — the repo's own tool configs are `*.dist` too (`php-cs-fixer.php.dist`,
+- Root configs: the repo's own tool configs are `*.dist` too (`php-cs-fixer.php.dist`,
   `phpcs.xml.dist`, `phpstan.neon.dist`, `phpunit.xml.dist`, `psalm.xml.dist`), which is a
   naming preference and unrelated to `dist/`. Rector's is `rector-ci.php`, named for the CI
   gate that enforces it. Only PHP-CS-Fixer and Rector need an explicit `--config`; PHPStan,
@@ -80,7 +80,7 @@ Guidance for AI agents working in this repository. For install and usage see `RE
     `tests/resources/PHPCSFixer/` (`fixer_test_cases.php`).
   - Fixtures are deliberately excluded from the tools, and the scope differs on purpose:
     `php-cs-fixer.php.dist` excludes all of `tests/resources`, while `phpcs.xml.dist`,
-    `phpstan.neon.dist` and `rector-ci.php` exclude only `tests/resources/PHPCodeSniffer` — those files are intentionally
+    `phpstan.neon.dist` and `rector-ci.php` exclude only `tests/resources/PHPCodeSniffer`, because those files are intentionally
     malformed, whereas `fixer_test_cases.php` is valid PHP and stays under analysis.
 - Minimum PHP version and required extensions are declared in `composer.json` (`require.php` and the `ext-*` entries).
 
@@ -101,7 +101,7 @@ subcommand, and `audit` is built into Composer.
 
 `composer audit` runs with `--abandoned=report`: `maglnet/composer-require-checker` pulls in the
 abandoned `azjezz/psl`, which would otherwise fail the step. Security advisories still fail the
-build, for production and dev dependencies alike — only the abandoned notice is informational.
+build, for production and dev dependencies alike; only the abandoned notice is informational.
 
 Note that `composer ci` calls `@cs-fix`, so it rewrites files rather than only checking them.
 CI runs `php-cs-fixer check` instead.
@@ -122,7 +122,7 @@ See `scripts` in `composer.json` for individual commands and `CONTRIBUTING.md` f
 `CsFixerPlugin` installs the PHP-CS-Fixer pre-commit hook on `post-install-cmd`/`post-update-cmd`.
 In consuming projects that happens through the Composer plugin events. **It cannot here**: Composer
 loads plugins only from installed packages (`PluginManager::loadInstalledPlugins()` reads the local
-repository), never from the root package, so this repository's own plugin never activates — which is
+repository), never from the root package, so this repository's own plugin never activates, which is
 also why `composer list` offers no `kununu:*` commands here. Adding the package to `allow-plugins`
 does not change that.
 
@@ -140,7 +140,7 @@ the config's finder; the packaged template's finder is rooted inside `vendor/` a
 nothing.
 
 Plugin output goes to `php://output`, not `php://stdout`, so tests can capture it with `ob_start()`.
-Tests that exercise the installer must `chdir()` into a throwaway git repository first — the command
+Tests that exercise the installer must `chdir()` into a throwaway git repository first, because the command
 resolves its target from the working directory, so without that they rewrite this repository's own
 hooks while the suite runs.
 
