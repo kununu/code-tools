@@ -10,19 +10,23 @@ if [ -d "$PROJECT_ROOT/services/vendor/kununu/code-tools" ]; then
   readonly CONFIG_DIR="$PROJECT_ROOT/services/vendor/kununu/code-tools"
 elif [ -d "$PROJECT_ROOT/vendor/kununu/code-tools" ]; then
   readonly CONFIG_DIR="$PROJECT_ROOT/vendor/kununu/code-tools"
-elif [ -d "$PROJECT_ROOT" ]; then
+elif [ -d "$PROJECT_ROOT/dist" ]; then
+  # Running from inside the code-tools repository itself
   readonly CONFIG_DIR="$PROJECT_ROOT"
 else
   echo "❌ Could not find 'vendor/kununu/code-tools'."
   exit 1
 fi
 
+# Single source of truth: "<tool-name>:<template>". Drives the help text, the
+# tool-name lookup and the publish-everything loop, so they cannot drift apart.
 readonly CONFIG_FILES=(
-    "dist/php-cs-fixer.php.dist"
-    "dist/phpcs.xml.dist"
-    "dist/psalm.xml.dist"
-    "dist/rector.php.dist"
-    "dist/.editorconfig.dist"
+    "cs-fixer:dist/php-cs-fixer.php.dist"
+    "code-sniffer:dist/phpcs.xml.dist"
+    "psalm:dist/psalm.xml.dist"
+    "rector:dist/rector.php.dist"
+    "phpstan:dist/phpstan.neon.dist"
+    "editorconfig:dist/.editorconfig.dist"
 )
 
 # Function to display help instructions
@@ -30,13 +34,31 @@ show_help() {
     cat <<EOF
 Usage: vendor/bin/code-tools publish:config [tool-name]
 
+Publishes a tool's configuration template into the project. Without a tool name,
+every configuration below is published.
+
 Valid tool names:
-  cs-fixer     => copies dist/php-cs-fixer.php.dist
-  code-sniffer => copies dist/phpcs.xml.dist
-  psalm        => copies dist/psalm.xml.dist
-  rector       => copies dist/rector.php.dist
-  editorconfig => copies dist/.editorconfig.dist
 EOF
+    local entry
+    for entry in "${CONFIG_FILES[@]}"; do
+        printf '  %-13s => copies %s\n' "${entry%%:*}" "${entry#*:}"
+    done
+}
+
+# Function to resolve a tool name to its template, printing it on success
+resolve_config_file() {
+    local tool="$1"
+    local entry
+
+    for entry in "${CONFIG_FILES[@]}"; do
+        if [ "${entry%%:*}" = "$tool" ]; then
+            echo "${entry#*:}"
+
+            return 0
+        fi
+    done
+
+    return 1
 }
 
 # Function to copy a config file
@@ -62,7 +84,7 @@ if [ "${1:-}" == "--help" ]; then
     exit 0
 fi
 
-if [ "$#" -ne 2 ]; then
+if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
     show_help
     exit 1
 fi
@@ -72,27 +94,21 @@ if [ "$1" != "publish:config" ]; then
     exit 1
 fi
 
+# No tool name: publish every configuration
+if [ "$#" -eq 1 ]; then
+    for entry in "${CONFIG_FILES[@]}"; do
+        copy_config_file "${entry#*:}"
+    done
+
+    exit 0
+fi
+
 tool_name="$2"
 
-case "$tool_name" in
-    cs-fixer)
-        copy_config_file "dist/php-cs-fixer.php.dist"
-        ;;
-    code-sniffer)
-        copy_config_file "dist/phpcs.xml.dist"
-        ;;
-    psalm)
-        copy_config_file "dist/psalm.xml.dist"
-        ;;
-    rector)
-        copy_config_file "dist/rector.php.dist"
-        ;;
-    editorconfig)
-        copy_config_file "dist/.editorconfig.dist"
-        ;;
-    *)
-        echo "❌ Invalid tool name: '$tool_name'"
-        show_help
-        exit 1
-        ;;
-esac
+if ! config_file="$(resolve_config_file "$tool_name")"; then
+    echo "❌ Invalid tool name: '$tool_name'"
+    show_help
+    exit 1
+fi
+
+copy_config_file "$config_file"

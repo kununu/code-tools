@@ -2,26 +2,9 @@
 
 ## Overview
 
-Architecture Sniffer enforces architectural and coding guidelines in PHP projects. It analyzes your codebase to ensure that dependency and structural rules are followed, helping maintain code quality and consistency.
+Architecture Sniffer enforces architectural and coding guidelines in PHP projects. It analyses your codebase to ensure that dependency and structural rules are followed, helping maintain code quality and consistency.
 
 ## Quick Start
-
-### Prerequisites
-
-- PHP >= 8.3
-- Composer
-- This project (`code-tools`) should be installed as a dev dependency:
-  ```bash
-  composer require --dev kununu/code-tools
-  ```
-
-### Installation
-
-Install via Composer as a dev dependency:
-
-```bash
-composer require --dev kununu/code-tools
-```
 
 ### Minimal Configuration
 
@@ -43,7 +26,7 @@ architecture:
 
 ### Running with PHPStan
 
-Add to your `phpstan.neon`:
+Add to your PHPStan configuration file:
 
 ```neon
 includes:
@@ -55,7 +38,7 @@ parameters:
         show_rule_names: true
 
 services:
-    - class: Kununu\ArchitectureSniffer\ArchitectureSniffer
+    - class: Kununu\CodeTools\ArchitectureSniffer\ArchitectureSniffer
       tags:
         - phpat.test
 ```
@@ -185,7 +168,7 @@ When specifying patterns or references in your `architecture.yaml` (for `include
   - Example: `"App\\Service\\"` matches everything in the `App\Service` namespace.
 
 - **Interface:**
-  - If the fqcn is a Interface or the regex ends with `Interface`, it is treated as an interface.
+  - If the fqcn is an Interface or the regex ends with `Interface`, it is treated as an interface.
   - Example: `"App\\Service\\ServiceInterface"` matches the interface `ServiceInterface`.
 
 - **Class:**
@@ -228,23 +211,17 @@ This logic applies to all properties that accept patterns or references, such as
 
 - Ensure `architecture.yaml` is in your project root.
 - Check for typos in group names and references.
-- For a clean static analysis run, use:
+- For a clean static analysis run, use (adjust the config file name to your setup):
   ```sh
   `php vendor/bin/phpstan clear-result && php vendor/bin/phpstan analyse -c phpstan.neon --memory-limit 240M`
   ```
 - For more help, see [PHPAT issues](https://github.com/carlosas/phpat/issues).
-
-## Contributing
-
-Contributions are welcome! Please submit issues or pull requests via GitHub.
-
-## License
-
-See [LICENSE](../LICENSE).
 
 ## Further Resources
 
 - [PHPAT Documentation](https://github.com/carlosas/phpat)
 - [Architecture Sniffer (Spryker)](https://github.com/spryker/architecture-sniffer)
 
+---
 
+[Back to Index](../../README.md)

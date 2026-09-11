@@ -1,7 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
-# Documentation: https://new-work.atlassian.net/wiki/x/M4EjV
+# Documentation: https://kununu-team.atlassian.net/wiki/x/zVNdAQ
+#
+# Keep this script compatible with bash 3.2, which is what macOS still ships.
 
 if [[ "$#" -eq 0 ]]; then
   echo "At least one argument for php runtime must be set" >&2
@@ -21,7 +23,11 @@ log_debug() {
 if [[ -z "${PROJECT_DIR:-}" ]]; then
   if [[ -n "${COMPOSER_RUNTIME_BIN_DIR:-}" ]]; then
     log_debug "Using COMPOSER_RUNTIME_BIN_DIR as a fallback for PROJECT_DIR value extraction: ${COMPOSER_RUNTIME_BIN_DIR}"
+    # Support both the services/ layout and a project with vendor/ at its root
     PROJECT_DIR="${COMPOSER_RUNTIME_BIN_DIR%/services/vendor/bin}"
+    if [[ "$PROJECT_DIR" == "$COMPOSER_RUNTIME_BIN_DIR" ]]; then
+      PROJECT_DIR="${COMPOSER_RUNTIME_BIN_DIR%/vendor/bin}"
+    fi
   else
     log_debug "Using PWD as a fallback for PROJECT_DIR: ${PWD}"
     PROJECT_DIR="$PWD"
@@ -37,7 +43,20 @@ fi
 
 log_debug "Script called with arguments: $*"
 
-POD_NAME=$(kubectl -n local get pods -l app="$K8S_APP_NAME" --no-headers -o custom-columns=":metadata.name")
+POD_NAMES=$(kubectl -n local get pods -l app="$K8S_APP_NAME" --no-headers -o custom-columns=":metadata.name")
+
+if [[ -z "$POD_NAMES" ]]; then
+  echo "❌ No pod found in namespace 'local' with label app=$K8S_APP_NAME" >&2
+  exit 1
+fi
+
+POD_NAME=$(printf '%s\n' "$POD_NAMES" | sed '/^[[:space:]]*$/d' | head -n 1)
+POD_COUNT=$(printf '%s\n' "$POD_NAMES" | sed '/^[[:space:]]*$/d' | wc -l | tr -d '[:space:]')
+
+if [[ "$POD_COUNT" -gt 1 ]]; then
+  echo "⚠️  $POD_COUNT pods match app=$K8S_APP_NAME; using '$POD_NAME'." >&2
+fi
+
 log_debug "Selected pod: $POD_NAME"
 
 HOST_BASE=$PROJECT_DIR
@@ -77,12 +96,15 @@ done
 
 log_debug "Final command: kubectl -n local -c main exec -i $POD_NAME -- secrets_env.sh php ${MODIFIED_ARGS[*]}"
 
-# Run the PHP command and replace container paths with host paths in the output
-kubectl -n local -c main exec -i "$POD_NAME" -- secrets_env.sh php "${MODIFIED_ARGS[@]}" | sed "s|$CONTAINER_BASE|$HOST_BASE|g"
+# "&", "|" and "\" are special on the replacement side of s|||, so escape them
+HOST_BASE_SED=$(printf '%s' "$HOST_BASE" | sed 's/[\\&|]/\\&/g')
 
-if [[ ${#PHPSTORM_FILE_PATHS[@]:-0} -gt 0 ]]; then
-  for file_path in "${PHPSTORM_FILE_PATHS[@]}"; do
-    log_debug "Copying file generated for PHPStorm back from pod: $POD_NAME:$file_path -> $file_path"
-    kubectl -n local -c main cp "$POD_NAME:$file_path" "$file_path"
-  done
-fi
+# Run the PHP command and replace container paths with host paths in the output
+kubectl -n local -c main exec -i "$POD_NAME" -- secrets_env.sh php "${MODIFIED_ARGS[@]}" | sed "s|$CONTAINER_BASE|$HOST_BASE_SED|g"
+
+# ${arr[@]+"${arr[@]}"} is the bash 3.2-safe expansion: under `set -u` an empty
+# array cannot be expanded directly, and the loop simply does not run when empty
+for file_path in ${PHPSTORM_FILE_PATHS[@]+"${PHPSTORM_FILE_PATHS[@]}"}; do
+  log_debug "Copying file generated for PHPStorm back from pod: $POD_NAME:$file_path -> $file_path"
+  kubectl -n local -c main cp "$POD_NAME:$file_path" "$file_path"
+done

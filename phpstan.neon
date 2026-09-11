@@ -1,8 +1,0 @@
-parameters:
-    level: 8
-
-    paths:
-        - Kununu/
-
-    bootstrapFiles:
-        - '%rootDir%/../../../tests/bootstrap.php'

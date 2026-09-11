@@ -36,3 +36,7 @@ trim_trailing_whitespace = true
 
 [*.md]
 trim_trailing_whitespace = false
+
+---
+
+[Back to Index](../../README.md)
