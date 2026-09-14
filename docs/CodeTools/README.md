@@ -29,3 +29,7 @@ vendor/bin/code-tools publish:config
 ```bash
 vendor/bin/code-tools --help
 ```
+
+---
+
+[Back to Index](../../README.md)

@@ -3,22 +3,31 @@
 ## Table of Contents
 - [Out of the box usage](#out-of-the-box-usage)
 - [Customized usage](#customized-usage)
-  - [Example of a customized `rector.php` to upgrade to PHP 8.3 and phpunit 10](#example-of-a-customized-rectorphp-to-upgrade-to-php-83-and-phpunit-10)
+  - [Example of a customized `rector.php` to upgrade PHP syntax and PHPUnit usage](#example-of-a-customized-rectorphp-to-upgrade-php-syntax-and-phpunit-usage)
   - [Example of a customized `rector.php` to fix phpunit deprecation warnings](#example-of-a-customized-rectorphp-to-fix-phpunit-deprecation-warnings)
   - [Example of a customized `rector.php` to maintain the code quality and enforce it via a CI pipeline](#example-of-a-customized-rectorphp-to-maintain-the-code-quality-and-enforce-it-via-a-ci-pipeline)
 
 ## Out of the box usage
-- It will check the code in `tests` directory and suggest or apply the necessary refactor to make it compatible with phpunit v10.
-- The `--config` flag is used to specify the configuration to be used.
+- It will check the code in `tests` directory and suggest or apply the necessary refactor to make it compatible with the PHPUnit version installed in your project.
+- Rector only accepts a config file whose extension is `.php`, so `--config` cannot be pointed at
+  `dist/rector.php.dist` inside `vendor/`. Publish the template into your project first:
+
+```console
+vendor/bin/code-tools publish:config rector
+```
+
+- The `--config` flag then refers to the published `rector.php`. Do not point it at
+  `vendor/kununu/code-tools/rector-ci.php`: that is this package's own CI config, whose skip list is
+  resolved relative to *this* repository rather than to your project.
 
 ### Preview suggested changes
 ```console
-vendor/bin/rector process --dry-run --config vendor/kununu/code-tools/rector.php tests
+vendor/bin/rector process --dry-run --config rector.php tests
 ```
 
 ### Apply suggested changes
 ```console
-vendor/bin/rector process --config vendor/kununu/code-tools/rector.php tests
+vendor/bin/rector process --config rector.php tests
 ```
 
 <details>
@@ -31,7 +40,7 @@ vendor/bin/rector process --config vendor/kununu/code-tools/rector.php tests
 ## Customized usage
 - You can customize the `rector.php` file to include/exclude directories, files, or rules.
 - You can create your own configuration file and use it with the `--config` flag.
-- The easiest way to customize the rules is to copy the `rector.php` file to your project and modify it, for this we provide the following command:
+- The `rector.php` published above is yours to edit. If you do not have it yet, publish it with:
 
 ```console
 vendor/bin/code-tools publish:config rector
@@ -42,46 +51,29 @@ vendor/bin/code-tools publish:config rector
 <details>
   <summary>See some customization examples</summary>
 
-### Example of a customized `rector.php` to upgrade to PHP 8.3 and phpunit 10:
+### Example of a customized `rector.php` to upgrade PHP syntax and PHPUnit usage:
 ```php
 <?php
 
 declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
-use Rector\Php71\Rector\ClassConst\PublicConstantVisibilityRector;
 use Rector\Php74\Rector\Closure\ClosureToArrowFunctionRector;
-use Rector\Php81\Rector\Property\ReadOnlyPropertyRector;
-use Rector\Php82\Rector\Class_\ReadOnlyClassRector;
-use Rector\Php83\Rector\ClassConst\AddTypeToConstRector;
-use Rector\Php83\Rector\ClassMethod\AddOverrideAttributeToOverriddenMethodsRector;
-use Rector\PHPUnit\Rector\StmtsAwareInterface\WithConsecutiveRector;
-use Rector\PHPUnit\Set\PHPUnitSetList;
-use Rector\PHPUnit\AnnotationsToAttributes\Rector\ClassMethod\DataProviderAnnotationToAttributeRector;
-use Rector\PHPUnit\PHPUnit100\Rector\Class_\StaticDataProviderClassMethodRector;
-use Rector\Set\ValueObject\LevelSetList;
-use Rector\ValueObject\PhpVersion;
+use Rector\PHPUnit\PHPUnit100\Rector\StmtsAwareInterface\WithConsecutiveRector;
 
 return RectorConfig::configure()
-->withPaths([
-  __DIR__ . '/src',
-  __DIR__ . '/tests',
-])
-->withRules([
-    AddTypeToConstRector::class,
-    ReadOnlyClassRector::class,
-    DataProviderAnnotationToAttributeRector::class,
-    StaticDataProviderClassMethodRector::class,
-])
-->withSets([
-    LevelSetList::UP_TO_PHP_83
-])
-->withSkip([
-  WithConsecutiveRector::class,
-  ClosureToArrowFunctionRector::class,
-  PublicConstantVisibilityRector::class,
-  AddOverrideAttributeToOverriddenMethodsRector::class,
-]);
+    ->withPaths([
+        __DIR__ . '/src',
+        __DIR__ . '/tests',
+    ])
+    // Picks the PHP level up from your composer.json `require.php` constraint
+    ->withPhpSets()
+    // Picks the PHPUnit rules up from your installed phpunit/phpunit version
+    ->withComposerBased(phpunit: true)
+    ->withSkip([
+        WithConsecutiveRector::class,
+        ClosureToArrowFunctionRector::class,
+    ]);
 ```
 
 ### Example of a customized `rector.php` to fix phpunit deprecation warnings:
@@ -93,33 +85,22 @@ use Rector\CodeQuality\Rector\Class_\CompleteDynamicPropertiesRector;
 use Rector\Config\RectorConfig;
 use Rector\Php70\Rector\Ternary\TernaryToNullCoalescingRector;
 use Rector\Php80\Rector\Class_\ClassPropertyAssignToConstructorPromotionRector;
-use Rector\Php83\Rector\ClassMethod\AddOverrideAttributeToOverriddenMethodsRector;
-use Rector\PHPUnit\AnnotationsToAttributes\Rector\ClassMethod\DataProviderAnnotationToAttributeRector;
-use Rector\PHPUnit\PHPUnit110\Rector\Class_\NamedArgumentForDataProviderRector;
-use Rector\PHPUnit\Rector\StmtsAwareInterface\WithConsecutiveRector;
-use Rector\PHPUnit\Set\PHPUnitSetList;
-use Rector\Set\ValueObject\LevelSetList;
-use Rector\Set\ValueObject\SetList;
-use Rector\Symfony\Set\SymfonySetList;
+use Rector\PHPUnit\PHPUnit100\Rector\StmtsAwareInterface\WithConsecutiveRector;
 use Rector\TypeDeclaration\Rector\ClassMethod\ReturnNeverTypeRector;
 
 return RectorConfig::configure()
-    ->withSets([
-        PHPUnitSetList::PHPUNIT_110,
-        LevelSetList::UP_TO_PHP_83,
-        SetList::PHP_83,
-        SymfonySetList::SYMFONY_64,
-        SymfonySetList::SYMFONY_CODE_QUALITY,
-        SymfonySetList::SYMFONY_CONSTRUCTOR_INJECTION,
-    ])
+    ->withPhpSets()
+    ->withComposerBased(phpunit: true)
+    ->withPreparedSets(
+        phpunitCodeQuality: true,
+        phpunitNarrowAsserts: true,
+        phpunitMockToStub: true
+    )
     ->withRules([
-        DataProviderAnnotationToAttributeRector::class,
-        NamedArgumentForDataProviderRector::class,
         CompleteDynamicPropertiesRector::class,
     ])
     ->withSkip([
         WithConsecutiveRector::class,
-        AddOverrideAttributeToOverriddenMethodsRector::class,
         ReturnNeverTypeRector::class,
         TernaryToNullCoalescingRector::class,
         ClassPropertyAssignToConstructorPromotionRector::class,
@@ -135,9 +116,6 @@ return RectorConfig::configure()
 declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
-use Rector\PHPUnit\Set\PHPUnitSetList;
-use Rector\Set\ValueObject\SetList;
-use Rector\Symfony\Set\SymfonySetList;
 
 return RectorConfig::configure()
     ->withPaths([
@@ -146,18 +124,14 @@ return RectorConfig::configure()
         __DIR__ . '/src',
         __DIR__ . '/tests',
     ])
-    ->withSets([
-        SetList::PHP_83,
-        SymfonySetList::SYMFONY_64,
-        SymfonySetList::SYMFONY_CODE_QUALITY,
-        SymfonySetList::SYMFONY_CONSTRUCTOR_INJECTION,
-        PHPUnitSetList::PHPUNIT_100,
-    ])
+    ->withPhpSets()
+    ->withComposerBased(phpunit: true, symfony: true)
     ->withSymfonyContainerPhp(__DIR__ . '/var/cache/dev/App_KernelDevContainer.php')
     ->withTypeCoverageLevel(0)
     ->withPreparedSets(
         deadCode: true,
-        codeQuality: true
+        codeQuality: true,
+        symfonyCodeQuality: true
     )
     ->withSkip([
         __DIR__ . '/src/Migrations',
@@ -222,3 +196,7 @@ vendor/bin/rector process --config rector.php
 - There are many rules available, you can use them to upgrade your codebase to the latest PHP version, framework version (e.g. symfony), or package version (e.g. phpunit).
 - Rector is a powerful tool but some manual intervention may be required to make the code work as expected.
 - Learn more about Rector at official page [here](https://getrector.com/documentation).
+
+---
+
+[Back to Index](../../README.md)

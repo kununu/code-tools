@@ -11,33 +11,58 @@
   ],
   "require": {
     "php": ">=8.4",
+    "ext-mbstring": "*",
+    "ext-tokenizer": "*",
     "composer-plugin-api": "^2.0",
-    "composer/composer": "^2.8",
-    "friendsofphp/php-cs-fixer": "^3.93",
+    "composer/composer": "^2.10",
+    "friendsofphp/php-cs-fixer": "^3.95",
+    "jetbrains/phpstorm-attributes": "^1.3",
     "phpat/phpat": "^0.11.4",
-    "phpstan/phpstan": "^2.1",
+    "phpstan/phpstan": "^2.2",
+    "phpstan/phpstan-phpunit": "^2.0",
     "psalm/plugin-phpunit": "^0.19",
     "psalm/plugin-symfony": "^5.3",
-    "rector/rector": "^2.0",
-    "squizlabs/php_codesniffer": "^3.10",
+    "rector/rector": "^2.6",
+    "squizlabs/php_codesniffer": "^3.13",
     "symfony/console": "^6.4 || ^7.4",
     "symfony/process": "^6.4 || ^7.4",
     "symfony/yaml": "^6.4 || ^7.4",
-    "vimeo/psalm": "^6.16"
+    "vimeo/psalm": "^6.17"
   },
   "require-dev": {
-    "ergebnis/composer-normalize": "^2.50",
-    "phpunit/phpunit": "^11.5",
+    "ergebnis/composer-normalize": "^2.53",
+    "maglnet/composer-require-checker": "^4.20",
+    "phpunit/phpunit": "^13.3",
     "shipmonk/composer-dependency-analyser": "^1.8"
+  },
+  "conflict": {
+    "symfony/config": "<6.4 || >=8.0",
+    "symfony/dependency-injection": "<6.4 || >=8.0",
+    "symfony/error-handler": "<6.4 || >=8.0",
+    "symfony/event-dispatcher": "<6.4 || >=8.0",
+    "symfony/expression-language": "<6.4 || >=8.0",
+    "symfony/filesystem": "<6.4 || >=8.0",
+    "symfony/finder": "<6.4 || >=8.0",
+    "symfony/framework-bundle": "<6.4 || >=8.0",
+    "symfony/http-foundation": "<6.4 || >=8.0",
+    "symfony/http-kernel": "<6.4 || >=8.0",
+    "symfony/options-resolver": "<6.4 || >=8.0",
+    "symfony/routing": "<6.4 || >=8.0",
+    "symfony/stopwatch": "<6.4 || >=8.0",
+    "symfony/string": "<6.4 || >=8.0",
+    "symfony/symfony": "*",
+    "symfony/var-dumper": "<6.4 || >=8.0",
+    "symfony/var-exporter": "<6.4 || >=8.0"
   },
   "autoload": {
     "psr-4": {
-      "Kununu\\": "Kununu/"
+      "Kununu\\CodeTools\\": "src/",
+      "Kununu\\Sniffs\\": "src/PHPCodeSniffer/Kununu/Sniffs/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "Tests\\": "tests/"
+      "Kununu\\CodeTools\\Tests\\": "tests/"
     }
   },
   "bin": [
@@ -52,26 +77,47 @@
     "sort-packages": true
   },
   "extra": {
-    "class": "Kununu\\CsFixer\\CsFixerPlugin"
+    "class": "Kununu\\CodeTools\\PHPCSFixer\\CsFixerPlugin"
   },
   "scripts": {
-    "ci-checks": [
-      "@cs-fixer-check",
-      "@cs-check",
-      "@stan",
+    "post-install-cmd": "@git-hook",
+    "post-update-cmd": "@git-hook",
+    "ci": [
+      "composer audit --abandoned=report",
+      "composer-dependency-analyser",
+      "composer-require-checker",
+      "composer normalize --dry-run --indent-size 2 --indent-style space --no-check-lock --no-update-lock",
+      "@cs-fix",
+      "@sniffer",
       "@rector",
+      "@phpstan",
       "@psalm",
-      "@test-unit"
+      "@test-coverage"
     ],
-    "cs-check": "phpcs --standard=phpcs.xml Kununu/ tests/",
-    "cs-fix": "phpcbf --standard=phpcs.xml Kununu/ tests/",
-    "cs-fixer-check": "php-cs-fixer check --config=php-cs-fixer.php",
-    "cs-fixer-fix": "php-cs-fixer fix --config=php-cs-fixer.php",
-    "psalm": "psalm --no-cache",
-    "psalm-baseline": "psalm --no-cache --set-baseline=psalm-baseline.xml",
-    "rector": "rector process --dry-run Kununu/ tests/",
-    "rector-fix": "rector process Kununu/ tests/",
-    "stan": "phpstan analyze",
-    "test-unit": "phpunit"
+    "cs": "php-cs-fixer check --config=php-cs-fixer.php.dist",
+    "cs-fix": "php-cs-fixer fix --config=php-cs-fixer.php.dist",
+    "git-hook": "Kununu\\CodeTools\\PHPCSFixer\\CsFixerPlugin::installGitHooks",
+    "phpstan": "phpstan analyze",
+    "psalm": "psalm",
+    "rector": "rector process --dry-run --config=rector-ci.php src/ tests/",
+    "rector-fix": "rector process --config=rector-ci.php src/ tests/",
+    "sniffer": "phpcs --standard=phpcs.xml.dist src/ tests/",
+    "sniffer-fix": "phpcbf --standard=phpcs.xml.dist src/ tests/",
+    "test": "@php -d zend.assertions=1 vendor/bin/phpunit --testsuite Full --testdox --testdox-summary --no-coverage --no-logging",
+    "test-coverage": [
+      "@putenv XDEBUG_MODE=coverage",
+      "@php -d zend.assertions=1 vendor/bin/phpunit --testsuite Full --testdox --testdox-summary --log-junit tests/.results/tests-junit.xml --coverage-clover tests/.results/tests-clover.xml --coverage-html tests/.results/html/"
+    ]
+  },
+  "scripts-descriptions": {
+    "ci": "Run all CI checks",
+    "cs": "Run PHP CS Fixer",
+    "git-hook": "Install the PHP CS Fixer git pre-commit hook in this repository",
+    "phpstan": "Run PHPStan",
+    "rector": "Run Rector in dry-run mode with CI rules",
+    "rector-fix": "Run Rector in fix mode with CI rules",
+    "sniffer": "Run PHP_CodeSniffer",
+    "test": "Run all tests",
+    "test-coverage": "Run all tests with coverage report"
   }
 }

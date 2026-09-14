@@ -8,18 +8,13 @@ $config = new Configuration();
 
 return $config
     ->addPathToExclude(__DIR__ . '/tests')
-    ->ignoreErrorsOnPath(__DIR__ . '/Kununu/Sniffs/', [ErrorType::UNKNOWN_CLASS])
-    ->ignoreErrorsOnExtensions(
-        [
-            'ext-mbstring',
-            'ext-tokenizer',
-        ],
-        [ErrorType::SHADOW_DEPENDENCY]
-    )
+    ->ignoreErrorsOnPath(__DIR__ . '/src/PHPCodeSniffer/Kununu/Sniffs/', [ErrorType::UNKNOWN_CLASS])
     ->ignoreErrorsOnPackages(
         [
             'friendsofphp/php-cs-fixer',
+            'jetbrains/phpstorm-attributes',
             'phpstan/phpstan',
+            'phpstan/phpstan-phpunit',
             'psalm/plugin-phpunit',
             'psalm/plugin-symfony',
             'rector/rector',

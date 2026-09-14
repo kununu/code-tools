@@ -1,0 +1,41 @@
+name: Branch Name Validator
+
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate Branch Name
+    runs-on: ubuntu-latest
+    # Bots do not follow the naming convention (e.g. dependabot/composer/...)
+    if: github.event.pull_request.user.type != 'Bot'
+
+    steps:
+      - name: Validate Branch Name
+        env:
+          # Never interpolate ${{ }} into the script: branch names are author-controlled
+          BRANCH_NAME: ${{ github.head_ref }}
+          # Keep in sync with the pattern documented in CONTRIBUTING.md
+          PATTERN: '^((KUN[A-Z][A-Z0-9]*-[0-9]+(-[a-z0-9]+)*)|([a-z]{2}[-a-z0-9]*[a-z0-9]))$'
+        run: |
+          if [[ "$BRANCH_NAME" =~ $PATTERN ]]; then
+            echo "✅ Branch name '$BRANCH_NAME' is valid."
+            exit 0
+          fi
+
+          echo "❌ Branch name '$BRANCH_NAME' does not follow the naming convention."
+          echo
+          echo "Expected either:"
+          echo "  - a JIRA issue branch, e.g. KUNSOMETHING-9999 or KUNSOMETHING-9999-my-feature"
+          echo "    (the KUN prefix and issue key stay uppercase, any suffix is kebab case)"
+          echo "  - a meaningful kebab case name of at least three characters, e.g. implement-my-feature"
+          echo
+          echo "Underscores are not allowed, and a name must not start with a digit."
+          echo "See the Branches section in CONTRIBUTING.md for the full rules."
+          echo
+          echo "Pattern: $PATTERN"
+          exit 1

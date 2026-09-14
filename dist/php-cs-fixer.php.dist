@@ -6,7 +6,7 @@ use PhpCsFixer\Finder;
 use PhpCsFixer\Runner\Parallel\ParallelConfigFactory;
 
 // Help on rules -> https://cs.symfony.com/doc/rules/index.html
-return (new Config())
+return new Config()
     ->setParallelConfig(ParallelConfigFactory::detect())
     ->setCacheFile('/tmp/.php-cs-fixer.php.cache')
     ->setRiskyAllowed(true)
@@ -79,7 +79,6 @@ return (new Config())
     ])
     ->setFinder(
         Finder::create()
-            ->exclude('vendor')
-            ->exclude('var')
+            ->exclude(['vendor', 'var'])
             ->in(__DIR__)
     );

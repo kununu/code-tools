@@ -1,0 +1,14 @@
+includes:
+    - vendor/phpstan/phpstan-phpunit/extension.neon
+    - vendor/phpstan/phpstan-phpunit/rules.neon
+parameters:
+    level: 8
+    paths:
+        - src/
+        - tests/
+    excludePaths:
+        - tests/resources/PHPCodeSniffer/
+    scanDirectories:
+        - vendor/squizlabs/php_codesniffer/src
+    bootstrapFiles:
+        - tests/bootstrap.php
