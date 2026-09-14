@@ -29,18 +29,7 @@ final class CsFixerGitHookCommandTest extends CommandTestCase
         chdir($this->repoDir);
         exec('git init 2>/dev/null');
 
-        // Create the vendor tree where your current code expects it:
-        // - resolveVendorDir(dirname($rootGitPath))
-        // - If rootGitPath is $this->repoDir, it will look under $this->baseDir/vendor
-        $vendorBase = sprintf('%s/vendor', $this->baseDir);
-        $codeToolsDir = sprintf('%s/kununu/code-tools', $vendorBase);
-        $binDir = sprintf('%s/bin', $vendorBase);
-        mkdir($codeToolsDir, 0777, true);
-        mkdir($binDir, 0777, true);
-
-        // Files the command symlinks to:
-        file_put_contents(sprintf('%s/php-cs-fixer', $binDir), "#!/usr/bin/env php\n<?php\n");
-        @chmod(filename: sprintf('%s/php-cs-fixer', $binDir), permissions: 0755);
+        $this->createVendorTree();
 
         $exitCode = $this->tester->execute([]);
 
@@ -103,12 +92,7 @@ final class CsFixerGitHookCommandTest extends CommandTestCase
         chdir($this->repoDir);
         exec('git init 2>/dev/null');
 
-        $vendorBase = sprintf('%s/vendor', $this->baseDir);
-        $binDir = sprintf('%s/bin', $vendorBase);
-        mkdir(sprintf('%s/kununu/code-tools', $vendorBase), 0777, true);
-        mkdir($binDir, 0777, true);
-        file_put_contents(sprintf('%s/php-cs-fixer', $binDir), "#!/usr/bin/env php\n<?php\n");
-        @chmod(sprintf('%s/php-cs-fixer', $binDir), 0755);
+        $this->createVendorTree();
 
         $marker = sprintf('%s/.git/kununu/filter-by-config', $this->repoDir);
 
@@ -129,12 +113,7 @@ final class CsFixerGitHookCommandTest extends CommandTestCase
         chdir($this->repoDir);
         exec('git init 2>/dev/null');
 
-        $vendorBase = sprintf('%s/vendor', $this->baseDir);
-        $binDir = sprintf('%s/bin', $vendorBase);
-        mkdir(sprintf('%s/kununu/code-tools', $vendorBase), 0777, true);
-        mkdir($binDir, 0777, true);
-        file_put_contents(sprintf('%s/php-cs-fixer', $binDir), "#!/usr/bin/env php\n<?php\n");
-        @chmod(sprintf('%s/php-cs-fixer', $binDir), 0755);
+        $binDir = $this->createVendorTree();
 
         self::assertEquals(CsFixerGitHookCommand::SUCCESS, $this->tester->execute([]));
 
@@ -158,13 +137,7 @@ final class CsFixerGitHookCommandTest extends CommandTestCase
         chdir($this->repoDir);
         exec('git init 2>/dev/null');
 
-        $vendorBase = sprintf('%s/vendor', $this->baseDir);
-        $codeToolsDir = sprintf('%s/kununu/code-tools', $vendorBase);
-        $binDir = sprintf('%s/bin', $vendorBase);
-        mkdir($codeToolsDir, 0777, true);
-        mkdir($binDir, 0777, true);
-        file_put_contents(sprintf('%s/php-cs-fixer', $binDir), "#!/usr/bin/env php\n<?php\n");
-        @chmod(sprintf('%s/php-cs-fixer', $binDir), 0755);
+        $this->createVendorTree();
 
         $this->tester->execute([]);
 
@@ -253,6 +226,66 @@ final class CsFixerGitHookCommandTest extends CommandTestCase
         self::assertStringContainsString('Could not find vendor directory', $this->tester->getDisplay());
     }
 
+    public function testScopeMarkerIsRemovedWhenTheProjectConfigGoesAway(): void
+    {
+        chdir($this->repoDir);
+        exec('git init 2>/dev/null');
+        $this->createVendorTree();
+
+        $config = sprintf('%s/php-cs-fixer.php', $this->repoDir);
+        $marker = sprintf('%s/.git/kununu/filter-by-config', $this->repoDir);
+
+        file_put_contents($config, "<?php\nreturn null;\n");
+
+        self::assertEquals(CsFixerGitHookCommand::SUCCESS, $this->tester->execute([]));
+        self::assertFileExists($marker);
+
+        // The project dropped its own config, so the hook falls back to the packaged template and
+        // must stop narrowing staged files through a config that is no longer there.
+        unlink($config);
+
+        self::assertEquals(CsFixerGitHookCommand::SUCCESS, $this->tester->execute([]));
+        self::assertFileDoesNotExist($marker);
+    }
+
+    public function testFailsWhenSymlinkDirectoryCannotBeCreated(): void
+    {
+        chdir($this->repoDir);
+        exec('git init 2>/dev/null');
+        $this->createVendorTree();
+
+        // The hooks directory already exists and stays writable, so installation gets past the hook
+        // itself and only then fails to create the directory holding the symlinks.
+        $gitPath = sprintf('%s/.git', $this->repoDir);
+        chmod($gitPath, 0555);
+
+        $exitCode = $this->tester->execute([]);
+
+        chmod($gitPath, 0755);
+
+        self::assertEquals(CsFixerGitHookCommand::FAILURE, $exitCode);
+        self::assertStringContainsString('Could not create directory', $this->tester->getDisplay());
+    }
+
+    public function testFailsWhenSymlinkCannotBeCreated(): void
+    {
+        chdir($this->repoDir);
+        exec('git init 2>/dev/null');
+        $this->createVendorTree();
+
+        // Here the directory is already there, so it is the symlink itself that cannot be written.
+        $kununuDir = sprintf('%s/.git/kununu', $this->repoDir);
+        mkdir($kununuDir, 0777, true);
+        chmod($kununuDir, 0555);
+
+        $exitCode = $this->tester->execute([]);
+
+        chmod($kununuDir, 0755);
+
+        self::assertEquals(CsFixerGitHookCommand::FAILURE, $exitCode);
+        self::assertStringContainsString('Failed to create symlink', $this->tester->getDisplay());
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -283,6 +316,23 @@ final class CsFixerGitHookCommandTest extends CommandTestCase
     protected function getCommandName(): string
     {
         return 'kununu:cs-fixer-git-hook';
+    }
+
+    // The vendor tree where the command looks for it: resolveVendorDir() walks up from the
+    // repository, so for $this->repoDir that is $this->baseDir/vendor. Returns the bin directory,
+    // which holds the binary the command symlinks to.
+    private function createVendorTree(): string
+    {
+        $vendorBase = sprintf('%s/vendor', $this->baseDir);
+        $binDir = sprintf('%s/bin', $vendorBase);
+
+        mkdir(sprintf('%s/kununu/code-tools', $vendorBase), 0777, true);
+        mkdir($binDir, 0777, true);
+
+        file_put_contents(sprintf('%s/php-cs-fixer', $binDir), "#!/usr/bin/env php\n<?php\n");
+        @chmod(sprintf('%s/php-cs-fixer', $binDir), 0755);
+
+        return $binDir;
     }
 
     private function resolveConfigTemplate(string $gitPath): mixed

@@ -19,6 +19,7 @@ abstract class CommandTestCase extends TestCase
     protected function setUp(): void
     {
         $application = new Application();
+        $application->setCatchExceptions(false);
         $application->addCommand($this->getCommand());
 
         $this->tester = new CommandTester($application->find($this->getCommandName()));
