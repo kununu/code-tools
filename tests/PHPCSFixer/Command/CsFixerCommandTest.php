@@ -14,7 +14,9 @@ declare(strict_types=1);
 
 TEXT;
 
+    private ?string $tempDir = null;
     private ?string $tempFile = null;
+    private string $oldCwd;
 
     #[DataProvider('csFixerCommandDataProvider')]
     public function testCsFixerCommand(string $before, string $after): void
@@ -110,6 +112,31 @@ TEXT;
         self::assertEquals(CsFixerCommand::FAILURE, $exitCode);
     }
 
+    public function testCsFixerCommandReturnsFailureWhenBinaryIsMissing(): void
+    {
+        // Outside a Composer project there is no vendor-dir to read, so the command falls back to
+        // resolving one from its own location, where no PHP CS Fixer binary is installed.
+        $this->tempDir = sprintf('%s/csfixer_no_project_%s', sys_get_temp_dir(), uniqid('', true));
+        mkdir($this->tempDir, 0777, true);
+        chdir($this->tempDir);
+
+        $this->tempFile = self::createTempFile(self::TEMPLATE);
+
+        $exitCode = $this->tester->execute([
+            'files' => [$this->tempFile],
+        ]);
+
+        self::assertEquals(CsFixerCommand::FAILURE, $exitCode);
+        self::assertStringContainsString('PHP CS Fixer binary not found', $this->tester->getDisplay());
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->oldCwd = (string) getcwd();
+    }
+
     protected function getCommand(): CsFixerCommand
     {
         return new CsFixerCommand();
@@ -122,8 +149,14 @@ TEXT;
 
     protected function tearDown(): void
     {
+        chdir($this->oldCwd);
+
         if ($this->tempFile !== null && is_file($this->tempFile)) {
             unlink($this->tempFile);
+        }
+
+        if ($this->tempDir !== null && is_dir($this->tempDir)) {
+            rmdir($this->tempDir);
         }
     }
 
