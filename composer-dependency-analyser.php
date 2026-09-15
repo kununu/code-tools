@@ -9,6 +9,7 @@ $config = new Configuration();
 return $config
     ->addPathToExclude(__DIR__ . '/tests')
     ->ignoreErrorsOnPath(__DIR__ . '/src/PHPCodeSniffer/Kununu/Sniffs/', [ErrorType::UNKNOWN_CLASS])
+    ->ignoreErrorsOnExtension('ext-simplexml', [ErrorType::UNUSED_DEPENDENCY])
     ->ignoreErrorsOnPackages(
         [
             'friendsofphp/php-cs-fixer',
