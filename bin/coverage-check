@@ -1,0 +1,150 @@
+#!/usr/bin/env php
+<?php
+declare(strict_types=1);
+
+/**
+ * Checks that the line coverage of a Cobertura report meets a minimum threshold.
+ *
+ * Usage: coverage-check <cobertura-report> <minimum-percentage>
+ */
+final readonly class CoverageCheck
+{
+    private const string COLOR_MASK = "\033[%sm";
+    private const string COLOR_CYAN = '0;36';
+    private const string COLOR_RED = '0;31';
+    private const string COLOR_GREEN = '0;32';
+    private const string COLOR_RESET = '0';
+
+    private bool $useColors;
+    private float $minimumPercentage;
+    private string $reportPath;
+    private float $validLines;
+    private float $coveredLines;
+    private float $coveragePercentage;
+
+    public function __construct(mixed $reportPath, mixed $minimum)
+    {
+        $this->useColors = getenv('NO_COLOR') === false;
+
+        $this->validateRequiredArguments($reportPath, $minimum);
+
+        $this->minimumPercentage = $this->getMinimumPercentage($minimum);
+        $this->reportPath = $this->getReportPath($reportPath);
+        $this->validLines = $this->getValidLines($coverage = $this->getCoverage());
+        $this->coveredLines = $this->getCoveredLines($coverage);
+        $this->coveragePercentage = $this->getCoveragePercentage();
+    }
+
+    public function __invoke(): string
+    {
+        return $this->colorize(
+            sprintf(
+                'Line coverage: %.2f%% (%d/%d lines) | Minimum: %.2f%%',
+                $this->coveragePercentage,
+                $this->coveredLines,
+                $this->validLines,
+                $this->minimumPercentage,
+            ),
+            $this->hasPassed() ? self::COLOR_GREEN : self::COLOR_RED
+        );
+    }
+
+    public function hasPassed(): bool
+    {
+        return $this->coveragePercentage >= $this->minimumPercentage;
+    }
+
+    private function validateRequiredArguments(mixed $report, mixed $minimum): void
+    {
+        if (null === $report || null === $minimum) {
+            $this->warning(sprintf('Usage: %s <cobertura-report-file> <minimum-percentage>', basename(__FILE__)));
+        }
+    }
+
+    private function getMinimumPercentage(mixed $minimum): float
+    {
+        if (!is_numeric($minimum)) {
+            $this->warning(sprintf('The minimum percentage must be a number, got "%s".', $minimum));
+        }
+
+        $minimum = (float) $minimum;
+
+        if ($minimum < 0.0 || $minimum > 100.0) {
+            $this->warning(sprintf('The minimum percentage must be between 0 and 100, got %s.', $minimum));
+        }
+
+        return round($minimum, 2);
+    }
+
+    private function getReportPath(mixed $report): string
+    {
+        if (!is_file($report)) {
+            $this->warning(sprintf('Coverage report "%s" not found!', $report));
+        }
+
+        return (string) $report;
+    }
+
+    private function getCoverage(): SimpleXMLElement
+    {
+        $coverage = @simplexml_load_file($this->reportPath);
+
+        if (false === $coverage) {
+            $this->warning(sprintf('Could not read the coverage report "%s".', $this->reportPath));
+        }
+
+        return $coverage;
+    }
+
+    private function getValidLines(SimpleXMLElement $coverage): float
+    {
+        $valid = (int) ($coverage['lines-valid'] ?? 0);
+
+        if (0 === $valid) {
+            $this->warning(sprintf('No line coverage found in report "%s".', $this->reportPath));
+        }
+
+        return (float) $valid;
+    }
+
+    private function getCoveredLines(SimpleXMLElement $coverage): float
+    {
+        $covered = (int) ($coverage['lines-covered'] ?? 0);
+
+        return (float) $covered;
+    }
+
+    private function getCoveragePercentage(): float
+    {
+        return round(($this->coveredLines / $this->validLines) * 100.0, 2);
+    }
+
+    private function colorMask(string $color): string
+    {
+        return sprintf(self::COLOR_MASK, $color);
+    }
+
+    private function colorize(string $text, string $color): string
+    {
+        return $this->useColors
+            ? sprintf('%s%s%s', $this->colorMask($color), $text, $this->colorMask(self::COLOR_RESET))
+            : $text;
+    }
+
+    private function warning(string $message): never
+    {
+        throw new RuntimeException($this->colorize($message, self::COLOR_CYAN));
+    }
+}
+
+try {
+    $coverageCheck = new CoverageCheck($argv[1] ?? null, $argv[2] ?? null);
+
+    printf('%s%s', $coverageCheck(), PHP_EOL);
+
+    exit($coverageCheck->hasPassed() ? 0 : 1);
+} catch (RuntimeException $e) {
+    fwrite(STDERR, sprintf('%s%s', $e->getMessage(), PHP_EOL));
+
+    exit(1);
+}

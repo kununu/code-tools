@@ -26,6 +26,10 @@ Guidance for AI agents working in this repository. For install and usage see `RE
   - Publishes `dist/*.dist` configs into a consuming project.
 - `bin/php-in-k8s`
   - Runs PHP commands inside a local Kubernetes pod.
+- `bin/coverage-check`
+  - Checks the total line coverage of a Cobertura report against a minimum percentage.
+- `bin/print-section`
+  - Prints a section header, used by the `ci` script to separate the steps.
 
 ## Code layout
 
@@ -35,7 +39,8 @@ Guidance for AI agents working in this repository. For install and usage see `RE
   - `PHPCodeSniffer/Kununu/` holds the PHP_CodeSniffer standard: `ruleset.xml` plus `Sniffs/`.
     These are the one exception to the namespace above; see Conventions below.
 - `bin/`
-  - The `code-tools` and `php-in-k8s` executables.
+  - The executables listed above. They are standalone scripts, outside the PSR-4 namespace, and
+    are published to the consumer's `vendor/bin` through the `bin` entry in `composer.json`.
 - `dist/`
   - `*.dist` config templates published into consuming projects.
 - Root configs: the repo's own tool configs are `*.dist` too (`php-cs-fixer.php.dist`,

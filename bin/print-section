@@ -1,0 +1,92 @@
+#!/usr/bin/env php
+<?php
+declare(strict_types=1);
+
+/**
+ * Prints a centered section label, used to separate the steps of the "ci" script.
+ *
+ * Usage: print-section <label> [width]
+ *
+ * Colors are omitted when the NO_COLOR environment variable is set.
+ */
+final readonly class Section
+{
+    private const int DEFAULT_WIDTH = 80;
+    private const string FILLER = '━';
+    private const string COLOR = "\033[1;36m";
+    private const string RESET = "\033[0m";
+
+    private string $label;
+    private int $width;
+    private bool $color;
+
+    public function __construct(?string $label, mixed $width)
+    {
+        $this->label = $this->getLabel($label);
+        $this->width = $this->getWidth($width);
+        $this->color = getenv('NO_COLOR') === false;
+    }
+
+    public function __invoke(): string
+    {
+        return $this->getText();
+    }
+
+    private function getLabel(?string $label): string
+    {
+        if (null === $label || '' === trim($label)) {
+            $this->fail(sprintf('Usage: %s <label> [width]', basename(__FILE__)));
+        }
+
+        return trim($label);
+    }
+
+    private function getWidth(mixed $width): int
+    {
+        $width ??= self::DEFAULT_WIDTH;
+
+        if (!is_numeric($width) || (int) $width < 1) {
+            $this->fail(sprintf('The width must be a positive number, got "%s".', $width));
+        }
+
+        return (int) $width;
+    }
+
+    private function getText(): string
+    {
+        $length = (int) preg_match_all('/./u', $this->label);
+        $filler = max(0, $this->width - $length - 2);
+        $left = intdiv($filler, 2);
+
+        $section = sprintf(
+            '%s %s %s',
+            str_repeat(self::FILLER, $left),
+            $this->label,
+            str_repeat(self::FILLER, $filler - $left)
+        );
+
+        return sprintf(
+            '%s%s%s%s%s',
+            PHP_EOL,
+            $this->color ? self::COLOR : '',
+            trim($section),
+            $this->color ? self::RESET : '',
+            PHP_EOL
+        );
+    }
+
+    private function fail(string $message): never
+    {
+        throw new RuntimeException($message);
+    }
+}
+
+try {
+    printf('%s', new Section($argv[1] ?? null, $argv[2] ?? null)());
+
+    exit(0);
+} catch (RuntimeException $e) {
+    fwrite(STDERR, sprintf('%s%s', $e->getMessage(), PHP_EOL));
+
+    exit(1);
+}

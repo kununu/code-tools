@@ -46,6 +46,7 @@ composer phpstan        # PHPStan static analysis
 composer psalm          # Psalm static analysis
 composer test           # Run the full PHPUnit test suite
 composer test-coverage  # Run the full PHPUnit test suite with a coverage report
+composer coverage-check # Check the line coverage of the last coverage run against the minimum
 ```
 
 All scripts are defined in `composer.json` under `scripts`.
@@ -65,6 +66,10 @@ The same tools run in CI (`.github/workflows/continuous-integration.yml`), which
 - PHPStan
 - Psalm
 - PHPUnit tests
+- Coverage check ([`coverage-check`](docs/CoverageCheck/README.md))
+
+Each step is preceded by a header printed with [`print-section`](docs/PrintSection/README.md), so
+the output of the individual tools stays easy to tell apart.
 
 #### Shell scripts
 
@@ -107,6 +112,13 @@ Run the test suite with a coverage report:
 ```console
 composer test-coverage
 ```
+
+Check the result of that run against the 95% minimum:
+
+```console
+composer coverage-check
+```
+
 ### Documentation
 
 Each feature under `src/` has a corresponding per-tool deep Markdown page document in `docs/`, one folder per tool, indexed from `README.md`.
