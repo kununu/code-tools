@@ -29,6 +29,7 @@ Every tool works out of the box. Use [`bin/code-tools`](docs/CodeTools/README.md
 | [Architecture Sniffer](docs/ArchitectureSniffer/README.md) | Architecture and dependency rules, powered by PHPAT                          |
 | [`bin/code-tools`](docs/CodeTools/README.md)               | Publishes the configuration templates above into your project                |
 | [`bin/coverage-check`](docs/CoverageCheck/README.md)       | Checks the total line coverage of a Cobertura report against a minimum       |
+| [`bin/download-phar`](docs/DownloadPhar/README.md)         | Keeps a tool's PHAR on its latest GitHub release                             |
 | [`bin/php-in-k8s`](docs/PHPInK8s/README.md)                | Runs PHP commands inside a local Kubernetes pod                              |
 | [`bin/print-section`](docs/PrintSection/README.md)         | Prints a section header, to separate the steps of a multi-tool script        |
 

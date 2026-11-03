@@ -35,25 +35,28 @@ composer install
 #### Scripts
 
 ```console
-composer ci             # Run same checks as in CI (note: applies CS fixes, CI only checks)
-composer cs             # PHP CS Fixer (kununu code standards) (dry-run)
-composer cs-fix         # PHP CS Fixer (kununu code standards) (apply-fixes)
-composer sniffer        # PHP_CodeSniffer (dry-run)
-composer sniffer-fix    # PHP_CodeSniffer (apply fixes)
-composer rector         # Rector (dry-run)
-composer rector-fix     # Rector (apply fixes)
-composer phpstan        # PHPStan static analysis
-composer psalm          # Psalm static analysis
-composer test           # Run the full PHPUnit test suite
-composer test-coverage  # Run the full PHPUnit test suite with a coverage report
-composer coverage-check # Check the line coverage of the last coverage run against the minimum
+composer ci              # Run same checks as in CI (note: applies CS fixes, CI only checks)
+composer cs              # PHP CS Fixer (kununu code standards) (dry-run)
+composer cs-fix          # PHP CS Fixer (kununu code standards) (apply-fixes)
+composer sniffer         # PHP_CodeSniffer (dry-run)
+composer sniffer-fix     # PHP_CodeSniffer (apply fixes)
+composer rector          # Rector (dry-run)
+composer rector-fix      # Rector (apply fixes)
+composer phpstan         # PHPStan static analysis
+composer psalm           # Psalm static analysis
+composer test            # Run the full PHPUnit test suite
+composer test-coverage   # Run the full PHPUnit test suite with a coverage report
+composer coverage-check  # Check the line coverage of the last coverage run against the minimum
+composer require-checker # Composer Require Checker (downloads its PHAR into tools/ if needed)
+composer normalize-check # Composer Normalize (dry-run, downloads its PHAR into tools/ if needed)
+composer normalize-fix   # Composer Normalize (apply fixes)
 ```
 
 All scripts are defined in `composer.json` under `scripts`.
 
 The same tools run in CI (`.github/workflows/continuous-integration.yml`), which also checks `composer-audit`, `composer-normalize`, `composer-require-checker`, and `composer-dependency-analyser`.
 
-`composer-dependency-analyser`, `composer-require-checker` and `composer-normalize` are global tools, installed in CI via `setup-php`. Install them locally to run `composer ci` in full.
+`composer-require-checker` and `composer-normalize` are not dependencies of the package. Their scripts (`composer require-checker`, `composer normalize-check`) download the latest release PHAR into the gitignored `tools/` directory with [`download-phar`](docs/DownloadPhar/README.md), and only download again when a new release is out. Nothing has to be installed globally.
 
 `composer ci` runs the same set of tools as in CI:
 - Composer Audit

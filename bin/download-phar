@@ -1,0 +1,186 @@
+#!/usr/bin/env php
+<?php
+declare(strict_types=1);
+
+/**
+ * Keeps <directory>/<tool>.phar on the latest release of a GitHub repository.
+ *
+ * Usage: download-phar <tool> <owner/repository> <release-asset> [directory]
+ *
+ * Every run asks GitHub which tag `releases/latest` redirects to (no download), and downloads the asset only when that
+ * tag is not the one already in the directory. Without network access the PHAR already there is used.
+ *
+ * The directory defaults to "tools", relative to the working directory.
+ */
+final readonly class DownloadPhar
+{
+    private const string DEFAULT_DIRECTORY = 'tools';
+    private const string LATEST_URL = 'https://github.com/%s/releases/latest';
+    private const string DOWNLOAD_URL = 'https://github.com/%s/releases/download/%s/%s';
+    private const string TAG_PATTERN = '#/releases/tag/([^/]+)$#';
+    private const string NAME_PATTERN = '/^[A-Za-z0-9][A-Za-z0-9._-]*$/';
+    private const string REPOSITORY_PATTERN = '#^[A-Za-z0-9][A-Za-z0-9._-]*/[A-Za-z0-9][A-Za-z0-9._-]*$#';
+    private const int CHECK_TIMEOUT = 10;
+    private const int DOWNLOAD_TIMEOUT = 60;
+
+    private string $tool;
+    private string $repository;
+    private string $asset;
+    private string $directory;
+    private string $phar;
+    private string $versionFile;
+
+    public function __construct(?string $tool, ?string $repository, ?string $asset, ?string $directory)
+    {
+        $this->validateRequiredArguments($tool, $repository, $asset);
+
+        $this->tool = $this->getName((string) $tool, 'tool');
+        $this->repository = $this->getRepository((string) $repository);
+        $this->asset = $this->getName((string) $asset, 'release asset');
+        $this->directory = $this->getDirectory($directory);
+        $this->phar = sprintf('%s/%s.phar', $this->directory, $this->tool);
+        $this->versionFile = sprintf('%s/%s.version', $this->directory, $this->tool);
+    }
+
+    public function __invoke(): void
+    {
+        $tag = $this->getLatestTag();
+
+        if (null === $tag) {
+            $this->useExistingPhar();
+
+            return;
+        }
+
+        if ($this->isUpToDate($tag)) {
+            return;
+        }
+
+        $this->download($tag);
+    }
+
+    private function validateRequiredArguments(?string $tool, ?string $repository, ?string $asset): void
+    {
+        if (null === $tool || null === $repository || null === $asset) {
+            $this->fail(
+                sprintf('Usage: %s <tool> <owner/repository> <release-asset> [directory]', basename(__FILE__))
+            );
+        }
+    }
+
+    private function getName(string $name, string $description): string
+    {
+        if (1 !== preg_match(self::NAME_PATTERN, $name)) {
+            $this->fail(sprintf('Invalid %s name "%s".', $description, $name));
+        }
+
+        return $name;
+    }
+
+    private function getRepository(string $repository): string
+    {
+        if (1 !== preg_match(self::REPOSITORY_PATTERN, $repository)) {
+            $this->fail(sprintf('The repository must be in the "owner/repository" format, got "%s".', $repository));
+        }
+
+        return $repository;
+    }
+
+    private function getDirectory(?string $directory): string
+    {
+        $directory = rtrim($directory ?? self::DEFAULT_DIRECTORY, '/');
+
+        if ('' === $directory) {
+            $this->fail('The directory must not be empty.');
+        }
+
+        return $directory;
+    }
+
+    // `releases/latest` redirects to `releases/tag/<tag>`: reading the redirect gives the tag without a download
+    private function getLatestTag(): ?string
+    {
+        $headers = @get_headers(
+            sprintf(self::LATEST_URL, $this->repository),
+            true,
+            stream_context_create(
+                [
+                    'http' => [
+                        'method'          => 'HEAD',
+                        'follow_location' => 0,
+                        'timeout'         => self::CHECK_TIMEOUT,
+                    ],
+                ]
+            )
+        );
+
+        $location = is_array($headers) ? ($headers['Location'] ?? $headers['location'] ?? null) : null;
+        $location = is_array($location) ? end($location) : $location;
+
+        return is_string($location) && 1 === preg_match(self::TAG_PATTERN, $location, $matches)
+            ? rawurldecode($matches[1])
+            : null;
+    }
+
+    private function useExistingPhar(): void
+    {
+        if (!is_file($this->phar)) {
+            $this->fail(sprintf('Could not find the latest %s release.', $this->tool));
+        }
+
+        fwrite(
+            STDERR,
+            sprintf('Could not check the latest %s release, using %s.%s', $this->tool, $this->phar, PHP_EOL)
+        );
+    }
+
+    private function isUpToDate(string $tag): bool
+    {
+        return is_file($this->phar)
+            && is_file($this->versionFile)
+            && trim((string) file_get_contents($this->versionFile)) === $tag;
+    }
+
+    // Download next to the target and rename, so an interrupted download never replaces a working PHAR
+    private function download(string $tag): void
+    {
+        if (!is_dir($this->directory) && !@mkdir($this->directory, 0755, true) && !is_dir($this->directory)) {
+            $this->fail(sprintf('Could not create the directory "%s".', $this->directory));
+        }
+
+        printf('Downloading %s %s%s', $this->tool, $tag, PHP_EOL);
+
+        $url = sprintf(self::DOWNLOAD_URL, $this->repository, rawurlencode($tag), $this->asset);
+        $temporary = sprintf('%s.tmp', $this->phar);
+        $context = stream_context_create(['http' => ['timeout' => self::DOWNLOAD_TIMEOUT]]);
+
+        if (!@copy($url, $temporary, $context)) {
+            @unlink($temporary);
+            $this->fail(sprintf('Could not download %s', $url));
+        }
+
+        if (!@rename($temporary, $this->phar)) {
+            @unlink($temporary);
+            $this->fail(sprintf('Could not move the download to %s', $this->phar));
+        }
+
+        if (false === @file_put_contents($this->versionFile, sprintf('%s%s', $tag, PHP_EOL))) {
+            $this->fail(sprintf('Could not write %s', $this->versionFile));
+        }
+    }
+
+    private function fail(string $message): never
+    {
+        throw new RuntimeException($message);
+    }
+}
+
+try {
+    (new DownloadPhar($argv[1] ?? null, $argv[2] ?? null, $argv[3] ?? null, $argv[4] ?? null))();
+
+    exit(0);
+} catch (RuntimeException $e) {
+    fwrite(STDERR, sprintf('%s%s', $e->getMessage(), PHP_EOL));
+
+    exit(1);
+}

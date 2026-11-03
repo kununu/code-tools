@@ -8,7 +8,7 @@
          cacheDirectory=".phpunit.cache"
          colors="true"
          displayDetailsOnAllIssues="true"
-         executionOrder="depends,defects"
+         executionOrder="defects"
          failOnRisky="true"
          failOnWarning="true">
     <testsuites>
@@ -21,5 +21,4 @@
             <directory>src</directory>
         </include>
     </source>
-
 </phpunit>

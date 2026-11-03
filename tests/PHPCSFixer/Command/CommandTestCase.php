@@ -20,7 +20,7 @@ abstract class CommandTestCase extends TestCase
     {
         $application = new Application();
         $application->setCatchExceptions(false);
-        $application->addCommand($this->getCommand());
+        $application->addCommands([$this->getCommand()]);
 
         $this->tester = new CommandTester($application->find($this->getCommandName()));
     }

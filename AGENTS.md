@@ -28,6 +28,8 @@ Guidance for AI agents working in this repository. For install and usage see `RE
   - Runs PHP commands inside a local Kubernetes pod.
 - `bin/coverage-check`
   - Checks the total line coverage of a Cobertura report against a minimum percentage.
+- `bin/download-phar`
+  - Keeps `tools/<tool>.phar` on the latest GitHub release of a tool.
 - `bin/print-section`
   - Prints a section header, used by the `ci` script to separate the steps.
 
@@ -99,14 +101,20 @@ Run `composer ci` (composer audit, composer-dependency-analyser, composer-requir
 composer-normalize, cs-fixer, code sniffer, Rector, PHPStan, Psalm, PHPUnit with coverage).
 
 `composer ci` needs nothing installed globally: a fresh clone plus `composer install` is enough.
-`composer-dependency-analyser` and `composer-require-checker` come from `require-dev` and are run
-from `vendor/bin` (Composer puts the bin-dir first on `PATH` for scripts, so the vendored copy wins
-over any global one), `composer-normalize` is a `require-dev` plugin providing the `normalize`
-subcommand, and `audit` is built into Composer.
+`composer-dependency-analyser` comes from `require-dev` and is run from `vendor/bin` (Composer puts
+the bin-dir first on `PATH` for scripts, so the vendored copy wins over any global one), and `audit`
+is built into Composer.
 
-`composer audit` runs with `--abandoned=report`: `maglnet/composer-require-checker` pulls in the
-abandoned `azjezz/psl`, which would otherwise fail the step. Security advisories still fail the
-build, for production and dev dependencies alike; only the abandoned notice is informational.
+`composer-require-checker` and `composer-normalize` are deliberately **not** dependencies: as
+`require-dev` entries their own requirements constrain what the package can install, and Composer
+Require Checker's upstream recommends the PHAR. The `require-checker` and `normalize-check` scripts
+first run `tool:*`, which calls `bin/download-phar` to keep `tools/<tool>.phar` (gitignored) on the
+latest release, then run the PHAR. CI instead installs both with `setup-php`, like the shared
+`backend_code_tools.yml`. Do not add either tool back to `require-dev`.
+
+`composer audit` runs with `--abandoned=report`: any package we depend on may be marked abandoned
+at any time, and that alone should not fail the build. Security advisories still fail it, for
+production and dev dependencies alike; only the abandoned notice is informational.
 
 Note that `composer ci` calls `@cs-fix`, so it rewrites files rather than only checking them.
 CI runs `php-cs-fixer check` instead.
