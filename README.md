@@ -18,20 +18,21 @@ composer require --dev kununu/code-tools --no-plugins
 
 Every tool works out of the box. Use [`bin/code-tools`](docs/CodeTools/README.md) to publish a tool's configuration template into your project when you need to customise it.
 
-| Tool                                                       | Purpose                                                                      |
-|------------------------------------------------------------|------------------------------------------------------------------------------|
-| [`.editorconfig`](docs/EditorConfig/README.md)             | Consistent editor and IDE settings across the team                           |
-| [PHP-CS-Fixer](docs/PHPCSFixer/README.md)                  | Formats and fixes code against the kununu coding standard                    |
-| [PHP_CodeSniffer](docs/PHPCodeSniffer/README.md)           | Reports and fixes coding-standard violations, including custom kununu sniffs |
-| [PHPStan](docs/PHPStan/README.md)                          | Static analysis                                                              |
-| [Psalm](docs/Psalm/README.md)                              | Static analysis with type inference                                          |
-| [Rector](docs/Rector/README.md)                            | Automated refactoring and PHP version upgrades                               |
-| [Architecture Sniffer](docs/ArchitectureSniffer/README.md) | Architecture and dependency rules, powered by PHPAT                          |
-| [`bin/code-tools`](docs/CodeTools/README.md)               | Publishes the configuration templates above into your project                |
-| [`bin/coverage-check`](docs/CoverageCheck/README.md)       | Checks the total line coverage of a Cobertura report against a minimum       |
-| [`bin/download-phar`](docs/DownloadPhar/README.md)         | Keeps a tool's PHAR on its latest GitHub release                             |
-| [`bin/php-in-k8s`](docs/PHPInK8s/README.md)                | Runs PHP commands inside a local Kubernetes pod                              |
-| [`bin/print-section`](docs/PrintSection/README.md)         | Prints a section header, to separate the steps of a multi-tool script        |
+| Tool                                                         | Purpose                                                                      |
+|--------------------------------------------------------------|------------------------------------------------------------------------------|
+| [`.editorconfig`](docs/EditorConfig/README.md)               | Consistent editor and IDE settings across the team                           |
+| [PHP-CS-Fixer](docs/PHPCSFixer/README.md)                    | Formats and fixes code against the kununu coding standard                    |
+| [PHP_CodeSniffer](docs/PHPCodeSniffer/README.md)             | Reports and fixes coding-standard violations, including custom kununu sniffs |
+| [PHPStan](docs/PHPStan/README.md)                            | Static analysis                                                              |
+| [Psalm](docs/Psalm/README.md)                                | Static analysis with type inference                                          |
+| [Rector](docs/Rector/README.md)                              | Automated refactoring and PHP version upgrades                               |
+| [Architecture Sniffer](docs/ArchitectureSniffer/README.md)   | Architecture and dependency rules, powered by PHPAT                          |
+| [`bin/architecture-check`](docs/ArchitectureCheck/README.md) | Checks the project against the company-wide architecture rules               |
+| [`bin/code-tools`](docs/CodeTools/README.md)                 | Publishes the configuration templates above into your project                |
+| [`bin/coverage-check`](docs/CoverageCheck/README.md)         | Checks the total line coverage of a Cobertura report against a minimum       |
+| [`bin/download-phar`](docs/DownloadPhar/README.md)           | Keeps a tool's PHAR on its latest GitHub release                             |
+| [`bin/php-in-k8s`](docs/PHPInK8s/README.md)                  | Runs PHP commands inside a local Kubernetes pod                              |
+| [`bin/print-section`](docs/PrintSection/README.md)           | Prints a section header, to separate the steps of a multi-tool script        |
 
 ## Upgrading
 

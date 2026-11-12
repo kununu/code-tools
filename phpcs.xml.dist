@@ -8,6 +8,7 @@
     <arg value="p"/>
     <arg value="n"/>
 
+    <exclude-pattern>tests/resources/Architecture/*</exclude-pattern>
     <exclude-pattern>tests/resources/PHPCodeSniffer/*</exclude-pattern>
 
     <!-- Include custom sniffs located in Kununu\Sniffs folder -->

@@ -65,6 +65,7 @@
     }
   },
   "bin": [
+    "bin/architecture-check",
     "bin/code-tools",
     "bin/coverage-check",
     "bin/download-phar",
