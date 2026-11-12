@@ -25,7 +25,11 @@ enum Assertion
         return match ($this) {
             self::CanOnlyDependOn   => Constraint::CanOnly,
             self::ShouldNotDependOn => Constraint::ShouldNot,
-            default                 => Constraint::Should,
+            self::ShouldBeFinal,
+            self::ShouldBeReadonly,
+            self::ShouldExtend,
+            self::ShouldHaveOnlyOnePublicMethodNamed,
+            self::ShouldImplement   => Constraint::Should,
         };
     }
 
