@@ -5,9 +5,10 @@ namespace Kununu\CodeTools\Tests\ArchitectureSniffer\Configuration\Rules;
 
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\ArchitectureLibrary;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Group;
+use Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules\AssertionType;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules\MustNotDependOn;
 use LogicException;
-use PHPat\Rule\Assertion\Relation\ShouldNotDepend\ShouldNotDepend;
+use PHPat\Rule\Assertion\Constraint;
 use PHPUnit\Framework\TestCase;
 
 final class MustNotDependOnTest extends TestCase
@@ -32,7 +33,8 @@ final class MustNotDependOnTest extends TestCase
 
         $result = MustNotDependOn::createRule($group, $library);
 
-        self::assertEquals(ShouldNotDepend::class, $result()->assertion);
+        self::assertEquals(Constraint::ShouldNot, $result()->constraint);
+        self::assertEquals(AssertionType::Depend->value, $result()->assertionType);
     }
 
     public function testCreateRuleThrowsWhenMustNotDependOnIsNull(): void

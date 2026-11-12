@@ -6,9 +6,10 @@ namespace Kununu\CodeTools\Tests\ArchitectureSniffer\Configuration\Rules;
 use InvalidArgumentException;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\ArchitectureLibrary;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Group;
+use Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules\AssertionType;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules\MustImplement;
 use LogicException;
-use PHPat\Rule\Assertion\Relation\ShouldImplement\ShouldImplement;
+use PHPat\Rule\Assertion\Constraint;
 use PHPUnit\Framework\TestCase;
 
 final class MustImplementTest extends TestCase
@@ -36,7 +37,8 @@ final class MustImplementTest extends TestCase
 
         $result = MustImplement::createRule($group, $library);
 
-        self::assertEquals(ShouldImplement::class, $result()->assertion);
+        self::assertEquals(Constraint::Should, $result()->constraint);
+        self::assertEquals(AssertionType::Implement->value, $result()->assertionType);
     }
 
     public function testCreateRuleThrowsWhenImplementsIsNull(): void

@@ -7,8 +7,7 @@ use Kununu\CodeTools\ArchitectureSniffer\Configuration\ArchitectureLibrary;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Group;
 use Kununu\CodeTools\ArchitectureSniffer\Helper\SelectorBuilder;
 use LogicException;
-use PHPat\Rule\Assertion\Declaration\DeclarationAssertion;
-use PHPat\Rule\Assertion\Relation\RelationAssertion;
+use PHPat\Rule\Assertion\Constraint;
 use PHPat\Selector\SelectorInterface;
 use PHPat\Test\Builder\BuildStep;
 use PHPat\Test\Builder\Rule;
@@ -44,16 +43,16 @@ abstract readonly class AbstractRule
     }
 
     /**
-     * @param class-string<DeclarationAssertion>|class-string<RelationAssertion> $specificRule
-     * @param array<string, string|false>|null                                   $ruleParams
-     * @param string[]|null                                                      $targets
-     * @param string[]|null                                                      $targetExcludes
-     * @param array<SelectorInterface>                                           $extraTargetSelectors
-     * @param array<SelectorInterface>                                           $extraExcludeSelectors
+     * @param array<string, string|false>|null $ruleParams
+     * @param string[]|null                    $targets
+     * @param string[]|null                    $targetExcludes
+     * @param array<SelectorInterface>         $extraTargetSelectors
+     * @param array<SelectorInterface>         $extraExcludeSelectors
      */
     protected static function buildDependencyRule(
         Group $group,
-        string $specificRule,
+        Constraint $constraint,
+        AssertionType $assertionType,
         string $because = '',
         ?array $ruleParams = [],
         ?array $targets = null,
@@ -74,7 +73,8 @@ abstract readonly class AbstractRule
         }
         $rule->subjectExcludes = $excludes;
 
-        $rule->assertion = $specificRule;
+        $rule->constraint = $constraint;
+        $rule->assertionType = $assertionType->value;
         if ($ruleParams !== null) {
             $rule->params = $ruleParams;
         }

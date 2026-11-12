@@ -5,9 +5,9 @@ namespace Kununu\CodeTools\Tests\ArchitectureSniffer;
 
 use InvalidArgumentException;
 use Kununu\CodeTools\ArchitectureSniffer\ArchitectureSniffer;
+use Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules\AssertionType;
 use Kununu\CodeTools\ArchitectureSniffer\Helper\ProjectPathResolver;
-use PHPat\Rule\Assertion\Declaration\ShouldBeFinal\ShouldBeFinal;
-use PHPat\Rule\Assertion\Relation\CanOnlyDepend\CanOnlyDepend;
+use PHPat\Rule\Assertion\Constraint;
 use PHPat\Test\Builder\Rule;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Yaml\Yaml;
@@ -32,9 +32,15 @@ final class ArchitectureSnifferTest extends TestCase
         $sniffer = new ArchitectureSniffer();
         $rules = iterator_to_array($sniffer->testArchitecture());
 
-        $assertions = array_map(static fn(Rule $rule): ?string => $rule()->assertion, $rules);
+        $assertions = array_map(
+            static fn(Rule $rule): array => [$rule()->constraint, $rule()->assertionType],
+            $rules
+        );
 
-        self::assertEquals([ShouldBeFinal::class, CanOnlyDepend::class], $assertions);
+        self::assertEquals(
+            [[Constraint::Should, AssertionType::BeFinal->value], [Constraint::CanOnly, AssertionType::Depend->value]],
+            $assertions
+        );
     }
 
     public function testTestArchitectureThrowsWhenArchitectureKeyMissing(): void

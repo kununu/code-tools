@@ -5,8 +5,9 @@ namespace Kununu\CodeTools\Tests\ArchitectureSniffer\Configuration\Rules;
 
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\ArchitectureLibrary;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Group;
+use Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules\AssertionType;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules\MustBeReadonly;
-use PHPat\Rule\Assertion\Declaration\ShouldBeReadonly\ShouldBeReadonly;
+use PHPat\Rule\Assertion\Constraint;
 use PHPUnit\Framework\TestCase;
 
 final class MustBeReadonlyTest extends TestCase
@@ -31,6 +32,7 @@ final class MustBeReadonlyTest extends TestCase
 
         $result = MustBeReadonly::createRule($group, $library);
 
-        self::assertEquals(ShouldBeReadonly::class, $result()->assertion);
+        self::assertEquals(Constraint::Should, $result()->constraint);
+        self::assertEquals(AssertionType::BeReadonly->value, $result()->assertionType);
     }
 }
