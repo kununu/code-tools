@@ -1,5 +1,35 @@
 # Upgrade guide
 
+## From 5.2 to 5.3
+
+### PHPAT raised from 0.11 to 0.12
+
+`phpat/phpat` is now required at `^0.12.5` (it was `^0.11.4`).
+
+**If you only use the Architecture Sniffer through `architecture.yaml`, there is nothing to do.**
+The YAML format, the sniffer class name and the errors it reports are unchanged.
+
+If your project also has its own PHPAT test classes, check them against these PHPAT changes:
+
+- The selector modifiers deprecated in 0.11, such as `Selector::AND()`, were removed.
+  - Use `Selector::AllOf()`, `Selector::AnyOf()`, `Selector::NoneOf()` and `Selector::Not()` instead.
+- The one-word assertions are deprecated in favour of a constraint followed by an assertion.
+  They still work, so this is not urgent:
+
+  ```diff
+  -->shouldBeFinal()
+  +->should()->beFinal()
+  -->shouldNotDependOn()
+  +->shouldNot()->dependOn()
+  -->canOnlyDependOn()
+  +->canOnly()->dependOn()
+  ```
+
+- PHPAT itself now needs PHP `^8.1` and PHPStan `^2.1`, both already below what this package requires.
+
+New in PHPAT 0.12.5 and available to your own rules: `->nonIgnorable()`, which stops a rule's errors from
+being silenced by an inline `@phpstan-ignore`, by `ignoreErrors` or by a baseline.
+
 ## From 4.x to 5.0
 
 Most of this release is internal restructuring, but a few things need a hand:

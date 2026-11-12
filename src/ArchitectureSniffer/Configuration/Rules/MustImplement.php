@@ -9,7 +9,6 @@ use Kununu\CodeTools\ArchitectureSniffer\Configuration\Group;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Selector\ClassSelector;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Selector\NamespaceSelector;
 use Kununu\CodeTools\ArchitectureSniffer\Helper\SelectorBuilder;
-use PHPat\Rule\Assertion\Relation\ShouldImplement\ShouldImplement;
 use PHPat\Selector\Selector;
 use PHPat\Test\Builder\Rule;
 
@@ -28,7 +27,7 @@ final readonly class MustImplement extends AbstractRule
 
         return self::buildDependencyRule(
             group: $group,
-            specificRule: ShouldImplement::class,
+            assertion: Assertion::ShouldImplement,
             because: "$group->name must implement interface.",
             targets: $targets,
             targetExcludes: $library->findTargetExcludes($group->implements, $targets),

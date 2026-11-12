@@ -5,8 +5,8 @@ namespace Kununu\CodeTools\Tests\ArchitectureSniffer\Configuration\Rules;
 
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\ArchitectureLibrary;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Group;
+use Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules\Assertion;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules\MustOnlyHaveOnePublicMethod;
-use PHPat\Rule\Assertion\Declaration\ShouldHaveOnlyOnePublicMethodNamed\ShouldHaveOnlyOnePublicMethodNamed;
 use PHPUnit\Framework\TestCase;
 
 final class MustOnlyHaveOnePublicMethodTest extends TestCase
@@ -34,6 +34,7 @@ final class MustOnlyHaveOnePublicMethodTest extends TestCase
 
         $result = MustOnlyHaveOnePublicMethod::createRule($group, $library);
 
-        self::assertEquals(ShouldHaveOnlyOnePublicMethodNamed::class, $result()->assertion);
+        self::assertEquals(Assertion::ShouldHaveOnlyOnePublicMethodNamed->constraint(), $result()->constraint);
+        self::assertEquals(Assertion::ShouldHaveOnlyOnePublicMethodNamed->type(), $result()->assertionType);
     }
 }

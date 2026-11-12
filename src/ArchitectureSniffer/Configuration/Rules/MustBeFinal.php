@@ -5,7 +5,6 @@ namespace Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules;
 
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\ArchitectureLibrary;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Group;
-use PHPat\Rule\Assertion\Declaration\ShouldBeFinal\ShouldBeFinal;
 use PHPat\Selector\Selector;
 use PHPat\Test\Builder\Rule;
 
@@ -17,7 +16,7 @@ final readonly class MustBeFinal extends AbstractRule
     ): Rule {
         return self::buildDependencyRule(
             group: $group,
-            specificRule: ShouldBeFinal::class,
+            assertion: Assertion::ShouldBeFinal,
             because: "$group->name must be final.",
             extraExcludeSelectors: [Selector::isInterface()]
         );

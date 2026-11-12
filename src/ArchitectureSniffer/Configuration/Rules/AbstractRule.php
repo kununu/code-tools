@@ -7,8 +7,6 @@ use Kununu\CodeTools\ArchitectureSniffer\Configuration\ArchitectureLibrary;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Group;
 use Kununu\CodeTools\ArchitectureSniffer\Helper\SelectorBuilder;
 use LogicException;
-use PHPat\Rule\Assertion\Declaration\DeclarationAssertion;
-use PHPat\Rule\Assertion\Relation\RelationAssertion;
 use PHPat\Selector\SelectorInterface;
 use PHPat\Test\Builder\BuildStep;
 use PHPat\Test\Builder\Rule;
@@ -44,16 +42,15 @@ abstract readonly class AbstractRule
     }
 
     /**
-     * @param class-string<DeclarationAssertion>|class-string<RelationAssertion> $specificRule
-     * @param array<string, string|false>|null                                   $ruleParams
-     * @param string[]|null                                                      $targets
-     * @param string[]|null                                                      $targetExcludes
-     * @param array<SelectorInterface>                                           $extraTargetSelectors
-     * @param array<SelectorInterface>                                           $extraExcludeSelectors
+     * @param array<string, string|false>|null $ruleParams
+     * @param string[]|null                    $targets
+     * @param string[]|null                    $targetExcludes
+     * @param array<SelectorInterface>         $extraTargetSelectors
+     * @param array<SelectorInterface>         $extraExcludeSelectors
      */
     protected static function buildDependencyRule(
         Group $group,
-        string $specificRule,
+        Assertion $assertion,
         string $because = '',
         ?array $ruleParams = [],
         ?array $targets = null,
@@ -74,7 +71,8 @@ abstract readonly class AbstractRule
         }
         $rule->subjectExcludes = $excludes;
 
-        $rule->assertion = $specificRule;
+        $rule->constraint = $assertion->constraint();
+        $rule->assertionType = $assertion->type();
         if ($ruleParams !== null) {
             $rule->params = $ruleParams;
         }
