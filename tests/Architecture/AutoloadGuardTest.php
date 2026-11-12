@@ -11,6 +11,8 @@ use RuntimeException;
 
 final class AutoloadGuardTest extends TestCase
 {
+    private const string SOURCE_DIRECTORY = 'src';
+
     private string $composerFile;
 
     /** @param array<string, mixed> $autoload */
@@ -20,7 +22,7 @@ final class AutoloadGuardTest extends TestCase
     {
         $this->writeComposerFile(json_encode(['autoload' => $autoload], JSON_THROW_ON_ERROR));
 
-        AutoloadGuard::guard($this->composerFile);
+        AutoloadGuard::guard($this->composerFile, self::SOURCE_DIRECTORY);
     }
 
     /** @return array<string, array{array<string, mixed>}> */
@@ -48,7 +50,7 @@ final class AutoloadGuardTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessageIsOrContains($expectedMessage);
 
-        AutoloadGuard::guard($this->composerFile);
+        AutoloadGuard::guard($this->composerFile, self::SOURCE_DIRECTORY);
     }
 
     /** @return array<string, array{string, string}> */
@@ -159,7 +161,7 @@ final class AutoloadGuardTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessageIsOrContains('/composer.json" found.');
 
-        AutoloadGuard::guard($this->composerFile);
+        AutoloadGuard::guard($this->composerFile, self::SOURCE_DIRECTORY);
     }
 
     protected function setUp(): void

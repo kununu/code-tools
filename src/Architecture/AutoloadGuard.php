@@ -14,17 +14,14 @@ use RuntimeException;
  */
 final readonly class AutoloadGuard
 {
-    public const string SOURCE_DIRECTORY = 'src';
-
-    private const string DIRECTORY_INSIDE_SOURCE_PATTERN = '#^' . self::SOURCE_DIRECTORY
-        . '(/[A-Za-z0-9_-][A-Za-z0-9_.-]*)*\z#';
+    private const string DIRECTORY_INSIDE_SOURCE_PATTERN = '#^%s(/[A-Za-z0-9_-][A-Za-z0-9_.-]*)*\z#';
     private const string ROOT_NAMESPACE = 'App\\';
     private const array SECTIONS_THAT_LOAD_NO_CODE = ['exclude-from-classmap'];
     private const string SUPPORTED_SECTION = 'psr-4';
     private const string TESTS_NAMESPACE = 'App\\Tests\\';
 
     /** @throws RuntimeException when the project autoloads code the rules cannot see, or this cannot be told */
-    public static function guard(string $composerFile): void
+    public static function guard(string $composerFile, string $sourceDirectory): void
     {
         $autoload = self::autoload($composerFile);
         $namespaces = $autoload[self::SUPPORTED_SECTION] ?? [];
@@ -36,15 +33,15 @@ final readonly class AutoloadGuard
         $directoriesByNamespace = self::directoriesByNamespace($namespaces);
         $problems = [
             ...self::unsupportedSections($autoload),
-            ...self::rootNamespaceElsewhere($directoriesByNamespace),
-            ...self::namespacesOutsideSource($directoriesByNamespace),
+            ...self::rootNamespaceElsewhere($directoriesByNamespace, $sourceDirectory),
+            ...self::namespacesOutsideSource($directoriesByNamespace, $sourceDirectory),
         ];
 
         if ($problems !== []) {
             throw new RuntimeException(
                 sprintf(
                     'The architecture rules only see "%s" as the "%s" namespace. In "%s": %s.',
-                    self::SOURCE_DIRECTORY,
+                    $sourceDirectory,
                     self::ROOT_NAMESPACE,
                     $composerFile,
                     implode('; ', $problems)
@@ -119,9 +116,11 @@ final readonly class AutoloadGuard
 
     // Only plain directory names are accepted below the source directory: Composer also reads "\" as a
     // separator and resolves "..", so anything else could point elsewhere.
-    private static function isInsideSource(string $directory): bool
+    private static function isInsideSource(string $directory, string $sourceDirectory): bool
     {
-        return preg_match(self::DIRECTORY_INSIDE_SOURCE_PATTERN, $directory) === 1;
+        $pattern = sprintf(self::DIRECTORY_INSIDE_SOURCE_PATTERN, preg_quote($sourceDirectory, '#'));
+
+        return preg_match($pattern, $directory) === 1;
     }
 
     /**
@@ -129,7 +128,7 @@ final readonly class AutoloadGuard
      *
      * @return list<string>
      */
-    private static function namespacesOutsideSource(array $directoriesByNamespace): array
+    private static function namespacesOutsideSource(array $directoriesByNamespace, string $sourceDirectory): array
     {
         $problems = [];
         foreach ($directoriesByNamespace as $namespace => $directories) {
@@ -139,7 +138,7 @@ final readonly class AutoloadGuard
             }
 
             foreach ($directories as $directory) {
-                if (!self::isInsideSource($directory)) {
+                if (!self::isInsideSource($directory, $sourceDirectory)) {
                     $problems[] = sprintf('"%s" is loaded from "%s"', $namespace, $directory);
                 }
             }
@@ -153,16 +152,16 @@ final readonly class AutoloadGuard
      *
      * @return list<string>
      */
-    private static function rootNamespaceElsewhere(array $directoriesByNamespace): array
+    private static function rootNamespaceElsewhere(array $directoriesByNamespace, string $sourceDirectory): array
     {
-        return ($directoriesByNamespace[self::ROOT_NAMESPACE] ?? []) === [self::SOURCE_DIRECTORY]
+        return ($directoriesByNamespace[self::ROOT_NAMESPACE] ?? []) === [$sourceDirectory]
             ? []
             : [
                 sprintf(
                     '"%s" must be the %s namespace of "%s" and of nothing else',
                     self::ROOT_NAMESPACE,
                     self::SUPPORTED_SECTION,
-                    self::SOURCE_DIRECTORY
+                    $sourceDirectory
                 ),
             ];
     }

@@ -24,6 +24,7 @@ final readonly class ArchitectureCheck
     private const string PHPAT_EXTENSION_VARIABLE = 'ARCHITECTURE_CHECK_PHPAT_EXTENSION';
     // Read by architecture/common.neon as PHPStan's tmpDir: a directory per run, so no result is reused
     private const string PHPSTAN_TEMPORARY_DIRECTORY_VARIABLE = 'ARCHITECTURE_CHECK_TMP_DIR';
+    private const string SOURCE_DIRECTORY = 'src';
     // Where PHP puts the temporary files PHPStan creates outside its tmpDir, unless php.ini sets sys_temp_dir
     private const string TEMPORARY_DIRECTORY_VARIABLE = 'TMPDIR';
     private const string WITHOUT_EXTENSION_INSTALLER = 'no-extension-installer.php';
@@ -189,7 +190,7 @@ final readonly class ArchitectureCheck
             );
         }
 
-        AutoloadGuard::guard(sprintf('%s/composer.json', $this->projectDirectory));
+        AutoloadGuard::guard(sprintf('%s/composer.json', $this->projectDirectory), self::SOURCE_DIRECTORY);
     }
 
     // The run already has its result by now, so a failed clean-up is reported and does not change it.
@@ -208,6 +209,6 @@ final readonly class ArchitectureCheck
 
     private function sourceDirectory(): string
     {
-        return sprintf('%s/%s', $this->projectDirectory, AutoloadGuard::SOURCE_DIRECTORY);
+        return sprintf('%s/%s', $this->projectDirectory, self::SOURCE_DIRECTORY);
     }
 }
