@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Kununu\CodeTools\Tests\Architecture;
 
 use InvalidArgumentException;
+use Kununu\CodeTools\Architecture\ArchitectureCheck;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -17,12 +18,20 @@ final class ArchitectureCheckTest extends TestCase
     private const array NOT_FINAL_CONTROLLER = [
         'testControllersAreFinal' => ['src/Controller/NotFinalController.php' => ['be final']],
     ];
+    private const string UNREADABLE_DIRECTORY = '/unreadable';
 
     private string $temporaryDirectory;
 
     public function testProjectWithoutViolationsPasses(): void
     {
         [$exitCode] = self::runCheck('clean', ['--error-format=json']);
+
+        self::assertEquals(0, $exitCode);
+    }
+
+    public function testTestCodeAndOtherNamespacesMayLiveOutsideTheSourceDirectory(): void
+    {
+        [$exitCode] = self::runCheck('tests-outside-source', ['--error-format=json']);
 
         self::assertEquals(0, $exitCode);
     }
@@ -81,6 +90,47 @@ final class ArchitectureCheckTest extends TestCase
         self::assertEquals([], glob($this->temporaryDirectory . '/*'));
     }
 
+    public function testFailedCleanUpIsReportedWithoutChangingTheResult(): void
+    {
+        if (function_exists('posix_geteuid') && posix_geteuid() === 0) {
+            self::markTestSkipped('The root user can remove anything, so the clean-up cannot be made to fail.');
+        }
+
+        $errorOutput = '';
+        $check = ArchitectureCheck::create(
+            self::fixtureProject('service-layered'),
+            $this->temporaryDirectory,
+            static function(string $text) use (&$errorOutput): void {
+                $errorOutput .= $text;
+            }
+        );
+
+        // The report is the last thing the run prints: by then its work directory exists and is about to be removed
+        ob_start(
+            function(): string {
+                foreach (glob($this->temporaryDirectory . '/*') ?: [] as $workDirectory) {
+                    mkdir($workDirectory . self::UNREADABLE_DIRECTORY, 0000);
+                }
+
+                return '';
+            },
+            1
+        );
+
+        try {
+            $exitCode = $check->run(['--error-format=json']);
+        } finally {
+            ob_end_clean();
+            foreach (glob($this->temporaryDirectory . '/*') ?: [] as $workDirectory) {
+                rmdir($workDirectory . self::UNREADABLE_DIRECTORY);
+                self::removeRecursively($workDirectory);
+            }
+        }
+
+        self::assertEquals(1, $exitCode);
+        self::assertStringContainsString(sprintf('Could not remove "%s/', $this->temporaryDirectory), $errorOutput);
+    }
+
     #[DataProvider('unsupportedOptionIsRejectedDataProvider')]
     public function testUnsupportedOptionIsRejected(string $option): void
     {
@@ -116,11 +166,8 @@ final class ArchitectureCheckTest extends TestCase
     public static function projectTheRulesCannotCheckIsRejectedDataProvider(): array
     {
         return [
-            'no_source_directory'          => ['does-not-exist', 'Run this from the project directory.'],
-            'no_composer_file'             => ['no-composer-file', '/composer.json" found.'],
-            'unreadable_composer_file'     => ['invalid-composer-file', 'Could not read'],
-            'source_is_not_in_namespace'   => ['other-namespace', 'need "App\" to be the PSR-4 namespace of "src"'],
-            'namespace_has_a_second_root'  => ['second-source-root', 'and of nothing else'],
+            'no_source_directory'    => ['does-not-exist', 'Run this from the project directory.'],
+            'autoload_guard_refuses' => ['other-namespace', '"App\" must be the psr-4 namespace of "src"'],
         ];
     }
 
@@ -157,5 +204,14 @@ final class ArchitectureCheckTest extends TestCase
     protected function tearDown(): void
     {
         rmdir($this->temporaryDirectory);
+    }
+
+    private static function removeRecursively(string $directory): void
+    {
+        foreach (glob($directory . '/*') ?: [] as $entry) {
+            is_dir($entry) ? self::removeRecursively($entry) : unlink($entry);
+        }
+
+        rmdir($directory);
     }
 }

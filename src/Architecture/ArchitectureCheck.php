@@ -7,12 +7,12 @@ use Closure;
 use Composer\InstalledVersions;
 use FilesystemIterator;
 use InvalidArgumentException;
-use JsonException;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RuntimeException;
 use SplFileInfo;
 use Symfony\Component\Process\Process;
+use UnexpectedValueException;
 
 final readonly class ArchitectureCheck
 {
@@ -24,8 +24,6 @@ final readonly class ArchitectureCheck
     private const string PHPAT_EXTENSION_VARIABLE = 'ARCHITECTURE_CHECK_PHPAT_EXTENSION';
     // Read by architecture/common.neon as PHPStan's tmpDir: a directory per run, so no result is reused
     private const string PHPSTAN_TEMPORARY_DIRECTORY_VARIABLE = 'ARCHITECTURE_CHECK_TMP_DIR';
-    private const string ROOT_NAMESPACE = 'App\\';
-    private const string SOURCE_DIRECTORY = 'src';
     // Where PHP puts the temporary files PHPStan creates outside its tmpDir, unless php.ini sets sys_temp_dir
     private const string TEMPORARY_DIRECTORY_VARIABLE = 'TMPDIR';
     private const string WITHOUT_EXTENSION_INSTALLER = 'no-extension-installer.php';
@@ -75,7 +73,7 @@ final readonly class ArchitectureCheck
         try {
             return $this->analyse($workDirectory, $rules, $options);
         } finally {
-            self::removeDirectory($workDirectory);
+            $this->removeWorkDirectory($workDirectory);
         }
     }
 
@@ -120,6 +118,7 @@ final readonly class ArchitectureCheck
             ?? throw new RuntimeException(sprintf('Package "%s" is not installed.', $package));
     }
 
+    // Failures are silenced because a PHP warning would be printed into the report; the caller checks the outcome.
     private static function removeDirectory(string $directory): void
     {
         $entries = new RecursiveIteratorIterator(
@@ -129,10 +128,10 @@ final readonly class ArchitectureCheck
 
         /** @var SplFileInfo $entry */
         foreach ($entries as $entry) {
-            $entry->isDir() ? rmdir($entry->getPathname()) : unlink($entry->getPathname());
+            $entry->isDir() ? @rmdir($entry->getPathname()) : @unlink($entry->getPathname());
         }
 
-        rmdir($directory);
+        @rmdir($directory);
     }
 
     /** @param list<string> $options */
@@ -171,11 +170,6 @@ final readonly class ArchitectureCheck
         );
     }
 
-    private function composerFile(): string
-    {
-        return sprintf('%s/composer.json', $this->projectDirectory);
-    }
-
     private function createWorkDirectory(): string
     {
         $workDirectory = sprintf('%s/architecture-check-%s', $this->temporaryDirectory, bin2hex(random_bytes(8)));
@@ -187,8 +181,6 @@ final readonly class ArchitectureCheck
         return $workDirectory;
     }
 
-    // The rules select classes by namespace and only "src" is analysed, so a project that keeps its code
-    // under another namespace or directory would pass without being checked.
     private function guardProject(): void
     {
         if (!is_dir($this->sourceDirectory())) {
@@ -197,46 +189,25 @@ final readonly class ArchitectureCheck
             );
         }
 
-        if ($this->rootNamespaceDirectories() !== [self::SOURCE_DIRECTORY]) {
-            throw new RuntimeException(
-                sprintf(
-                    'The architecture rules need "%s" to be the PSR-4 namespace of "%s", and of nothing else, in "%s".',
-                    self::ROOT_NAMESPACE,
-                    self::SOURCE_DIRECTORY,
-                    $this->composerFile()
-                )
-            );
-        }
+        AutoloadGuard::guard(sprintf('%s/composer.json', $this->projectDirectory));
     }
 
-    /** @return list<string> */
-    private function rootNamespaceDirectories(): array
+    // The run already has its result by now, so a failed clean-up is reported and does not change it.
+    private function removeWorkDirectory(string $workDirectory): void
     {
-        if (!is_file($this->composerFile())) {
-            throw new RuntimeException(sprintf('No "%s" found.', $this->composerFile()));
-        }
-
         try {
-            /** @var array{autoload?: array{psr-4?: array<string, mixed>}} $composer */
-            $composer = json_decode(
-                (string) file_get_contents($this->composerFile()),
-                true,
-                flags: JSON_THROW_ON_ERROR
-            );
-        } catch (JsonException $exception) {
-            throw new RuntimeException(sprintf('Could not read "%s".', $this->composerFile()), previous: $exception);
+            self::removeDirectory($workDirectory);
+        } catch (UnexpectedValueException) {
+            // An entry that cannot be read. What is left is reported below, like any other entry that stays.
         }
 
-        return array_map(
-            static fn(string $directory): string => trim(preg_replace('#^\./#', '', $directory) ?? $directory, '/'),
-            array_values(
-                array_filter((array) ($composer['autoload']['psr-4'][self::ROOT_NAMESPACE] ?? []), is_string(...))
-            )
-        );
+        if (is_dir($workDirectory)) {
+            ($this->writeError)(sprintf('Could not remove "%s".%s', $workDirectory, PHP_EOL));
+        }
     }
 
     private function sourceDirectory(): string
     {
-        return sprintf('%s/%s', $this->projectDirectory, self::SOURCE_DIRECTORY);
+        return sprintf('%s/%s', $this->projectDirectory, AutoloadGuard::SOURCE_DIRECTORY);
     }
 }

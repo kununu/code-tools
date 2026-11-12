@@ -7,7 +7,8 @@ includes:
 parameters:
     customRulesetUsed: true
     tmpDir: %env.ARCHITECTURE_CHECK_TMP_DIR%
-    # Only PHPAT rules run here, so the ignores a project wrote for its regular PHPStan run match nothing.
+    # Only PHPAT rules run here, so an inline @phpstan-ignore written for the project's regular PHPStan run
+    # matches nothing. Inline comments are the only ignores that reach this run: the project's config is not read.
     reportUnmatchedIgnoredErrors: false
     phpat:
         show_rule_names: true

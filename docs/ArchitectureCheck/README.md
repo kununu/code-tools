@@ -79,14 +79,22 @@ The only way to make the check pass is to fix the code.
 ### What the rules can and cannot see
 
 - Only `src` is analysed, and the rules select classes by namespace. The check therefore refuses to start
-  unless `composer.json` maps the PSR-4 namespace `App\` to `src` and to nothing else.
+  unless the `autoload` section of `composer.json` is one it knows to be safe:
+  - `psr-4` is the only kind of entry in it (`psr-0`, `classmap` and `files` are refused, whatever they hold).
+  - `App\` maps to `src` and to nothing else.
+  - Any other namespace under `App\`, in any letter case, and the empty fallback prefix are loaded from
+    inside `src`, written as a plain path such as `src/Legacy`. Test code under `App\Tests\` is the
+    exception and may live elsewhere.
+
+  Other namespaces, such as `DoctrineMigrations\`, and `autoload-dev` are not looked at.
 - The rules expect the layers directly under `App\` (`App\Controller`, `App\Domain`, `App\UseCase` and so
   on). Code that sits somewhere else, for example `App\Company\Controller`, is not matched by a layer rule.
 - `testControllersAreFinal` applies to classes in `App\Controller` whose name ends in `Controller`.
 - A dependency is only reported when PHPStan can find the class that is depended on. Run the check with the
   project's dependencies installed.
 - Each run works in a temporary directory of its own and removes it when it finishes, so no result is reused
-  between runs. A run that is killed leaves that directory behind in the system's temporary directory.
+  between runs. If it cannot be removed, that is reported on the error output and the exit code stays what it
+  was. A run that is killed leaves the directory behind in the system's temporary directory.
 
 ## Adding stricter rules
 
