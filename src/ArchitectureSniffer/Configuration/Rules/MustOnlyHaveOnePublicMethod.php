@@ -5,7 +5,6 @@ namespace Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules;
 
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\ArchitectureLibrary;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Group;
-use PHPat\Rule\Assertion\Constraint;
 use PHPat\Test\Builder\Rule;
 
 final readonly class MustOnlyHaveOnePublicMethod extends AbstractRule
@@ -16,8 +15,7 @@ final readonly class MustOnlyHaveOnePublicMethod extends AbstractRule
     ): Rule {
         return self::buildDependencyRule(
             group: $group,
-            constraint: Constraint::Should,
-            assertionType: AssertionType::HaveOnlyOnePublicMethodNamed,
+            assertion: Assertion::ShouldHaveOnlyOnePublicMethodNamed,
             because: "$group->name should only have one public method named $group->mustOnlyHaveOnePublicMethodName.",
         );
     }

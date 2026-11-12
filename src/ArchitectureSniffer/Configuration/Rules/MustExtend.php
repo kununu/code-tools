@@ -8,7 +8,6 @@ use Kununu\CodeTools\ArchitectureSniffer\Configuration\ArchitectureLibrary;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Group;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Selector\InterfaceClassSelector;
 use Kununu\CodeTools\ArchitectureSniffer\Helper\SelectorBuilder;
-use PHPat\Rule\Assertion\Constraint;
 use PHPat\Test\Builder\Rule;
 
 final readonly class MustExtend extends AbstractRule
@@ -27,8 +26,7 @@ final readonly class MustExtend extends AbstractRule
 
         return self::buildDependencyRule(
             group: $group,
-            constraint: Constraint::Should,
-            assertionType: AssertionType::Extend,
+            assertion: Assertion::ShouldExtend,
             because: "$group->name should extend class.",
             targets: $targets,
             targetExcludes: $library->findTargetExcludes([$group->extends], $targets),

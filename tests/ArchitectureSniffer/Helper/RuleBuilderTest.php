@@ -5,9 +5,8 @@ namespace Kununu\CodeTools\Tests\ArchitectureSniffer\Helper;
 
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\ArchitectureLibrary;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Group;
-use Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules\AssertionType;
+use Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules\Assertion;
 use Kununu\CodeTools\ArchitectureSniffer\Helper\RuleBuilder;
-use PHPat\Rule\Assertion\Constraint;
 use PHPUnit\Framework\TestCase;
 
 final class RuleBuilderTest extends TestCase
@@ -52,8 +51,8 @@ final class RuleBuilderTest extends TestCase
         $rules = iterator_to_array(RuleBuilder::getRules($group, $library));
 
         self::assertCount(1, $rules);
-        self::assertEquals(Constraint::Should, $rules[0]()->constraint);
-        self::assertEquals(AssertionType::BeFinal->value, $rules[0]()->assertionType);
+        self::assertEquals(Assertion::ShouldBeFinal->constraint(), $rules[0]()->constraint);
+        self::assertEquals(Assertion::ShouldBeFinal->type(), $rules[0]()->assertionType);
     }
 
     public function testGetRulesYieldsReadonlyRule(): void

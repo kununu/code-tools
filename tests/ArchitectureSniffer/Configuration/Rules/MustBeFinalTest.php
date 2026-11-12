@@ -5,9 +5,8 @@ namespace Kununu\CodeTools\Tests\ArchitectureSniffer\Configuration\Rules;
 
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\ArchitectureLibrary;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Group;
-use Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules\AssertionType;
+use Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules\Assertion;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules\MustBeFinal;
-use PHPat\Rule\Assertion\Constraint;
 use PHPUnit\Framework\TestCase;
 
 final class MustBeFinalTest extends TestCase
@@ -32,8 +31,8 @@ final class MustBeFinalTest extends TestCase
 
         $result = MustBeFinal::createRule($group, $library);
 
-        self::assertEquals(Constraint::Should, $result()->constraint);
-        self::assertEquals(AssertionType::BeFinal->value, $result()->assertionType);
+        self::assertEquals(Assertion::ShouldBeFinal->constraint(), $result()->constraint);
+        self::assertEquals(Assertion::ShouldBeFinal->type(), $result()->assertionType);
     }
 
     public function testCreateRuleWithExcludes(): void
@@ -60,7 +59,7 @@ final class MustBeFinalTest extends TestCase
 
         $result = MustBeFinal::createRule($group, $library);
 
-        self::assertEquals(Constraint::Should, $result()->constraint);
-        self::assertEquals(AssertionType::BeFinal->value, $result()->assertionType);
+        self::assertEquals(Assertion::ShouldBeFinal->constraint(), $result()->constraint);
+        self::assertEquals(Assertion::ShouldBeFinal->type(), $result()->assertionType);
     }
 }

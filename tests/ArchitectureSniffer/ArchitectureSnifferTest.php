@@ -5,9 +5,8 @@ namespace Kununu\CodeTools\Tests\ArchitectureSniffer;
 
 use InvalidArgumentException;
 use Kununu\CodeTools\ArchitectureSniffer\ArchitectureSniffer;
-use Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules\AssertionType;
+use Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules\Assertion;
 use Kununu\CodeTools\ArchitectureSniffer\Helper\ProjectPathResolver;
-use PHPat\Rule\Assertion\Constraint;
 use PHPat\Test\Builder\Rule;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Yaml\Yaml;
@@ -38,7 +37,10 @@ final class ArchitectureSnifferTest extends TestCase
         );
 
         self::assertEquals(
-            [[Constraint::Should, AssertionType::BeFinal->value], [Constraint::CanOnly, AssertionType::Depend->value]],
+            [
+                [Assertion::ShouldBeFinal->constraint(), Assertion::ShouldBeFinal->type()],
+                [Assertion::CanOnlyDependOn->constraint(), Assertion::CanOnlyDependOn->type()],
+            ],
             $assertions
         );
     }

@@ -5,10 +5,9 @@ namespace Kununu\CodeTools\Tests\ArchitectureSniffer\Configuration\Rules;
 
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\ArchitectureLibrary;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Group;
-use Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules\AssertionType;
+use Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules\Assertion;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules\MustOnlyDependOn;
 use LogicException;
-use PHPat\Rule\Assertion\Constraint;
 use PHPUnit\Framework\TestCase;
 
 final class MustOnlyDependOnTest extends TestCase
@@ -33,8 +32,8 @@ final class MustOnlyDependOnTest extends TestCase
 
         $result = MustOnlyDependOn::createRule($group, $library);
 
-        self::assertEquals(Constraint::CanOnly, $result()->constraint);
-        self::assertEquals(AssertionType::Depend->value, $result()->assertionType);
+        self::assertEquals(Assertion::CanOnlyDependOn->constraint(), $result()->constraint);
+        self::assertEquals(Assertion::CanOnlyDependOn->type(), $result()->assertionType);
     }
 
     public function testCreateRuleThrowsWhenDependsOnIsNull(): void

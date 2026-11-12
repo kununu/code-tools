@@ -7,7 +7,6 @@ use Kununu\CodeTools\ArchitectureSniffer\Configuration\ArchitectureLibrary;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Group;
 use Kununu\CodeTools\ArchitectureSniffer\Helper\SelectorBuilder;
 use LogicException;
-use PHPat\Rule\Assertion\Constraint;
 use PHPat\Selector\SelectorInterface;
 use PHPat\Test\Builder\BuildStep;
 use PHPat\Test\Builder\Rule;
@@ -51,8 +50,7 @@ abstract readonly class AbstractRule
      */
     protected static function buildDependencyRule(
         Group $group,
-        Constraint $constraint,
-        AssertionType $assertionType,
+        Assertion $assertion,
         string $because = '',
         ?array $ruleParams = [],
         ?array $targets = null,
@@ -73,8 +71,8 @@ abstract readonly class AbstractRule
         }
         $rule->subjectExcludes = $excludes;
 
-        $rule->constraint = $constraint;
-        $rule->assertionType = $assertionType->value;
+        $rule->constraint = $assertion->constraint();
+        $rule->assertionType = $assertion->type();
         if ($ruleParams !== null) {
             $rule->params = $ruleParams;
         }
