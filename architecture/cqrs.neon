@@ -1,0 +1,9 @@
+# Architecture rules for projects with a CQRS layout (src/UseCase), on top of the common ones.
+includes:
+    - common.neon
+
+services:
+    -
+        class: Kununu\CodeTools\Architecture\Rules\CqrsRules
+        tags:
+            - phpat.test

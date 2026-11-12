@@ -1,0 +1,19 @@
+# Company-wide architecture rules that apply to every project layout.
+# Run through vendor/bin/architecture-check, which passes the directory to analyse and sets the two
+# environment variables used below.
+includes:
+    - %env.ARCHITECTURE_CHECK_PHPAT_EXTENSION%
+
+parameters:
+    customRulesetUsed: true
+    tmpDir: %env.ARCHITECTURE_CHECK_TMP_DIR%
+    # Only PHPAT rules run here, so the ignores a project wrote for its regular PHPStan run match nothing.
+    reportUnmatchedIgnoredErrors: false
+    phpat:
+        show_rule_names: true
+
+services:
+    -
+        class: Kununu\CodeTools\Architecture\Rules\CommonRules
+        tags:
+            - phpat.test

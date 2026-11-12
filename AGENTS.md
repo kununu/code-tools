@@ -22,6 +22,8 @@ Guidance for AI agents working in this repository. For install and usage see `RE
 - PHPStan
 - Rector.
 - PHPAT (Architecture Sniffer for architecture/dependency rules).
+- `bin/architecture-check`
+  - Checks a consuming project against the company-wide architecture rules (PHPAT rule classes).
 - `bin/code-tools`
   - Publishes `dist/*.dist` configs into a consuming project.
 - `bin/php-in-k8s`
@@ -37,12 +39,16 @@ Guidance for AI agents working in this repository. For install and usage see `RE
 
 - `src/`: PSR-4 source (`Kununu\CodeTools\` namespace):
   - `PHPCSFixer/` (composer plugin, command, git hook, provider)
-  - `ArchitectureSniffer/` (PHPAT architecture rules)
+  - `Architecture/` (the company-wide PHPAT rule sets and the runner behind `bin/architecture-check`)
+  - `ArchitectureSniffer/` (PHPAT architecture rules a project defines in `architecture.yaml`)
   - `PHPCodeSniffer/Kununu/` holds the PHP_CodeSniffer standard: `ruleset.xml` plus `Sniffs/`.
     These are the one exception to the namespace above; see Conventions below.
 - `bin/`
   - The executables listed above. They are standalone scripts, outside the PSR-4 namespace, and
     are published to the consumer's `vendor/bin` through the `bin` entry in `composer.json`.
+- `architecture/`
+  - PHPStan configs for `bin/architecture-check`, one per project layout. They are used from inside
+    the package and are deliberately not in `dist/`: a project must not be able to publish and edit them.
 - `dist/`
   - `*.dist` config templates published into consuming projects.
 - Root configs: the repo's own tool configs are `*.dist` too (`php-cs-fixer.php.dist`,
@@ -77,18 +83,24 @@ Guidance for AI agents working in this repository. For install and usage see `RE
   `tests/PHPCSFixer/Command/CsFixerCommandTest.php` in `Kununu\CodeTools\Tests\PHPCSFixer\Command`.
   - There is no `Unit/` level. Every test here is a unit test, so the single PHPUnit test suite is
     named `Full` and takes all of `tests/`. Do not reintroduce a suite-per-type split.
+    The one exception in kind, not in place, is `tests/Architecture/`: those tests run the real
+    architecture check (a PHPStan process) against the fixture projects, because a PHPAT rule that
+    is wrong does not fail, it silently reports nothing.
   - The namespace is `Kununu\CodeTools\Tests\` + the path under `tests/`, including for the sniffs,
     whose tests live at `tests/PHPCodeSniffer/Kununu/Sniffs/` to match where their source sits.
   - `Kununu\CodeTools\Tests\` (`tests/`) deliberately overlaps `Kununu\CodeTools\` (`src/`).
     Composer matches the longest PSR-4 prefix first, so this resolves; it would only break if a
     `src/Tests/` directory were ever added.
   - Fixtures are not part of the mirror. They live under `tests/resources/<Tool>/`, one folder per
-    consumer: `tests/resources/PHPCodeSniffer/` (the sniff `before`/`after` files) and
-    `tests/resources/PHPCSFixer/` (`fixer_test_cases.php`).
+    consumer: `tests/resources/PHPCodeSniffer/` (the sniff `before`/`after` files),
+    `tests/resources/PHPCSFixer/` (`fixer_test_cases.php`) and `tests/resources/Architecture/`
+    (one small project per case the architecture check must handle).
   - Fixtures are deliberately excluded from the tools, and the scope differs on purpose:
     `php-cs-fixer.php.dist` excludes all of `tests/resources`, while `phpcs.xml.dist`,
     `phpstan.neon.dist` and `rector-ci.php` exclude only `tests/resources/PHPCodeSniffer`, because those files are intentionally
     malformed, whereas `fixer_test_cases.php` is valid PHP and stays under analysis.
+    `tests/resources/Architecture/` breaks the architecture rules on purpose and is excluded from the
+    same three.
 - Minimum PHP version and required extensions are declared in `composer.json` (`require.php` and the `ext-*` entries).
 
 ### Coding conventions
@@ -163,4 +175,7 @@ hooks while the suite runs.
 - Do not hardcode tool versions in docs
   - Reference `composer.json`.
 - Changes to `dist/*.dist` affect every consuming repo, so treat them as public API.
+- The rules in `src/Architecture/Rules/` are enforced in every consuming repo and cannot be ignored there.
+  - A new rule, or a wider one, can turn a consumer's build red, so check it against real services first.
+  - Every rule needs a class in `tests/resources/Architecture/` that breaks it; the rule set tests fail otherwise.
 - Keep the `code-tools` binary interface backward compatible.
