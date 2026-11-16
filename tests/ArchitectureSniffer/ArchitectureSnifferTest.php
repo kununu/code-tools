@@ -32,7 +32,11 @@ final class ArchitectureSnifferTest extends TestCase
         $rules = iterator_to_array($sniffer->testArchitecture());
 
         $assertions = array_map(
-            static fn(Rule $rule): array => [$rule()->constraint, $rule()->assertionType],
+            static function(Rule $rule): array {
+                $built = $rule();
+
+                return [$built->constraint, $built->assertionType];
+            },
             $rules
         );
 
