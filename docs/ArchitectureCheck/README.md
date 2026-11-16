@@ -74,7 +74,11 @@ The first match wins, from top to bottom.
 - Extensions registered through `phpstan/extension-installer` are not loaded, so one cannot bring parameters
   such as `excludePaths` into the check.
 
-The only way to make the check pass is to fix the code.
+This protects against silencing a rule by accident or out of habit, not against doing it on purpose. The
+check runs in the project's own installation, so code the project controls still runs inside it: for
+example the `files` entries of `autoload-dev`, or a patched or forked copy of this package. Such code can
+change the result. That takes a deliberate change to the project (its Composer files or a file they load)
+and is visible in a review.
 
 ### What the rules can and cannot see
 
