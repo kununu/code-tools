@@ -7,9 +7,10 @@ use PHPat\Rule\Assertion\Constraint;
 
 // The PHPAT assertions the Architecture Sniffer builds rules for.
 //
-// PHPAT identifies an assertion by a constraint plus a plain string type and validates neither:
-// a rule with an unknown type, or with a constraint its type does not support, is silently never
-// checked. Each case here fixes a pair PHPAT does support, so an invalid one cannot be written.
+// PHPAT identifies an assertion by a constraint plus a plain string type. It checks only that both
+// are set, not that they are valid: a rule with an unknown type, or with a constraint its type does
+// not support, is silently never checked. Each case here fixes a pair PHPAT does support, so an
+// invalid one cannot be written.
 enum Assertion
 {
     case CanOnlyDependOn;

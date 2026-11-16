@@ -160,7 +160,7 @@ final class RuleBuilderTest extends TestCase
         self::assertCount(1, $rules);
     }
 
-    public function testGetRulesYieldsPublicMethodRules(): void
+    public function testGetRulesYieldsPublicMethodRule(): void
     {
         $group = new Group(
             name: 'publicMethodOnly',
@@ -178,7 +178,9 @@ final class RuleBuilderTest extends TestCase
 
         $rules = iterator_to_array(RuleBuilder::getRules($group, $library));
 
-        self::assertCount(2, $rules);
+        self::assertCount(1, $rules);
+        self::assertEquals(Assertion::ShouldHaveOnlyOnePublicMethodNamed->type(), $rules[0]()->assertionType);
+        self::assertEquals(['name' => 'handle', 'isRegex' => false], $rules[0]()->params);
     }
 
     public function testGetRulesYieldsAllRulesForFullGroup(): void
@@ -199,7 +201,7 @@ final class RuleBuilderTest extends TestCase
 
         $rules = iterator_to_array(RuleBuilder::getRules($group, $library));
 
-        self::assertCount(8, $rules);
+        self::assertCount(7, $rules);
     }
 
     private function createLibraryForGroup(Group $group): ArchitectureLibrary

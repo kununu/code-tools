@@ -11,7 +11,6 @@ use Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules\MustExtend;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules\MustImplement;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules\MustNotDependOn;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules\MustOnlyDependOn;
-use Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules\MustOnlyHaveOnePublicMethod;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules\MustOnlyHaveOnePublicMethodNamed;
 use PHPat\Test\Builder\Rule as PHPatRule;
 
@@ -64,10 +63,6 @@ final readonly class RuleBuilder
 
         if ($group->shouldOnlyHaveOnePublicMethodNamed()) {
             yield MustOnlyHaveOnePublicMethodNamed::createRule(
-                $group,
-                $library
-            );
-            yield MustOnlyHaveOnePublicMethod::createRule(
                 $group,
                 $library
             );
