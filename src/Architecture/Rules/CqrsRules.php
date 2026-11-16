@@ -82,7 +82,7 @@ final readonly class CqrsRules extends RuleSet
                 self::SYMFONY_DEPENDENCY_INJECTION,
                 self::SYMFONY_EVENT_DISPATCHER,
             ],
-            because: 'The domain is free of client libraries and of framework wiring (routing, security, container, events).'
+            because: 'The domain uses no client libraries or framework wiring (routing, security, container, events).'
         );
     }
 
