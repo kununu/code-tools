@@ -22,7 +22,6 @@ final readonly class CqrsRules extends RuleSet
     private const string SYMFONY_EVENT_DISPATCHER = 'Symfony\Component\EventDispatcher';
     private const string SYMFONY_ROUTING = 'Symfony\Component\Routing';
     private const string SYMFONY_SECURITY = 'Symfony\Component\Security';
-    private const string SYMFONY_SERIALIZER = 'Symfony\Component\Serializer';
     private const string TACTICIAN = 'League\Tactician';
     private const string USE_CASE = 'App\UseCase';
     private const string USE_CASE_COMMAND = 'App\UseCase\Command';
@@ -80,11 +79,10 @@ final readonly class CqrsRules extends RuleSet
                 self::TACTICIAN,
                 self::SYMFONY_ROUTING,
                 self::SYMFONY_SECURITY,
-                self::SYMFONY_SERIALIZER,
                 self::SYMFONY_DEPENDENCY_INJECTION,
                 self::SYMFONY_EVENT_DISPATCHER,
             ],
-            because: 'The domain is free of infrastructure and framework libraries.'
+            because: 'The domain is free of client libraries and of framework wiring (routing, security, container, events).'
         );
     }
 
@@ -164,7 +162,7 @@ final readonly class CqrsRules extends RuleSet
         );
     }
 
-    public function testUseCasesDoNotDependOnEntrypointsFixturesOrSerializer(): Rule
+    public function testUseCasesDoNotDependOnEntrypointsOrFixtures(): Rule
     {
         return self::forbidDependency(
             from: [self::USE_CASE],
@@ -174,7 +172,6 @@ final readonly class CqrsRules extends RuleSet
                 self::SECURITY,
                 self::SYMFONY_CONSOLE,
                 self::SYMFONY_ROUTING,
-                self::SYMFONY_SERIALIZER,
             ],
             because: 'A use case does not know how it was triggered (HTTP, console or message).'
         );

@@ -17,7 +17,7 @@ final class UsesClientAndFrameworkLibraries
         public \League\Tactician\ArchitectureFixture $i,
         public \Symfony\Component\Routing\ArchitectureFixture $j,
         public \Symfony\Component\Security\ArchitectureFixture $k,
-        public \Symfony\Component\Serializer\ArchitectureFixture $l,
+        public \Symfony\Component\Serializer\ArchitectureFixture $allowed,
         public \Symfony\Component\DependencyInjection\ArchitectureFixture $m,
         public \Symfony\Component\EventDispatcher\ArchitectureFixture $n,
     ) {

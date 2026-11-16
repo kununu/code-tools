@@ -1,6 +1,6 @@
 # Upgrade guide
 
-## From 5.2 to 5.3
+## From 5.x to 6.0
 
 ### New: company-wide architecture rules
 
@@ -11,7 +11,8 @@ See [`architecture-check`](docs/ArchitectureCheck/README.md) for what it checks 
 
 ### PHPAT raised from 0.11 to 0.12
 
-`phpat/phpat` is now required at `^0.12.5` (it was `^0.11.4`).
+`phpat/phpat` is now required at `^0.12.5` (it was `^0.11.4`). This is why the release is a major: PHPAT 0.12
+removes APIs that a project's own PHPAT test classes may use.
 
 **If you only use the Architecture Sniffer through `architecture.yaml`, there is nothing to do.**
 The YAML format, the sniffer class name and the errors it reports are unchanged.

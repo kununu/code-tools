@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace App\UseCase\Command;
 
-final class UsesEntrypointsFixturesAndSerializer
+final class UsesEntrypointsAndFixtures
 {
     public function __construct(
         public \App\Command\CleanCommand $a,
@@ -11,7 +11,7 @@ final class UsesEntrypointsFixturesAndSerializer
         public \App\Security\CleanVoter $c,
         public \Symfony\Component\Console\ArchitectureFixture $d,
         public \Symfony\Component\Routing\ArchitectureFixture $e,
-        public \Symfony\Component\Serializer\ArchitectureFixture $f,
+        public \Symfony\Component\Serializer\ArchitectureFixture $allowed,
     ) {
     }
 }

@@ -53,7 +53,6 @@ final class CqrsRulesTest extends RuleSetTestCase
                     'not depend on Symfony\Component\EventDispatcher\ArchitectureFixture',
                     'not depend on Symfony\Component\Routing\ArchitectureFixture',
                     'not depend on Symfony\Component\Security\ArchitectureFixture',
-                    'not depend on Symfony\Component\Serializer\ArchitectureFixture',
                 ],
             ],
             'testDomainDoesNotDependOnInputOrReadModelLayers' => [
@@ -107,14 +106,13 @@ final class CqrsRulesTest extends RuleSetTestCase
                     'not depend on Kununu\CQRS\ArchitectureFixture',
                 ],
             ],
-            'testUseCasesDoNotDependOnEntrypointsFixturesOrSerializer' => [
-                'src/UseCase/Command/UsesEntrypointsFixturesAndSerializer.php' => [
+            'testUseCasesDoNotDependOnEntrypointsOrFixtures' => [
+                'src/UseCase/Command/UsesEntrypointsAndFixtures.php' => [
                     'not depend on App\Command\CleanCommand',
                     'not depend on App\DataFixtures\CleanFixture',
                     'not depend on App\Security\CleanVoter',
                     'not depend on Symfony\Component\Console\ArchitectureFixture',
                     'not depend on Symfony\Component\Routing\ArchitectureFixture',
-                    'not depend on Symfony\Component\Serializer\ArchitectureFixture',
                 ],
             ],
         ];
