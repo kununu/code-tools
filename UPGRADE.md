@@ -7,8 +7,20 @@
 `phpat/phpat` is now required at `^0.12.5` (it was `^0.11.4`). This is why the release is a major: PHPAT 0.12
 removes APIs that a project's own PHPAT test classes may use.
 
-**If you only use the Architecture Sniffer through `architecture.yaml`, there is nothing to do.**
-The YAML format, the sniffer class name and the errors it reports are unchanged.
+**If you only use the Architecture Sniffer through `architecture.yaml`, there is nothing to do**, unless a group
+sets `must_only_have_one_public_method_named` (see below). The YAML format and the sniffer class name are unchanged,
+and so are the errors reported for every other property.
+
+#### `must_only_have_one_public_method_named` reports one error less
+
+A group with this property used to get a second error for every class in it, including classes that follow the
+rule: `... should have only one public method named`, with no method name. That error is gone. If your PHPStan
+baseline or `ignoreErrors` lists it, remove the entry.
+
+The rule class behind it, `MustOnlyHaveOnePublicMethod`, was removed. Nothing in `architecture.yaml` refers to it.
+
+What remains is the one error that names the method. A class gets it when it does not have exactly one public
+method (the constructor is not counted), or when that method has another name.
 
 If your project also has its own PHPAT test classes, check them against these PHPAT changes:
 
