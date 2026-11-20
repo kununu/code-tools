@@ -1,0 +1,4 @@
+# An extension the project controls, trying to take its code out of the architecture check.
+parameters:
+    excludePaths:
+        - %currentWorkingDirectory%/src/*

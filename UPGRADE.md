@@ -2,6 +2,13 @@
 
 ## From 5.x to 6.0
 
+### New: company-wide architecture rules
+
+`vendor/bin/architecture-check` checks a project against architecture rules that are the same for every
+kununu PHP service. Nothing runs it yet, so upgrading changes nothing for your project.
+
+See [`architecture-check`](docs/ArchitectureCheck/README.md) for what it checks and how to run it.
+
 ### PHPAT raised from 0.11 to 0.12
 
 `phpat/phpat` is now required at `^0.12.5` (it was `^0.11.4`). This is why the release is a major: PHPAT 0.12

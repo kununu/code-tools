@@ -1,0 +1,9 @@
+{
+  "autoload": {
+    "psr-4": {
+      "App\\": "src/",
+      "App\\Tests\\Mock\\": "tests/Mock/",
+      "DoctrineMigrations\\": "migrations/"
+    }
+  }
+}

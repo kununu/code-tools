@@ -16,3 +16,6 @@ composer.lock
 composer.phar
 vendor/
 /tools/
+
+# Fixture projects for the architecture check carry a hand-written vendor directory
+!/tests/resources/Architecture/*/vendor/

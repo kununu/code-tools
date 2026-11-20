@@ -9,6 +9,7 @@ return RectorConfig::configure()
     ->withComposerBased(phpunit: true)
     ->withSkip([
         __DIR__ . '/tests/bootstrap.php',
+        __DIR__ . '/tests/resources/Architecture',
         __DIR__ . '/tests/resources/PHPCodeSniffer',
         __DIR__ . '/rector-ci.php',
     ])
