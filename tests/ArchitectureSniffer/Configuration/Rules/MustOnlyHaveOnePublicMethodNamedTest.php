@@ -5,9 +5,9 @@ namespace Kununu\CodeTools\Tests\ArchitectureSniffer\Configuration\Rules;
 
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\ArchitectureLibrary;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Group;
+use Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules\Assertion;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules\MustOnlyHaveOnePublicMethodNamed;
 use LogicException;
-use PHPat\Rule\Assertion\Declaration\ShouldHaveOnlyOnePublicMethodNamed\ShouldHaveOnlyOnePublicMethodNamed;
 use PHPUnit\Framework\TestCase;
 
 final class MustOnlyHaveOnePublicMethodNamedTest extends TestCase
@@ -35,7 +35,8 @@ final class MustOnlyHaveOnePublicMethodNamedTest extends TestCase
 
         $result = MustOnlyHaveOnePublicMethodNamed::createRule($group, $library);
 
-        self::assertEquals(ShouldHaveOnlyOnePublicMethodNamed::class, $result()->assertion);
+        self::assertEquals(Assertion::ShouldHaveOnlyOnePublicMethodNamed->constraint(), $result()->constraint);
+        self::assertEquals(Assertion::ShouldHaveOnlyOnePublicMethodNamed->type(), $result()->assertionType);
     }
 
     public function testCreateRuleThrowsWhenMethodNameIsNull(): void

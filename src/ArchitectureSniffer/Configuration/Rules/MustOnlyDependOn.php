@@ -5,7 +5,6 @@ namespace Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules;
 
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\ArchitectureLibrary;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Group;
-use PHPat\Rule\Assertion\Relation\CanOnlyDepend\CanOnlyDepend;
 use PHPat\Selector\Selector;
 use PHPat\Test\Builder\Rule;
 
@@ -23,7 +22,7 @@ final readonly class MustOnlyDependOn extends AbstractRule
 
         return self::buildDependencyRule(
             group: $group,
-            specificRule: CanOnlyDepend::class,
+            assertion: Assertion::CanOnlyDependOn,
             because: "$group->name must only depend on allowed dependencies.",
             targets: $targets,
             targetExcludes: $library->findTargetExcludes($group->dependsOn, $targets),

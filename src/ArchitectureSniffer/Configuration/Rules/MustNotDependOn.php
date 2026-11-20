@@ -5,7 +5,6 @@ namespace Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules;
 
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\ArchitectureLibrary;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Group;
-use PHPat\Rule\Assertion\Relation\ShouldNotDepend\ShouldNotDepend;
 use PHPat\Test\Builder\Rule;
 
 final readonly class MustNotDependOn extends AbstractRule
@@ -22,7 +21,7 @@ final readonly class MustNotDependOn extends AbstractRule
 
         return self::buildDependencyRule(
             group: $group,
-            specificRule: ShouldNotDepend::class,
+            assertion: Assertion::ShouldNotDependOn,
             because: "$group->name must not depend on forbidden dependencies.",
             targets: $targets,
             targetExcludes: $library->findTargetExcludes($group->mustNotDependOn, $targets),

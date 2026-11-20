@@ -5,8 +5,8 @@ namespace Kununu\CodeTools\Tests\ArchitectureSniffer\Helper;
 
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\ArchitectureLibrary;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Group;
+use Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules\Assertion;
 use Kununu\CodeTools\ArchitectureSniffer\Helper\RuleBuilder;
-use PHPat\Rule\Assertion\Declaration\ShouldBeFinal\ShouldBeFinal;
 use PHPUnit\Framework\TestCase;
 
 final class RuleBuilderTest extends TestCase
@@ -51,7 +51,8 @@ final class RuleBuilderTest extends TestCase
         $rules = iterator_to_array(RuleBuilder::getRules($group, $library));
 
         self::assertCount(1, $rules);
-        self::assertEquals(ShouldBeFinal::class, $rules[0]()->assertion);
+        self::assertEquals(Assertion::ShouldBeFinal->constraint(), $rules[0]()->constraint);
+        self::assertEquals(Assertion::ShouldBeFinal->type(), $rules[0]()->assertionType);
     }
 
     public function testGetRulesYieldsReadonlyRule(): void
@@ -159,7 +160,7 @@ final class RuleBuilderTest extends TestCase
         self::assertCount(1, $rules);
     }
 
-    public function testGetRulesYieldsPublicMethodRules(): void
+    public function testGetRulesYieldsPublicMethodRule(): void
     {
         $group = new Group(
             name: 'publicMethodOnly',
@@ -177,7 +178,9 @@ final class RuleBuilderTest extends TestCase
 
         $rules = iterator_to_array(RuleBuilder::getRules($group, $library));
 
-        self::assertCount(2, $rules);
+        self::assertCount(1, $rules);
+        self::assertEquals(Assertion::ShouldHaveOnlyOnePublicMethodNamed->type(), $rules[0]()->assertionType);
+        self::assertEquals(['name' => 'handle', 'isRegex' => false], $rules[0]()->params);
     }
 
     public function testGetRulesYieldsAllRulesForFullGroup(): void
@@ -198,7 +201,7 @@ final class RuleBuilderTest extends TestCase
 
         $rules = iterator_to_array(RuleBuilder::getRules($group, $library));
 
-        self::assertCount(8, $rules);
+        self::assertCount(7, $rules);
     }
 
     private function createLibraryForGroup(Group $group): ArchitectureLibrary

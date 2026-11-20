@@ -136,7 +136,7 @@ Each group in your `architecture.yaml` configuration is defined as a key under `
 - **must_only_have_one_public_method_named** (optional):
   - String. Restricts classes in this group to only one public method with the specified name.
   - Example: `must_only_have_one_public_method_named: "handle"`
-  - **Rule triggered:** Reports any class in the group that has more than one public method or a public method with a different name.
+  - **Rule triggered:** Reports any class in the group that does not have exactly one public method (the constructor is not counted), or whose public method has a different name.
 
 #### Summary Table
 | Property                        | Required | Type      | Description                                                                 | Rule Triggered                                                      |

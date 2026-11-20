@@ -6,9 +6,9 @@ namespace Kununu\CodeTools\Tests\ArchitectureSniffer\Configuration\Rules;
 use InvalidArgumentException;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\ArchitectureLibrary;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Group;
+use Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules\Assertion;
 use Kununu\CodeTools\ArchitectureSniffer\Configuration\Rules\MustExtend;
 use LogicException;
-use PHPat\Rule\Assertion\Relation\ShouldExtend\ShouldExtend;
 use PHPUnit\Framework\TestCase;
 
 final class MustExtendTest extends TestCase
@@ -33,7 +33,8 @@ final class MustExtendTest extends TestCase
 
         $result = MustExtend::createRule($group, $library);
 
-        self::assertEquals(ShouldExtend::class, $result()->assertion);
+        self::assertEquals(Assertion::ShouldExtend->constraint(), $result()->constraint);
+        self::assertEquals(Assertion::ShouldExtend->type(), $result()->assertionType);
     }
 
     public function testCreateRuleThrowsWhenExtendsIsNull(): void
